@@ -1,0 +1,152 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["click"]
+# ///
+
+import zipfile
+import json
+import os
+import glob
+import click
+import tempfile
+from pathlib import Path
+from collections import defaultdict
+
+
+def process_zip(zip_path: str, output_dir: str | None = None, dry_run: bool = False, auto_yes: bool = False):
+    if output_dir is None:
+        dry_run = True
+        output_dir = tempfile.gettempdir()
+    output_zip_path = os.path.join(
+        output_dir,
+        os.path.basename(zip_path).replace(".zip", "_renamed.zip")
+    )
+
+    # Group files by album folder
+    albums = defaultdict(list)
+
+    click.secho(f"Processing '{click.style(zip_path, bold=True)}'")
+    with zipfile.ZipFile(zip_path, 'r') as zin:
+        for item in zin.infolist():
+            parts = item.filename.split('/')
+            if len(parts) >= 2:
+                album_name = parts[2]
+                albums[album_name].append(item)
+                
+
+        number_of_images = 0
+        with zipfile.ZipFile(output_zip_path, 'w') as zout:
+            for album_name, items in albums.items():
+                number_of_images += len(items)
+                # Determine proposed album name
+                if ',' in album_name:
+                    proposed_name, removed = album_name.rsplit(',', 1)
+                    removed = removed.strip()
+                elif "_" in album_name:
+                    proposed_name = album_name.replace('_', " ")
+                    removed = ""
+                else:
+                    proposed_name = album_name
+                    removed = ""
+                proposed_name = proposed_name.strip()
+
+                # Decide on new name
+                if auto_yes or proposed_name == album_name:
+                    new_name = proposed_name
+                    action = "accept"
+                else:
+                    click.echo()
+                    click.echo(f"Proposed new name: '", nl=False)
+                    click.secho(proposed_name, bold=True, nl=False)
+                    click.secho(f", {removed}", strikethrough=True, dim=True, nl=False)
+                    click.secho("'", nl=False)
+
+                    action = click.prompt(
+                        (click.style(f" (", dim=True) +
+                          click.style('Enter', bold=True, fg='green') +
+                          click.style('=accept, ', dim=True) +
+                          click.style('n', bold=True) +
+                          click.style('=edit name, ', dim=True) +
+                          click.style('d', bold=True, fg='red') +
+                          click.style('=delete) ', dim=True)),
+                        default="accept",
+                        show_default=False,
+                    ).lower()
+
+                    if action == 'd':
+                        click.echo(f"Deleting album {album_name}")
+                        continue
+                    elif action == 'n':
+                        new_name = click.prompt("Enter new name").strip()
+                    else:
+                        new_name = proposed_name
+                output = click.style("DRY RUN: ", fg="yellow") if dry_run else ""
+                output += f"Adding album '{click.style(album_name, bold=True)}'"
+                if new_name != album_name:
+                    output += f" as '{click.style(new_name, bold=True)}'"
+                output += click.style(f" ({len(items)} files) ", dim=True)
+                click.secho(output, nl=False)
+
+                for item in items:
+                    data = zin.read(item.filename)
+                    parts = item.filename.split('/')
+                    parts[2] = new_name
+
+                    # If JSON file, update metadata
+                    if item.filename.endswith("metadata.json"):
+                        try:
+                            json_data = json.loads(data)
+
+                            if 'title' in json_data:
+                                json_data['title'] = new_name
+
+                            data = json.dumps(json_data, indent=2).encode('utf-8')
+                        except json.JSONDecodeError:
+                            click.echo(f"Failed to decode JSON: {item.filename}", err=True)
+                            pass
+
+                    new_filename = '/'.join(parts)
+                    if not dry_run:
+                        zout.writestr(new_filename, data)
+                padding = 150 - len(output) if new_name != album_name else 150 - len(output) - 8
+                padding = 1 if padding < 1 else padding
+                click.secho("." * padding, dim=True, nl=False)
+                click.secho(" ok", fg="green")
+                        
+    if dry_run:
+        Path(output_zip_path).unlink()
+    if dry_run:
+        click.secho("DRY RUN: ", fg="yellow", nl=False)
+        click.secho(f"Would process {click.style(number_of_images, bold=True, fg='magenta')} files to '{click.style(output_zip_path, bold=True)}'")
+    else:
+        click.secho(f"{click.style('Successfully', fg='green')} wrote {click.style(number_of_images, bold=True, fg='magenta')}" ,nl=False)
+        click.secho(f" files to '{click.style(output_zip_path, bold=True)}'")
+
+
+@click.command()
+@click.argument("input_glob")
+@click.argument("output_dir", type=click.Path(file_okay=False))
+@click.option("--dry-run", is_flag=True, help="Show what would be done, but don’t modify anything.")
+@click.option("--yes", "auto_yes", is_flag=True, help="Automatically accept proposed names.")
+def main(input_glob: str, output_dir: str, dry_run: bool, auto_yes: bool):
+    """
+    Process Google Photos Takeout ZIP(s).
+
+    INPUT_GLOB: Glob pattern for zip(s), e.g. '*.zip'
+    OUTPUT_DIR: Directory for processed zips
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    files = glob.glob(input_glob)
+
+    if not files:
+        click.secho("No matching files found.", fg="red")
+        raise SystemExit(1)
+
+    for f in files:
+        process_zip(f, output_dir, dry_run, auto_yes)
+
+
+if __name__ == "__main__":
+    main()

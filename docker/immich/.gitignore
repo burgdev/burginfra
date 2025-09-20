@@ -1,0 +1,11 @@
+.env*
+!.env.template
+immich-config.json*
+!immich-config.json.template
+takeouts*/
+.volumes/
+.cache/
+library/
+.library/
+postgres/
+.postgres/
