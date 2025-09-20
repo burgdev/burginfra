@@ -1,8 +1,8 @@
 {
   "backup": {
     "database": {
-      "cronExpression": "0 02 * * *",
       "enabled": true,
+      "cronExpression": "0 02 * * *",
       "keepLastAmount": 14
     }
   },
@@ -107,6 +107,7 @@
     "level": "log"
   },
   "machineLearning": {
+    "enabled": true,
     "clip": {
       "enabled": true,
       "modelName": "ViT-L-16-SigLIP2-256__webli"
@@ -115,7 +116,6 @@
       "enabled": true,
       "maxDistance": 0.01
     },
-    "enabled": true,
     "facialRecognition": {
       "enabled": true,
       "maxDistance": 0.5,
@@ -128,9 +128,9 @@
     ]
   },
   "map": {
-    "darkStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=yYYuZy3hwmMjY087FDvY",
     "enabled": true,
-    "lightStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=yYYuZy3hwmMjY087FDvY"
+    "darkStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=Qw5uULMWH4eI8iOp0mtc",
+    "lightStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=Qw5uULMWH4eI8iOp0mtc"
   },
   "metadata": {
     "faces": {
@@ -163,13 +163,13 @@
     }
   },
   "oauth": {
+    "enabled": false,
     "autoLaunch": false,
     "autoRegister": true,
     "buttonText": "Login with OAuth",
     "clientId": "",
     "clientSecret": "",
     "defaultStorageQuota": null,
-    "enabled": false,
     "issuerUrl": "",
     "mobileOverrideEnabled": false,
     "mobileRedirectUri": "",
@@ -190,11 +190,11 @@
   },
   "server": {
     "externalDomain": "",
-    "loginPageMessage": "<div><b>Welcome</b> to <i>pix.crux.li</i><br/><small>Please log in or <u><a href=mailto:tobi@curx.li>ask</a></u> for an account.</small></div>",
+    "loginPageMessage": "<div><b>Welcome</b> to <i>pix.crux.li</i><br/><small>Please log in or <u><a href=#>ask</a></u> for an account.</small></div>",
     "publicUsers": true
   },
   "storageTemplate": {
-    "enabled": false,
+    "enabled": true,
     "hashVerificationEnabled": true,
     "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}_NoAlbum{{/if}}/{{filename}}"
   },

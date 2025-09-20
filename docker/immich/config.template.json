@@ -5,8 +5,8 @@
 {
   "backup": {
     "database": {
-      "cronExpression": "0 02 * * *",
       "enabled": true,
+      "cronExpression": "0 02 * * *",
       "keepLastAmount": 14
     }
   },
@@ -111,6 +111,7 @@
     "level": "$IMMICH_LOG_LEVEL"
   },
   "machineLearning": {
+    "enabled": true,
     "clip": {
       "enabled": true,
       "modelName": "ViT-L-16-SigLIP2-256__webli"
@@ -119,7 +120,6 @@
       "enabled": true,
       "maxDistance": 0.01
     },
-    "enabled": true,
     "facialRecognition": {
       "enabled": true,
       "maxDistance": 0.5,
@@ -132,8 +132,8 @@
     ]
   },
   "map": {
-    "darkStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=$MAPTILER_KEY",
     "enabled": true,
+    "darkStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=$MAPTILER_KEY",
     "lightStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=$MAPTILER_KEY"
   },
   "metadata": {
@@ -167,13 +167,13 @@
     }
   },
   "oauth": {
+    "enabled": false,
     "autoLaunch": false,
     "autoRegister": true,
     "buttonText": "Login with OAuth",
     "clientId": "",
     "clientSecret": "",
     "defaultStorageQuota": null,
-    "enabled": false,
     "issuerUrl": "",
     "mobileOverrideEnabled": false,
     "mobileRedirectUri": "",
@@ -198,7 +198,7 @@
     "publicUsers": true
   },
   "storageTemplate": {
-    "enabled": false,
+    "enabled": true,
     "hashVerificationEnabled": true,
     "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}_NoAlbum{{/if}}/{{filename}}"
   },
