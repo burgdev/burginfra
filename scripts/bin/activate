@@ -1,0 +1,14 @@
+#!/bin/bash
+# Check if the script is sourced
+# (BASH_SOURCE[0] != $0 means it's being sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  echo "❌ Error: This script must be sourced, not executed."
+  echo "Usage: source ${BASH_SOURCE[0]}"
+  exit 1
+fi
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+export PATH=$PATH:$SCRIPT_DIR/bin
+
+
+

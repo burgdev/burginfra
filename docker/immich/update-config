@@ -1,16 +1,1 @@
-#!/bin/bash
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-cd $SCRIPT_DIR
-
-TEMPLATE=config.template.json
-CONFIG=.immich-config.json
-
-set -a
-source .env
-set +a
-
-envsubst < "$TEMPLATE" > "$CONFIG"
-sed -i '/^\s*\(#\|\/\/\)/d' $CONFIG
-
-
-
+../../scripts/immich/burg-immich-update-config
