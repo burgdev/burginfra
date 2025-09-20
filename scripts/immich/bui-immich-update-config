@@ -12,5 +12,6 @@ set +a
 envsubst < "$TEMPLATE" > "$CONFIG"
 sed -i '/^\s*\(#\|\/\/\)/d' $CONFIG
 
+echo "Update '$CONFIG' from template '$TEMPLATE'"
 
 

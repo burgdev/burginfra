@@ -154,15 +154,15 @@
   },
   "notifications": {
     "smtp": {
-      "enabled": false,
-      "from": "",
+      "enabled": $EMAIL_ENABLED,
+      "from": "$EMAIL_FROM",
       "replyTo": "",
       "transport": {
-        "host": "",
+        "host": "$EMAIL_HOST",
         "ignoreCert": false,
-        "password": "",
-        "port": 587,
-        "username": ""
+        "password": "$EMAIL_HOST_PASSWORD",
+        "port": $EMAIL_HOST_PORT,
+        "username": "$EMAIL_HOST_USER"
       }
     }
   },
@@ -200,7 +200,7 @@
   "storageTemplate": {
     "enabled": true,
     "hashVerificationEnabled": true,
-    "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}_NoAlbum{{/if}}/{{filename}}"
+    "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}{{MM}}_NoAlbum{{/if}}/{{filename}}"
   },
   "templates": {
     "email": {

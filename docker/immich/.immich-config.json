@@ -150,15 +150,15 @@
   },
   "notifications": {
     "smtp": {
-      "enabled": false,
-      "from": "",
+      "enabled": true,
+      "from": "pix.crux.li <no-reply@localhost>",
       "replyTo": "",
       "transport": {
-        "host": "",
+        "host": "mail.infomaniak.com",
         "ignoreCert": false,
-        "password": "",
-        "port": 587,
-        "username": ""
+        "password": "Cleat2$Yelling$Overstate",
+        "port": 465,
+        "username": "tb@wodore.com"
       }
     }
   },
@@ -196,7 +196,7 @@
   "storageTemplate": {
     "enabled": true,
     "hashVerificationEnabled": true,
-    "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}_NoAlbum{{/if}}/{{filename}}"
+    "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}{{MM}}_NoAlbum{{/if}}/{{filename}}"
   },
   "templates": {
     "email": {
