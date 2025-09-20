@@ -1,6 +1,6 @@
 ## Immich Installation
 
-From the https://immich.app/docs/install/docker-compose[docu].
+From the [docu](https://immich.app/docs/install/docker-compose):
 
 
 ```bash
@@ -28,7 +28,7 @@ After this run the `immich-go` script:
 
 ### `immich-go` installation
 
-https://github.com/simulot/immich-go[`immich-go`] can be used to import all you photos.
+[`immich-go`](https://github.com/simulot/immich-go) can be used to import all you photos.
 
 ```bash
 VERSION="v0.27.0" # or just main
