@@ -1,6 +1,5 @@
-<h3 align="center"><b>Burg</b><i>Infra</i></h3>
 <p align="center">
-  <a href="https://burgdev.github.io/imgora"><img src="https://raw.githubusercontent.com/burgdev/burgdev-infra/refs/heads/dev/assets/logo_banner_burginfra.png" alt="BurgInfra" width="128" /></a>
+  <a href="https://burgdev.github.io/imgora"><img src="/assets/logo_banner_burginfra.png" alt="BurgInfra" width="400" /></a>
 </p>
 <p align="center">
     <em>Infrastructure for burgdev web services</em>
