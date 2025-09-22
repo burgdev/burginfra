@@ -1,0 +1,9 @@
+# Local environment files
+.env
+.env.secret
+
+# Kubernetes generated files
+kustomization.yaml
+
+# Sensitive files
+secrets.yaml

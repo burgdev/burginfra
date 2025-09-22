@@ -53,27 +53,20 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: immich
-              #valueFrom:
-              #  configMapKeyRef:
-              #    name: immich-env
-              #    key: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: immich-secrets
+                  key: username
             - name: POSTGRES_PASSWORD
-              value: immich
-              #valueFrom:
-              #  configMapKeyRef:
-              #    name: immich-env
-              #    key: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-secrets
+                  key: password
             - name: POSTGRES_DB
               value: immich
-              #valueFrom:
-              #  configMapKeyRef:
-              #    name: immich-env
-              #    key: DB_DATABASE_NAME
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
-              #subPath: immich-db
           resources: {}
       volumes:
         - name: pgdata
