@@ -6,36 +6,46 @@ order: 40
 
 This document lists and describes the applications running on our Kubernetes cluster.
 
-## Application List
+[[toc]]
 
-### [Immich](/apps/immich)
+## [Immich](/apps/immich) <Badge type="info" text="immich" /> 
 
-- **Namespace**: `immich`
-- **Description**: Self-hosted photo and video backup solution
-- **Storage**: Two volumes, one for databasee and one for the library (images)
-- **Backup**: Not yet
+Self-hosted photo and video backup solution
 
-```bash
-kubectl get pods -n immich
+### Storage
+  - PostgreSQL database volume (managed by the chart)
+  - Local library storage at `/mnt/immich/library` (defined in settings)
+
+### Settings
+Settings are in `.env` files which need to be changed accordingly:
+
+::: code-group
+
+```bash [edit settings]
+cd k8s/immich
+cp .env.template .env
+cp .env.secret.template .env.secret
+vi .env
+vi .env.secret
 ```
+<<< @/../k8s/immich/.env.template{dotenv}
+<<< @/../k8s/immich/.env.secret.template{dotenv}
+:::
 
-### [Zitadel](/apps/zitadel)
+### Commands
 
-- **Namespace**: `zitadel`
-- **Description**: Identity and access management platform
-- **Storage**: One volume for database
-- **Backup**: Not yet
+<K8sCommandsSnippet namespace="immich" path="k8s/immich" />
 
-```bash
-kubectl get pods -n zitadel
-```
+## [Zitadel](/apps/zitadel) <Badge type="info" text="zitadel" /> 
 
-### Using kubectl
+Identity and access management (_iam_) platform.
 
-```bash
-# Apply a manifest
-kubectl apply -f path/to/manifest.yaml
+### Storage
+One volume for database
 
-# Check deployment status
-kubectl get deployments -n <namespace>
-```
+### Backup
+Not yet
+
+### Commands
+
+<K8sCommandsSnippet namespace="zitadel" path="k8s/zitadel" />

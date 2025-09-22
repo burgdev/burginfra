@@ -50,13 +50,6 @@ const vitePressOptions = {
       next: 'Next page'
     },
 
-    // Sidebar configuration
-    //sidebar: {
-    //  '/infrastructure/': getInfrastructureSidebar(),
-    //  '/apps/': getAppsSidebar(),
-    //  '/scripts/': getScriptsSidebar()
-    //},
-
     // Navigation bar
     nav: [
       { text: 'Home', link: '/' },
@@ -125,7 +118,7 @@ const vitePressSidebarOptions = {
   sortMenusByFrontmatterOrder: true,
   frontmatterOrderDefaultValue: 100,
   excludeFilesByFrontmatterFieldName: 'exclude',
-  excludeByFolderDepth: 4,
+  excludeByFolderDepth: 6,
   manualSortFileNameByPriority: ["overview.md"]
 };
 
