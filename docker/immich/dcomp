@@ -3,5 +3,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 cd $SCRIPT_DIR
 
 ./update-config 
+sleep 0.5
+
 CMD=${@:-up -d}
 docker compose $CMD

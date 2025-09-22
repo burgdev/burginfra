@@ -1,0 +1,84 @@
+# IMMICH NAMESPACE ================================= immich ==
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: immich
+---
+# PRESISTEND VOLUME ===========================================
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-library-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  hostPath:
+    path: /home/tobias/tmb/k8s/immich/library
+    type: DirectoryOrCreate
+---
+# PRESISTEND VOLUME CLAIM =====================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-library
+  namespace: immich
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-path   # or whatever StorageClass you use in k3s
+  volumeName: immich-library-pv
+---
+# IMMICH HELM ================================ immich-server ==
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  repo: https://immich-app.github.io/immich-charts
+  chart: immich
+  version: 0.9.3
+  targetNamespace: immich
+  valuesContent: |-
+    image:
+      tag: v1.142.1
+    env:
+      DB_HOSTNAME: immich-database.immich.svc.cluster.local
+    postgresql:
+      enabled: false        # disable built-in
+      global:
+        auth:
+          username: immich
+          password: immich
+          database: immich
+    redis:
+      enabled: true
+    immich:
+      persistence:
+        library:
+          existingClaim: immich-library
+---
+# IMMICH INGRESS =============================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  rules:
+    - host: pix.burginfra
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: immich-server
+                port:
+                  number: 2283

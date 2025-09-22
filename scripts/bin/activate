@@ -8,7 +8,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-export PATH=$PATH:$SCRIPT_DIR/bin
+export PATH=$SCRIPT_DIR:$PATH
 
 
 
