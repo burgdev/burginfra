@@ -51,3 +51,15 @@ docker up # make sure immich is running
 API_KEY=my_key # TODO: create an api key with all permissions
 immich-go upload from-google-photos -k $API_KEY -s http://localhost:2283/ --takeout-tag --tag from_google takeouts/takeout-*.zip
 ```
+
+
+### Delete all Albums
+
+The [`immich-auto-album`](https://github.com/Salvoxia/immich-folder-album-creator) script can be used to delete all albums.
+
+```bash
+export API_KEY="my_key"
+. ../../scripts/bin/activate # source activate script
+bui-immich-auto-album -m DELETE_ALL --delete-confirm / http://localhost:2283/api $API_KEY
+```
+

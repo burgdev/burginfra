@@ -196,7 +196,7 @@
   "storageTemplate": {
     "enabled": true,
     "hashVerificationEnabled": true,
-    "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}{{MM}}_NoAlbum{{/if}}/{{filename}}"
+    "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}{{MM}}_NoAlbum{{/if}}/{{yy}}{{MM}}{{dd}}{{hh}}{{mm}}_{{filetype}}_{{assetIdShort}}"
   },
   "templates": {
     "email": {
