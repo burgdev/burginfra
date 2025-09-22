@@ -45,7 +45,7 @@ metadata:
   namespace: whoami
 spec:
   rules:
-  - host: whoami.burginfra
+  - host: example.com  # This will be replaced by kustomize
     http:
       paths:
       - path: /
