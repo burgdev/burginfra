@@ -1,7 +1,8 @@
 ---
 title: Networking
-order: 20
+order: 50
 ---
+# Networking
 
 For local testing the routes need to be defined in `/etc/hosts`.
 

@@ -56,7 +56,11 @@ const vitePressOptions = {
       { text: 'Documentation',
         items: [
           { text: 'Applications', link: '/apps/overview' },
-          { text: 'Infrastructure', link: '/infrastructure' },
+          { text: 'Infrastructure', items: [
+            { text: 'Overview', link: '/infrastructure' },
+            { text: 'Docker', link: '/infrastructure/docker/overview' },
+            { text: 'Kubernetes', link: '/infrastructure/kubernetes/overview' },
+          ] },
           { text: 'Scripts', link: '/scripts/' }
         ]
       },
@@ -123,53 +127,3 @@ const vitePressSidebarOptions = {
 };
 
 export default defineConfig(withSidebar(vitePressOptions, vitePressSidebarOptions))
-
-// Sidebar generators
-function getInfrastructureSidebar() {
-  return [
-    {
-      text: 'Infrastructure',
-      items: [
-        { text: 'Overview', link: '/infrastructure/' },
-        { 
-          text: 'Kubernetes',
-          collapsed: true,
-          items: [
-            { text: 'Getting Started', link: '/infrastructure/kubernetes/' },
-            { text: 'k3s Setup', link: '/infrastructure/kubernetes/k3s-setup' },
-            { text: 'k9s Setup', link: '/infrastructure/kubernetes/k9s-setup' },
-            { text: 'Applications', link: '/infrastructure/kubernetes/apps' }
-          ]
-        },
-        { 
-          text: 'Networking',
-          link: '/infrastructure/networking/'
-        }
-      ]
-    }
-  ]
-}
-
-function getAppsSidebar() {
-  return [
-    {
-      text: 'Applications',
-      items: [
-        { text: 'Overview', link: '/apps/' },
-        // Add more applications here as needed
-      ]
-    }
-  ]
-}
-
-function getScriptsSidebar() {
-  return [
-    {
-      text: 'Scripts',
-      items: [
-        { text: 'Overview', link: '/scripts/' },
-        // Add more script categories here as needed
-      ]
-    }
-  ]
-}

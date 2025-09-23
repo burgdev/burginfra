@@ -2,9 +2,13 @@
 title: k9s Setup
 exclude: true
 ---
+# `k9s` <img src="https://k9scli.io/assets/k9s.png" width="70" style="float: right; margin-right: 10px;"/>
 
-## k9s Setup
+[Github](https://github.com/derailed/k9s) | [Website](https://k9scli.io)
 
+![Exmple](https://k9scli.io/assets/screens/pods.png)
+
+Run the following commands on your host PC for installation:
 
 ```bash
 # For Linux

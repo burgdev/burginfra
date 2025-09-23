@@ -2,19 +2,16 @@
 title: Setup
 order: 0
 ---
+# Kubernetes Setup
 
 Documentation for the [Kubernetes](https://kubernetes.io) setup.
 
 
-## Requirements
+## Prerequisites
 
-### Mandatory
+Install `k3s` as described in the [k3s setup](/infrastructure/kubernetes/k3s-setup.md).
 
-- **k3s** ([setup](/infrastructure/kubernetes/k3s-setup.md))
-
-### Optional
-
-- **k9s** ([setup](/infrastructure/kubernetes/k9s-setup.md))
+Very helpful is the `k9s` tool ([setup](/infrastructure/kubernetes/k9s-setup.md)) as a terminal UI for `kubectl`.
 
 
 

@@ -1,6 +1,6 @@
 ---
 title: Applications
-order: 40
+order: 10
 ---
 # Kubernetes Applications
 

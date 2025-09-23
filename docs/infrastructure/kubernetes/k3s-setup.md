@@ -2,11 +2,12 @@
 title: k3s Setup
 exclude: true
 ---
+![Logo](https://k3s.io/img/k3s-logo-dark.svg){width=100}
 
-## k3s Setup Guide
+[Official installation guide](https://docs.k3s.io/installation) | [`k9s` Installation](k9s-setup)
 
 
-### Install k3s
+Run the following commands on your host PC for installation (or later on the nodes):
 
 ```bash
 # Install k3s with default options
@@ -41,20 +42,6 @@ kubectl cluster-info
 
 # Get nodes
 kubectl get nodes
-```
-
-### Post-Installation
-
-#### Install k9s (Terminal UI)
-
-```bash
-# For Linux
-wget https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
-tar xzf k9s_Linux_amd64.tar.gz
-sudo mv k9s /usr/local/bin/
-
-# For macOS/linux (using Homebrew)
-# brew install derailed/k9s/k9s
 ```
 
 ### Uninstallation
