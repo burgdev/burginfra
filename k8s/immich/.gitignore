@@ -1,6 +1,7 @@
 # Local environment files
 .env
 .env.secret
+certs
 
 # Kubernetes generated files
 kustomization.yaml

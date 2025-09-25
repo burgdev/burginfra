@@ -53,13 +53,18 @@ const vitePressOptions = {
     // Navigation bar
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Services',
+        items: [
+          { text: 'pix.crux.li', link: '/services/pix.crux.li' },
+          { text: 'wodo.re', link: '/services/wodo.re' },
+        ]
+      },
       { text: 'Documentation',
         items: [
-          { text: 'Applications', link: '/apps/overview' },
+          { text: 'Applications', link: '/apps/' },
           { text: 'Infrastructure', items: [
-            { text: 'Overview', link: '/infrastructure' },
-            { text: 'Docker', link: '/infrastructure/docker/overview' },
-            { text: 'Kubernetes', link: '/infrastructure/kubernetes/overview' },
+            { text: 'Docker', link: '/infrastructure/docker/' },
+            { text: 'Kubernetes', link: '/infrastructure/kubernetes/' },
           ] },
           { text: 'Scripts', link: '/scripts/' }
         ]
@@ -123,7 +128,8 @@ const vitePressSidebarOptions = {
   frontmatterOrderDefaultValue: 100,
   excludeFilesByFrontmatterFieldName: 'exclude',
   excludeByFolderDepth: 6,
-  manualSortFileNameByPriority: ["overview.md"]
+  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md"],
+  includeFolderIndexFile: true
 };
 
 export default defineConfig(withSidebar(vitePressOptions, vitePressSidebarOptions))

@@ -1,7 +1,13 @@
 ---
-title: Setup
+title: Overview
 order: 0
 ---
+
+# Overview
+
+[Official Documentation](https://kubernetes.io/docs/home/) | [Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/)
+
+
 # Kubernetes Setup
 
 Documentation for the [Kubernetes](https://kubernetes.io) setup.
@@ -29,4 +35,10 @@ kubectl get pods -A
 
 # Get services
 kubectl get svc -A
+
+# Scale
+DP=deployment_name
+NS=namespace
+kubectl scale deployment $DP --replicas=0 -n $NS # stop 
+kubectl scale deployment $DP --replicas=1 -n $NS # start 
 ```

@@ -23,3 +23,27 @@ EOF
 ## HTTPS
 
 A redirect from HTTP to HTTPS is enabled by defualt for the [traefik](https://traefik.io/solutions/kubernetes-ingress) ingress controller.
+
+
+### Certificates (local)
+
+For local testing you can use the self-signed certificates.
+
+[`mkcert`](https://mkcert.dev/) can be used for this.
+
+#### Setup
+```bash
+# install mkcert
+sudo apt install libnss3-tools
+brew install mkcert
+# Install the local CA
+mkcert -install
+```
+#### Create Certificates
+
+```bash
+mkcert "*.local.gd" "*.burginfra" "*.traefik.me"
+mv _wildcard.*-key.pem privkey.pem
+mv _wildcard.*.pem fullchain.pem
+```
+

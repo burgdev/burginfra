@@ -11,7 +11,7 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/tmb/k8s/immich/database
+    path: /home/tobias/mnt/k8s/immich/database
     type: DirectoryOrCreate
 ---
 # PERSISTEN VOLUME CLAIM =====================================
@@ -47,7 +47,7 @@ spec:
     spec:
       containers:
         - name: immich-postgres
-          image: "docker.io/tensorchord/pgvecto-rs:pg16-v0.3.0"
+          image: "docker.io/tensorchord/vchord-postgres:pg17-v0.4.3"
           imagePullPolicy: Always
           ports:
             - containerPort: 5432

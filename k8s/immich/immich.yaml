@@ -16,7 +16,7 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/tmb/k8s/immich/library
+    path: /home/tobias/mnt/k8s/immich/library
     type: DirectoryOrCreate
 ---
 # PRESISTEND VOLUME CLAIM =====================================
@@ -48,10 +48,12 @@ spec:
   valuesContent: |-
     # Default values for Immich
     image:
-      tag: v1.142.1
+      tag: v1.143.1
 
     # Environment variables for the application
     env:
+      # should be /data but is set to this old location in the helm chart
+      IMMICH_MEDIA_LOCATION: /usr/src/app/upload
       DB_HOSTNAME: immich-database.immich.svc.cluster.local
       DB_USERNAME:
         valueFrom:
@@ -98,8 +100,12 @@ metadata:
   name: immich
   namespace: immich
 spec:
+  tls:
+    - hosts:
+        - $DOMAIN
+      secretName: traefik-me-tls
   rules:
-    - host: REPLACE_ME
+    - host: $DOMAIN
       http:
         paths:
           - path: /

@@ -36,6 +36,49 @@ vi .env.secret
 
 <K8sCommandsSnippet namespace="immich" path="k8s/immich" />
 
+### Backup
+
+
+### Restore
+
+Create database if it does not exist:
+
+```bash
+POD=$(kubectl get pods -n immich -l app=immich-database -o jsonpath="{.items[0].metadata.name}")
+kubectl exec -i -n immich $POD -- \
+  psql --username=immich --dbname=postgres -c "CREATE DATABASE immich WITH OWNER immich;"
+```
+
+Restore the dump:
+```bash
+BACKUP_FILE=path/to/immich_dump.dump
+kubectl cp $BACKUP_FILE immich/$POD:/tmp/immich_dump.dump
+
+# dump
+kubectl exec -it -n immich $POD -- \
+  pg_restore --username=immich --dbname=immich -v --clean --format=custom --if-exists --verbose /tmp/immich_dump.dump
+
+# from sql
+kubectl exec -it -n immich $POD -- psql --username=immich --dbname=immich -f /tmp/immich_dump.dump
+
+# all
+kubectl exec -it -n immich $POD -- psql --username=immich -f /tmp/immich_dump.dump
+```
+
+## DB Access
+
+Forward port and access for example with `dbeaver`.
+
+```bash
+kubectl port-forward -n immich pod/$POD 6543:5432
+```
+
+## Infos
+
+Immich kubernetes setup by [jasjeetsri](https://github.com/jasjeetsuri/myk3s/tree/main/yaml_configs/immich)
+
+
+
 ## [Zitadel](/apps/zitadel) <Badge type="info" text="zitadel" /> 
 
 Identity and access management (_iam_) platform.

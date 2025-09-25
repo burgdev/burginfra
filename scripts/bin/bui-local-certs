@@ -1,0 +1,167 @@
+#!/bin/bash
+set -e
+
+# Default values
+MODE=""
+DOMAINS=()
+CERT_DIR="$(pwd)/certs"
+METADATA_FILE="${CERT_DIR}/.cert_metadata"
+
+# Print usage information
+usage() {
+    cat >&2 <<EOF
+Usage: $0 [-c|--cert] [-k|--key] domain1 [domain2 ...]
+  -c, --cert  Output certificate
+  -k, --key   Output private key
+  -h, --help  Show this help message
+
+At least one domain is required. By default, generates certificates with no output.
+
+At least one domain is required.
+EOF
+    exit 1
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -c|--cert)
+            if [ -n "$MODE" ]; then
+                echo "Error: Only one of -c/--cert or -k/--key can be specified" >&2
+                usage
+            fi
+            MODE="cert"
+            shift
+            ;;
+        -k|--key)
+            if [ -n "$MODE" ]; then
+                echo "Error: Only one of -c/--cert or -k/--key can be specified" >&2
+                usage
+            fi
+            MODE="key"
+            shift
+            ;;
+        -h|--help)
+            usage
+            ;;
+        -*)
+            echo "Error: Unknown option $1" >&2
+            usage
+            ;;
+        *)
+            DOMAINS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Default mode is none (no output)
+[ -z "$MODE" ] && MODE="none"
+
+# Check if at least one domain is provided
+if [ ${#DOMAINS[@]} -eq 0 ]; then
+    echo "Error: At least one domain is required" >&2
+    usage
+fi
+
+# Check if mkcert is installed
+if ! command -v mkcert >/dev/null 2>&1; then
+    echo "Error: 'mkcert' is required but not installed" >&2
+    echo "Installation instructions:" >&2
+    echo "  Ubuntu/Debian: sudo apt install libnss3-tools mkcert" >&2
+    echo "  macOS: brew install mkcert" >&2
+    exit 1
+fi
+
+# Create certs directory if it doesn't exist
+mkdir -p "$CERT_DIR"
+
+# Function to check if domains match the stored metadata
+check_domains_match() {
+    local stored_domains="$1"
+    shift
+    local current_domains=("$@")
+    
+    # Convert arrays to sorted strings for comparison
+    local stored_sorted=$(echo "${stored_domains[@]}" | tr ' ' '\n' | sort | tr '\n' ' ' | xargs)
+    local current_sorted=$(echo "${current_domains[@]}" | tr ' ' '\n' | sort | tr '\n' ' ' | xargs)
+    
+    [ "$stored_sorted" = "$current_sorted" ]
+}
+
+# Function to generate and manage certificates
+manage_certificates() {
+    local domains=("$@")
+    local domain_list="${domains[*]}"
+    local cert_file="$CERT_DIR/fullchain.pem"
+    local key_file="$CERT_DIR/privkey.pem"
+    local regenerate=false
+    
+    # Generate a unique identifier for these domains
+    local domain_hash=$(echo "$domain_list" | md5sum | cut -d' ' -f1)
+    
+    # Check if we need to regenerate certificates
+    if [ -f "$METADATA_FILE" ] && [ -f "$cert_file" ] && [ -f "$key_file" ]; then
+        local stored_hash=$(grep '^DOMAIN_HASH=' "$METADATA_FILE" | cut -d'=' -f2-)
+        local stored_domains=$(grep '^DOMAINS=' "$METADATA_FILE" | cut -d'=' -f2-)
+        
+        if [ "$stored_hash" != "$domain_hash" ] || ! check_domains_match "$stored_domains" "${domains[@]}"; then
+            echo "Domains have changed, regenerating certificates..." >&2
+            regenerate=true
+        fi
+    else
+        echo "No existing certificates found, generating new ones..." >&2
+        regenerate=true
+    fi
+    
+    # Generate new certificates if needed
+    if [ "$regenerate" = true ]; then
+        if ! mkcert -cert-file "$cert_file" \
+                   -key-file "$key_file" \
+                   "${domains[@]}" >/dev/null 2>&1; then
+            echo "Failed to generate certificates" >&2
+            exit 1
+        fi
+        
+        # Set secure permissions
+        chmod 600 "$key_file"
+        chmod 644 "$cert_file"
+        
+        # Save metadata
+        echo "DOMAIN_HASH=$domain_hash" > "$METADATA_FILE"
+        echo "DOMAINS=$domain_list" >> "$METADATA_FILE"
+        echo "GENERATED_AT=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")" >> "$METADATA_FILE"
+        echo "Generated new certificates for: ${domains[*]}" >&2
+    else
+        echo "Using existing certificates for: ${domains[*]}" >&2
+    fi
+    
+    # Output the requested content if a mode is specified
+    case "$MODE" in
+        cert)
+            cat "$cert_file"
+            ;;
+        key)
+            cat "$key_file"
+            ;;
+        none)
+            # No output by default
+            ;;
+    esac
+}
+
+# Function to check certificate files exist
+check_cert_files() {
+    local cert_file="$CERT_DIR/fullchain.pem"
+    local key_file="$CERT_DIR/privkey.pem"
+    
+    if [ ! -f "$cert_file" ] || [ ! -f "$key_file" ]; then
+        echo "Error: Certificate files not found in $CERT_DIR/" >&2
+        exit 1
+    fi
+}
+
+# Main execution
+manage_certificates "${DOMAINS[@]}"
+
+exit 0
