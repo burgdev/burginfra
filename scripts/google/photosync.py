@@ -8,6 +8,7 @@
 #   "python-dateutil",
 #   "click",
 #   "pydantic",
+#   "sqlalchemy",
 # ]
 # ///
 
@@ -18,7 +19,6 @@ os.environ['PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD'] = 'true'
 import asyncio
 import time
 import logging
-import sqlite3
 import json
 from datetime import datetime
 import click
@@ -29,6 +29,9 @@ from dateutil import parser
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, ForeignKey, UniqueConstraint, text
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
+from sqlalchemy.sql import func
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -48,6 +51,92 @@ DUPLICATE_LOG_THRESHOLD = 4
 MAX_ALBUMS = 3
 DATABASE_PATH = "photos.db"
 
+# SQLAlchemy setup
+Base = declarative_base()
+engine = create_engine(f"sqlite:///{DATABASE_PATH}")
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+class Album(Base):
+    """SQLAlchemy model for albums."""
+    __tablename__ = "albums"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String, unique=True, nullable=False)
+    items = Column(Integer)
+    processed_items = Column(Integer, default=0)
+    shared = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    photos = relationship("Photo", back_populates="album", cascade="all, delete-orphan")
+    errors = relationship("Error", back_populates="album")
+    users = relationship("User", secondary="album_users", back_populates="albums")
+    
+    def __repr__(self):
+        return f"<Album(title='{self.title}', items={self.items}, shared={self.shared})>"
+
+class User(Base):
+    """SQLAlchemy model for users."""
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, unique=True, nullable=False)
+    email = Column(String, nullable=True)  # Email field, nullable for manual filling later
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    albums = relationship("Album", secondary="album_users", back_populates="users")
+    
+    def __repr__(self):
+        return f"<User(name='{self.name}', email='{self.email}')>"
+
+class Photo(Base):
+    """SQLAlchemy model for photos."""
+    __tablename__ = "photos"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    filename = Column(String, nullable=False)
+    date_taken = Column(DateTime)
+    album_id = Column(Integer, ForeignKey("albums.id", ondelete="CASCADE"))
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    album = relationship("Album", back_populates="photos")
+    
+    def __repr__(self):
+        return f"<Photo(filename='{self.filename}', date_taken={self.date_taken})>"
+
+class Error(Base):
+    """SQLAlchemy model for errors."""
+    __tablename__ = "errors"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    error_message = Column(String, nullable=False)
+    album_id = Column(Integer, ForeignKey("albums.id", ondelete="SET NULL"))
+    created_at = Column(DateTime, default=func.now())
+    
+    # Relationships
+    album = relationship("Album", back_populates="errors")
+    
+    def __repr__(self):
+        return f"<Error(error_message='{self.error_message[:50]}...')>"
+
+class AlbumUser(Base):
+    """SQLAlchemy model for album-user relationships."""
+    __tablename__ = "album_users"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    album_id = Column(Integer, ForeignKey("albums.id", ondelete="CASCADE"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    created_at = Column(DateTime, default=func.now())
+    
+    # Unique constraint to prevent duplicate relationships
+    __table_args__ = (UniqueConstraint('album_id', 'user_id', name='unique_album_user'),)
+    
+    def __repr__(self):
+        return f"<AlbumUser(album_id={self.album_id}, user_id={self.user_id})>"
+
 STEALTH_ARGS = [
     "--disable-features=IsolateOrigins,site-per-process",
     "--disable-blink-features=AutomationControlled",
@@ -64,178 +153,262 @@ Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3,4,5] });
 window.chrome = window.chrome || { runtime: {} };
 """
 
-def get_db_connection() -> sqlite3.Connection:
-    """Get a database connection."""
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+def get_db_session() -> Session:
+    """Get a database session."""
+    return SessionLocal()
 
 def init_database() -> None:
     """Initialize the database with all required tables."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    Base.metadata.create_all(bind=engine)
     
-    # Create albums table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS albums (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT UNIQUE NOT NULL,
-            items INTEGER,
-            shared BOOLEAN,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    # Create users table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    # Create photos table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS photos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT NOT NULL,
-            date_taken TIMESTAMP,
-            album_id INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (album_id) REFERENCES albums (id) ON DELETE CASCADE
-        )
-    """)
-    
-    # Create errors table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS errors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            error_message TEXT NOT NULL,
-            album_id INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (album_id) REFERENCES albums (id) ON DELETE SET NULL
-        )
-    """)
-    
-    # Create album_users table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS album_users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            album_id INTEGER,
-            user_id INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (album_id) REFERENCES albums (id) ON DELETE CASCADE,
-            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-            UNIQUE(album_id, user_id)
-        )
-    """)
-    
-    conn.commit()
-    conn.close()
-    console.print("[green]Database initialized successfully[/green]")
+    # Check if we need to add the processed_items column to existing albums
+    session = get_db_session()
+    try:
+        # Check if the processed_items column exists by trying to access it
+        try:
+            session.execute(text("SELECT processed_items FROM albums LIMIT 1"))
+        except Exception:
+            # Column doesn't exist, add it
+            console.print("[yellow]Adding processed_items column to albums table...[/yellow]")
+            session.execute(text("ALTER TABLE albums ADD COLUMN processed_items INTEGER DEFAULT 0"))
+            session.commit()
+            console.print("[green]Added processed_items column to albums table[/green]")
+        
+        # Check if the email column exists in users table
+        try:
+            session.execute(text("SELECT email FROM users LIMIT 1"))
+        except Exception:
+            # Column doesn't exist, add it
+            console.print("[yellow]Adding email column to users table...[/yellow]")
+            session.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(255)"))
+            session.commit()
+            console.print("[green]Added email column to users table[/green]")
+        finally:
+            session.close()
+            
+        # Create photos_with_album view
+        create_photos_with_album_view()
+            
+        console.print("[green]Database initialized successfully[/green]")
+    except Exception as e:
+        console.print(f"[red]Error initializing database: {e}[/red]")
+        raise e
 
 def insert_or_update_album(album_info: "AlbumInfo") -> int:
     """Insert or update an album and return its ID."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        INSERT OR REPLACE INTO albums (title, items, shared, updated_at)
-        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    """, (album_info.title, album_info.items, album_info.shared))
-    
-    album_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
-    return album_id
+    session = get_db_session()
+    try:
+        # Check if album exists
+        existing_album = session.query(Album).filter_by(title=album_info.title).first()
+        
+        if existing_album:
+            # Update existing album
+            existing_album.items = album_info.items
+            existing_album.shared = album_info.shared
+            # Don't reset processed_items when updating album info
+            existing_album.updated_at = func.now()
+            album_id = existing_album.id
+        else:
+            # Create new album
+            new_album = Album(
+                title=album_info.title,
+                items=album_info.items,
+                processed_items=0,  # Start with 0 processed items
+                shared=album_info.shared
+            )
+            session.add(new_album)
+            session.flush()  # To get the ID
+            album_id = new_album.id
+        
+        session.commit()
+        return album_id
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 def insert_or_update_user(name: str) -> int:
     """Insert or update a user and return their ID."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        INSERT OR IGNORE INTO users (name)
-        VALUES (?)
-    """, (name,))
-    
-    if cursor.rowcount == 0:
-        # User already exists, get their ID
-        cursor.execute("SELECT id FROM users WHERE name = ?", (name,))
-        user_id = cursor.fetchone()[0]
-    else:
-        user_id = cursor.lastrowid
-    
-    conn.commit()
-    conn.close()
-    return user_id
+    session = get_db_session()
+    try:
+        # Check if user exists
+        existing_user = session.query(User).filter_by(name=name).first()
+        
+        if existing_user:
+            user_id = existing_user.id
+        else:
+            # Create new user
+            new_user = User(name=name)
+            session.add(new_user)
+            session.flush()  # To get the ID
+            user_id = new_user.id
+        
+        session.commit()
+        return user_id
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
-def insert_photo(filename: str, date_taken: Optional[datetime], album_id: int) -> int:
-    """Insert a photo and return its ID."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        INSERT OR IGNORE INTO photos (filename, date_taken, album_id)
-        VALUES (?, ?, ?)
-    """, (filename, date_taken, album_id))
-    
-    photo_id = cursor.lastrowid if cursor.rowcount > 0 else None
-    conn.commit()
-    conn.close()
-    return photo_id
+def insert_photo(filename: str, date_taken: Optional[datetime], album_id: int) -> Optional[int]:
+    """Insert a photo and return its ID. Returns None if photo already exists."""
+    session = get_db_session()
+    try:
+        # Check if photo already exists
+        existing_photo = session.query(Photo).filter_by(
+            filename=filename, 
+            album_id=album_id
+        ).first()
+        
+        if existing_photo:
+            return None
+        
+        # Create new photo
+        new_photo = Photo(
+            filename=filename,
+            date_taken=date_taken,
+            album_id=album_id
+        )
+        session.add(new_photo)
+        session.flush()  # To get the ID
+        photo_id = new_photo.id
+        
+        session.commit()
+        return photo_id
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 def insert_error(error_message: str, album_id: Optional[int] = None) -> int:
     """Insert an error and return its ID."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        INSERT INTO errors (error_message, album_id)
-        VALUES (?, ?)
-    """, (error_message, album_id))
-    
-    error_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
-    return error_id
+    session = get_db_session()
+    try:
+        new_error = Error(
+            error_message=error_message,
+            album_id=album_id
+        )
+        session.add(new_error)
+        session.flush()  # To get the ID
+        error_id = new_error.id
+        
+        session.commit()
+        return error_id
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 def link_user_to_album(album_id: int, user_id: int) -> None:
     """Link a user to an album."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        INSERT OR IGNORE INTO album_users (album_id, user_id)
-        VALUES (?, ?)
-    """, (album_id, user_id))
-    
-    conn.commit()
-    conn.close()
+    session = get_db_session()
+    try:
+        # Check if relationship already exists
+        existing_link = session.query(AlbumUser).filter_by(
+            album_id=album_id, 
+            user_id=user_id
+        ).first()
+        
+        if not existing_link:
+            new_link = AlbumUser(album_id=album_id, user_id=user_id)
+            session.add(new_link)
+            session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 def album_exists(title: str) -> bool:
     """Check if an album with the given title exists."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT COUNT(*) FROM albums WHERE title = ?", (title,))
-    exists = cursor.fetchone()[0] > 0
-    
-    conn.close()
-    return exists
+    session = get_db_session()
+    try:
+        album = session.query(Album).filter_by(title=title).first()
+        return album is not None
+    finally:
+        session.close()
 
 def get_album_photos_count(album_id: int) -> int:
     """Get the number of photos for a given album."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT COUNT(*) FROM photos WHERE album_id = ?", (album_id,))
-    count = cursor.fetchone()[0]
-    
-    conn.close()
-    return count
+    session = get_db_session()
+    try:
+        count = session.query(Photo).filter_by(album_id=album_id).count()
+        return count
+    finally:
+        session.close()
+
+def update_album_processed_items(album_id: int, processed_count: int) -> None:
+    """Update the processed_items count for an album."""
+    session = get_db_session()
+    try:
+        album = session.query(Album).filter_by(id=album_id).first()
+        if album:
+            album.processed_items = processed_count
+            album.updated_at = func.now()
+            session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+def is_album_fully_processed(album_id: int) -> bool:
+    """Check if an album is fully processed."""
+    session = get_db_session()
+    try:
+        album = session.query(Album).filter_by(id=album_id).first()
+        if album and album.items and album.processed_items is not None:
+            return album.processed_items >= album.items
+        return False
+    finally:
+        session.close()
+
+def create_photos_with_album_view() -> None:
+    """Create the photos_with_album view that joins album and user names."""
+    session = get_db_session()
+    try:
+        # Drop the view if it exists to recreate it
+        session.execute(text("DROP VIEW IF EXISTS photos_with_album"))
+        
+        # Create the view with joins to get album and user information
+        # Users are aggregated into a JSON array of objects with name and email to have one entry per photo
+        create_view_sql = """
+        CREATE VIEW photos_with_album AS
+        SELECT 
+            p.id as photo_id,
+            p.filename,
+            p.date_taken,
+            p.created_at as photo_created_at,
+            a.id as album_id,
+            a.title as album_title,
+            a.items as album_items,
+            a.processed_items as album_processed_items,
+            a.shared as album_shared,
+            json_group_array(
+                json_object('name', u.name, 'email', u.email)
+            ) FILTER (WHERE u.name IS NOT NULL) as users
+        FROM photos p
+        LEFT JOIN albums a ON p.album_id = a.id
+        LEFT JOIN album_users au ON a.id = au.album_id
+        LEFT JOIN users u ON au.user_id = u.id
+        GROUP BY p.id, p.filename, p.date_taken, p.created_at, 
+                 a.id, a.title, a.items, a.processed_items, a.shared
+        ORDER BY p.album_id, p.date_taken DESC
+        """
+        
+        session.execute(text(create_view_sql))
+        session.commit()
+        console.print("[green]Created photos_with_album view successfully[/green]")
+    except Exception as e:
+        session.rollback()
+        console.print(f"[red]Error creating photos_with_album view: {e}[/red]")
+        raise e
+    finally:
+        session.close()
 
 @dataclass
 class PictureInfo:
@@ -264,16 +437,17 @@ class ProcessingResult:
 class GooglePhotosScraper:
     """Main scraper class for Google Photos."""
 
-    def __init__(self, max_albums: int = 5, skip_existing: bool = False):
+    def __init__(self, max_albums: int = 5, start_album: int = 0, skip_existing: bool = False, albums_only: bool = False):
         self.max_albums = max_albums
+        self.start_album = start_album
         self.skip_existing = skip_existing
+        self.albums_only = albums_only
         self.context = None
         self.page = None
 
     async def setup_browser(self) -> None:
         """Initialize and setup the browser context."""
         Path(USER_DATA_DIR).mkdir(exist_ok=True)
-
         # Note: Browser context is now managed in scrape_albums()
         # This method just prepares the configuration
         pass
@@ -374,10 +548,22 @@ class GooglePhotosScraper:
         """Process all pictures in an album and save to database."""
         console.print(f"[green]Processing album: {album_info.title}[/green]")
 
+        # Insert or update album in database first to get album_id
+        album_id = insert_or_update_album(album_info)
+        
         # Check if album should be skipped
-        if self.skip_existing and album_exists(album_info.title):
-            existing_count = get_album_photos_count(insert_or_update_album(album_info))
-            console.print(f"[yellow]Skipping existing album: {album_info.title} (already has {existing_count} photos)[/yellow]")
+        if self.skip_existing and not self.albums_only:
+            if is_album_fully_processed(album_id):
+                console.print(f"[yellow]Skipping fully processed album: {album_info.title}[/yellow]")
+                return album_info
+            elif album_exists(album_info.title):
+                existing_count = get_album_photos_count(album_id)
+                console.print(f"[blue]Continuing partially processed album: {album_info.title} (has {existing_count}/{album_info.items} photos)[/blue]")
+        
+        # If albums_only mode, just add the album and return
+        if self.albums_only:
+            console.print(f"[blue]Albums-only mode: Added album {album_info.title} to database[/blue]")
+            await asyncio.sleep(0.3)
             return album_info
 
         # Open the album
@@ -391,8 +577,8 @@ class GooglePhotosScraper:
         duplicate_count = 0
         processed_users = set()
         
-        # Insert or update album in database
-        album_id = insert_or_update_album(album_info)
+        # Get current photo count to continue from where we left off
+        current_photo_count = get_album_photos_count(album_id)
 
         with Progress(
             SpinnerColumn(),
@@ -401,10 +587,19 @@ class GooglePhotosScraper:
         ) as progress:
             task = progress.add_task(
                 f"Processing {album_info.title}...",
-                total=album_info.items
+                total=album_info.items,
+                completed=current_photo_count
             )
 
-            while len(pictures) < album_info.items:
+            photo_index = 0
+            while current_photo_count < album_info.items:
+                if photo_index <= current_photo_count:
+                    # already in DB
+                    await self.page.keyboard.press('ArrowRight')
+                    await asyncio.sleep(IMAGE_NAVIGATION_DELAY)
+                    photo_index += 1
+                    continue
+                    
                 try:
                     picture_info = await self.get_picture_info(album_info.title)
 
@@ -425,7 +620,7 @@ class GooglePhotosScraper:
 
                         await asyncio.sleep(0.15)
                         continue
-                    
+                        
 
                     # New picture found
                     last_filename = picture_info.filename
@@ -441,6 +636,14 @@ class GooglePhotosScraper:
                             album_id
                         )
                         
+                        # Only count as processed if it was actually inserted (not duplicate)
+                        if photo_id is not None:
+                            photo_index += 1
+                            # Update processed items count
+                            # new_processed_count = current_photo_count + len(pictures) + 1
+                            current_photo_count += 1
+                            update_album_processed_items(album_id, current_photo_count)
+                        
                         # Handle user information
                         if picture_info.shared_by and picture_info.shared_by != "N/A":
                             user_id = insert_or_update_user(picture_info.shared_by)
@@ -452,11 +655,12 @@ class GooglePhotosScraper:
                         insert_error(f"Error saving picture {picture_info.filename}: {e}", album_id)
 
                     # Display progress
-                    progress.update(task, advance=1, description=
-                        f"[green]{len(pictures)}/{album_info.items} - {picture_info.filename}[/green]")
+                    #actual_processed = current_photo_count + len(pictures) + (1 if photo_id is not None else 0)
+                    progress.update(task, advance=1 if photo_id is not None else 0, description=
+                        f"[green]{current_photo_count}/{album_info.items} - {picture_info.filename}[/green]")
 
                     # Navigate to next image
-                    console.print(f"[green]Processing {picture_info.filename}, clicking next[/green]")
+                    #console.print(f"[green]Processing {picture_info.filename}, clicking next[/green]")
                     await self.page.keyboard.press('ArrowRight')
                     await asyncio.sleep(IMAGE_NAVIGATION_DELAY)
 
@@ -511,14 +715,23 @@ class GooglePhotosScraper:
                 albums_processed = []
                 errors = []
 
-                console.print(f"[blue]Starting to process {self.max_albums} albums...[/blue]")
+                console.print(f"[blue]Starting to process {self.max_albums} albums from index {self.start_album}...[/blue]")
                 if self.skip_existing:
                     console.print("[yellow]Skip existing albums mode enabled[/yellow]")
-
-                for album_index in range(self.max_albums):
+                if self.albums_only:
+                    console.print("[yellow]Albums-only mode enabled - will not open albums or process photos[/yellow]")
+                
+                # Navigate to the first album to process
+                if self.start_album > 0:
+                    console.print(f"[yellow]Navigating to album index {self.start_album}...[/yellow]")
+                    await self.navigate_to_next_album(self.start_album - 1)
+                
+                for album_index in range(self.start_album, self.start_album + self.max_albums):
                     try:
-                        # Navigate to album
-                        await self.navigate_to_next_album(album_index)
+                        # Navigate to next album (only one step from current position)
+                        if album_index > self.start_album:
+                            await self.page.keyboard.press('ArrowRight')
+                            await asyncio.sleep(0.2)
 
                         # Get album info
                         album_info = await self.get_album_info()
@@ -526,6 +739,11 @@ class GooglePhotosScraper:
                         # Process album
                         processed_album = await self.process_album(album_info)
                         albums_processed.append(processed_album)
+                        
+                        # In albums_only mode, return to album view after processing each album
+                        if self.albums_only:
+                            await self.page.keyboard.press('Escape')
+                            await asyncio.sleep(0.5)
 
                     except Exception as e:
                         error_msg = f"Error processing album {album_index + 1}: {e}"
@@ -574,53 +792,48 @@ class GooglePhotosScraper:
 
     def get_database_stats(self) -> Dict[str, Any]:
         """Get database statistics."""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        stats = {}
-        
-        # Get album counts
-        cursor.execute("SELECT COUNT(*) FROM albums")
-        stats['total_albums'] = cursor.fetchone()[0]
-        
-        # Get photo counts
-        cursor.execute("SELECT COUNT(*) FROM photos")
-        stats['total_photos'] = cursor.fetchone()[0]
-        
-        # Get user counts
-        cursor.execute("SELECT COUNT(*) FROM users")
-        stats['total_users'] = cursor.fetchone()[0]
-        
-        # Get error counts
-        cursor.execute("SELECT COUNT(*) FROM errors")
-        stats['total_errors'] = cursor.fetchone()[0]
-        
-        # Get album-user relationship counts
-        cursor.execute("SELECT COUNT(*) FROM album_users")
-        stats['total_album_users'] = cursor.fetchone()[0]
-        
-        # Get photos per album
-        cursor.execute("""
-            SELECT a.title, COUNT(p.id) as photo_count
-            FROM albums a
-            LEFT JOIN photos p ON a.id = p.album_id
-            GROUP BY a.id, a.title
-            ORDER BY photo_count DESC
-        """)
-        stats['photos_per_album'] = cursor.fetchall()
-        
-        # Get users per album
-        cursor.execute("""
-            SELECT a.title, COUNT(au.user_id) as user_count
-            FROM albums a
-            LEFT JOIN album_users au ON a.id = au.album_id
-            GROUP BY a.id, a.title
-            ORDER BY user_count DESC
-        """)
-        stats['users_per_album'] = cursor.fetchall()
-        
-        conn.close()
-        return stats
+        session = get_db_session()
+        try:
+            stats = {}
+            
+            # Get album counts
+            stats['total_albums'] = session.query(Album).count()
+            
+            # Get photo counts
+            stats['total_photos'] = session.query(Photo).count()
+            
+            # Get user counts
+            stats['total_users'] = session.query(User).count()
+            
+            # Get error counts
+            stats['total_errors'] = session.query(Error).count()
+            
+            # Get album-user relationship counts
+            stats['total_album_users'] = session.query(AlbumUser).count()
+            
+            # Get photos per album with processed items
+            photos_per_album = session.query(
+                Album.title,
+                Album.items,
+                Album.processed_items,
+                func.count(Photo.id).label('photo_count')
+            ).outerjoin(Photo).group_by(Album.id, Album.title, Album.items, Album.processed_items).order_by(
+                func.count(Photo.id).desc()
+            ).all()
+            stats['photos_per_album'] = [(album_title, total_items, processed_items, photo_count) for album_title, total_items, processed_items, photo_count in photos_per_album]
+            
+            # Get users per album
+            users_per_album = session.query(
+                Album.title,
+                func.count(User.id).label('user_count')
+            ).join(Album.users).group_by(Album.id, Album.title).order_by(
+                func.count(User.id).desc()
+            ).all()
+            stats['users_per_album'] = [(album_title, user_count) for album_title, user_count in users_per_album]
+            
+            return stats
+        finally:
+            session.close()
     
     def print_database_summary(self) -> None:
         """Print a summary of database contents."""
@@ -634,8 +847,16 @@ class GooglePhotosScraper:
         console.print(f"[green]Total album-user relationships: {stats['total_album_users']}[/green]")
         
         console.print("\n[bold blue]=== Photos per Album ===[/bold blue]")
-        for album_title, photo_count in stats['photos_per_album'][:10]:  # Show top 10
-            console.print(f"  [blue]{album_title}:[/blue] {photo_count} photos")
+        for album_data in stats['photos_per_album'][:10]:  # Show top 10
+            if len(album_data) == 4:
+                album_title, total_items, processed_items, photo_count = album_data
+                # Format processed items as x/y photos
+                processed_str = f"{processed_items or 0}/{total_items or '?'}" if total_items else f"{processed_items or 0}"
+                console.print(f"  [blue]{album_title}:[/blue] {processed_str} photos ({photo_count} in database)")
+            else:
+                # Fallback for old format
+                album_title, photo_count = album_data
+                console.print(f"  [blue]{album_title}:[/blue] {photo_count} photos")
         
         if len(stats['photos_per_album']) > 10:
             console.print(f"  ... and {len(stats['photos_per_album']) - 10} more albums")
@@ -648,16 +869,32 @@ class GooglePhotosScraper:
             console.print(f"  ... and {len(stats['users_per_album']) - 10} more albums")
 
 @click.command()
-@click.option('--max-albums', default=MAX_ALBUMS, help='Maximum number of albums to process')
-@click.option('--skip-existing', is_flag=True, help='Skip albums that already exist in the database')
-@click.option('--db-path', default=DATABASE_PATH, help='Path to the SQLite database file')
-@click.option('--init-db-only', is_flag=True, help='Only initialize the database and exit')
-@click.option('--show-stats', is_flag=True, help='Show database statistics and exit')
-def main(max_albums: int, skip_existing: bool, db_path: str, init_db_only: bool, show_stats: bool):
+@click.option('-m', '--max-albums', default=MAX_ALBUMS, help='Maximum number of albums to process')
+@click.option('-s', '--start-album', default=0, help='Start processing from this album index (0-based)')
+@click.option('-f', '--start-album-fresh', is_flag=True, help='Start processing from the beginning, ignoring existing albums')
+@click.option('-n', '--no-skip-existing', is_flag=True, help='Process all albums, including existing ones')
+@click.option('-a', '--albums-only', is_flag=True, help='Only add albums to database without processing photos')
+@click.option('-d', '--db-path', default=DATABASE_PATH, help='Path to the SQLite database file')
+@click.option('-c', '--chrome-bin', default=BRAVE_EXECUTABLE, help='Path to Chrome/Brave binary')
+@click.option('-r', '--reset-db', is_flag=True, help='Delete and recreate the database')
+@click.option('-i', '--init-db-only', is_flag=True, help='Only initialize the database and exit')
+@click.option('-t', '--show-stats', is_flag=True, help='Show database statistics and exit')
+def main(max_albums: int, start_album: int, start_album_fresh: bool, no_skip_existing: bool, albums_only: bool, db_path: str, chrome_bin: str, reset_db: bool, init_db_only: bool, show_stats: bool):
     """Main entry point."""
-    # Update global database path
-    global DATABASE_PATH
+    # Update global database path and chrome binary
+    global DATABASE_PATH, BRAVE_EXECUTABLE
     DATABASE_PATH = db_path
+    BRAVE_EXECUTABLE = chrome_bin
+    
+    # Handle database reset
+    if reset_db:
+        db_file = Path(DATABASE_PATH)
+        if db_file.exists():
+            console.print(f"[yellow]Deleting existing database: {DATABASE_PATH}[/yellow]")
+            db_file.unlink()
+            console.print("[green]Database deleted successfully[/green]")
+        else:
+            console.print(f"[blue]Database file not found: {DATABASE_PATH}[/blue]")
     
     # Initialize database
     init_database()
@@ -666,6 +903,13 @@ def main(max_albums: int, skip_existing: bool, db_path: str, init_db_only: bool,
         console.print("[green]Database initialized successfully. Exiting.[/green]")
         return
     
+    # Determine skip_existing logic
+    skip_existing = not no_skip_existing and not start_album_fresh
+    
+    if start_album_fresh:
+        start_album = 0
+        console.print("[yellow]Starting fresh from album 0, ignoring existing albums[/yellow]")
+    
     if show_stats:
         scraper = GooglePhotosScraper(max_albums=max_albums, skip_existing=skip_existing)
         scraper.print_database_summary()
@@ -673,7 +917,7 @@ def main(max_albums: int, skip_existing: bool, db_path: str, init_db_only: bool,
     
     # Run the scraper
     async def run_scraper():
-        scraper = GooglePhotosScraper(max_albums=max_albums, skip_existing=skip_existing)
+        scraper = GooglePhotosScraper(max_albums=max_albums, start_album=start_album, skip_existing=skip_existing, albums_only=albums_only)
         result = await scraper.scrape_albums()
         
         # Print database summary
