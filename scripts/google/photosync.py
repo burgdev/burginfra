@@ -437,11 +437,13 @@ class ProcessingResult:
 class GooglePhotosScraper:
     """Main scraper class for Google Photos."""
 
-    def __init__(self, max_albums: int = 5, start_album: int = 0, skip_existing: bool = False, albums_only: bool = False):
+    def __init__(self, max_albums: int = 5, start_album: int = 1, album_fresh: bool = False, skip_existing: bool = False, albums_only: bool = False, clear_storage: bool = False):
         self.max_albums = max_albums
         self.start_album = start_album
+        self.album_fresh = album_fresh
         self.skip_existing = skip_existing
         self.albums_only = albums_only
+        self.clear_storage = clear_storage
         self.context = None
         self.page = None
 
@@ -451,6 +453,20 @@ class GooglePhotosScraper:
         # Note: Browser context is now managed in scrape_albums()
         # This method just prepares the configuration
         pass
+    
+    def get_clear_storage_args(self) -> list:
+        """Get browser arguments for clearing storage on startup."""
+        if not self.clear_storage:
+            return []
+        
+        console.print("[yellow]Adding browser arguments to clear storage on startup[/yellow]")
+        return [
+            '--clear-browsing-data',
+            '--clear-browsing-data-on-exit',
+            '--disable-session-crashed-bubble',
+            '--disable-infobars',
+            '--disable-restore-session-state'
+        ]
 
     async def get_album_info(self) -> AlbumInfo:
         """Extract album information from the current selection."""
@@ -462,13 +478,13 @@ class GooglePhotosScraper:
             if len(children) < 2:
                 raise ValueError("Could not find album information elements")
 
-            album_title, description = (await children[1].inner_text()).split("\n")
-            items = int(description.split(" ")[0])
-            shared = "shared" in description.lower()
-
+            album_title, description = (await children[1].inner_text()).split("\n", 1)
             console.print(f"[blue]Album Title:[/blue] {album_title}")
-            console.print(f"[blue]Items:[/blue] {items}")
+            console.print(f"[blue]Description:[/blue] {description}")
+            shared = "shared" in description.lower()
             console.print(f"[blue]Shared:[/blue] {shared}")
+            items = int(description.split(" ")[0])
+            console.print(f"[blue]Items:[/blue] {items}")
 
             return AlbumInfo(
                 title=album_title,
@@ -544,21 +560,14 @@ class GooglePhotosScraper:
             logger.warning(f"Error parsing date '{date_str}': {e}")
             return None, date_str
 
-    async def process_album(self, album_info: AlbumInfo) -> AlbumInfo:
+    async def process_album(self, album_position: int) -> AlbumInfo:
         """Process all pictures in an album and save to database."""
+        # Get album info
+        album_info = await self.get_album_info()
         console.print(f"[green]Processing album: {album_info.title}[/green]")
 
         # Insert or update album in database first to get album_id
         album_id = insert_or_update_album(album_info)
-        
-        # Check if album should be skipped
-        if self.skip_existing and not self.albums_only:
-            if is_album_fully_processed(album_id):
-                console.print(f"[yellow]Skipping fully processed album: {album_info.title}[/yellow]")
-                return album_info
-            elif album_exists(album_info.title):
-                existing_count = get_album_photos_count(album_id)
-                console.print(f"[blue]Continuing partially processed album: {album_info.title} (has {existing_count}/{album_info.items} photos)[/blue]")
         
         # If albums_only mode, just add the album and return
         if self.albums_only:
@@ -566,11 +575,24 @@ class GooglePhotosScraper:
             await asyncio.sleep(0.3)
             return album_info
 
+        # Check if album should be skipped
+        processed_images = 0
+        if self.skip_existing:
+            if is_album_fully_processed(album_id):
+                console.print(f"[yellow]Skipping fully processed album: {album_info.title}[/yellow]")
+                return album_info
+            elif album_exists(album_info.title) and not self.album_fresh:
+                processed_images = get_album_photos_count(album_id)
+                console.print(f"[blue]Continuing partially processed album: {album_info.title} (has {processed_images}/{album_info.items} photos)[/blue]")
+        
+
         # Open the album
-        await self.page.keyboard.press('Enter')
+        await self.keyboard_press('Enter') # open album
         await asyncio.sleep(ALBUM_NAVIGATION_DELAY)
-        await self.page.keyboard.press('Enter')
-        await asyncio.sleep(0.3)
+        await self.page.wait_for_load_state("domcontentloaded")
+        await self.keyboard_press('Enter') # open first photo
+        await asyncio.sleep(0.5)
+        await self.page.wait_for_load_state("domcontentloaded")
 
         pictures = []
         last_filename = None
@@ -578,7 +600,6 @@ class GooglePhotosScraper:
         processed_users = set()
         
         # Get current photo count to continue from where we left off
-        current_photo_count = get_album_photos_count(album_id)
 
         with Progress(
             SpinnerColumn(),
@@ -588,16 +609,16 @@ class GooglePhotosScraper:
             task = progress.add_task(
                 f"Processing {album_info.title}...",
                 total=album_info.items,
-                completed=current_photo_count
+                completed=processed_images
             )
 
-            photo_index = 0
-            while current_photo_count < album_info.items:
-                if photo_index <= current_photo_count:
-                    # already in DB
-                    await self.page.keyboard.press('ArrowRight')
+            photo_position = 1
+            while processed_images < album_info.items:
+                # go to the correct photo position (needed if some where already processed)
+                if photo_position < processed_images:
+                    await self.keyboard_press('ArrowRight')
                     await asyncio.sleep(IMAGE_NAVIGATION_DELAY)
-                    photo_index += 1
+                    photo_position += 1
                     continue
                     
                 try:
@@ -636,13 +657,10 @@ class GooglePhotosScraper:
                             album_id
                         )
                         
-                        # Only count as processed if it was actually inserted (not duplicate)
-                        if photo_id is not None:
-                            photo_index += 1
-                            # Update processed items count
-                            # new_processed_count = current_photo_count + len(pictures) + 1
-                            current_photo_count += 1
-                            update_album_processed_items(album_id, current_photo_count)
+                        photo_position += 1
+                        # Update processed items count
+                        processed_images += 1
+                        update_album_processed_items(album_id, processed_images)
                         
                         # Handle user information
                         if picture_info.shared_by and picture_info.shared_by != "N/A":
@@ -656,12 +674,12 @@ class GooglePhotosScraper:
 
                     # Display progress
                     #actual_processed = current_photo_count + len(pictures) + (1 if photo_id is not None else 0)
-                    progress.update(task, advance=1 if photo_id is not None else 0, description=
-                        f"[green]{current_photo_count}/{album_info.items} - {picture_info.filename}[/green]")
+                    progress.update(task, advance=1, description=
+                        f"[green]{processed_images}/{album_info.items} - {picture_info.filename}[/green]")
 
                     # Navigate to next image
                     #console.print(f"[green]Processing {picture_info.filename}, clicking next[/green]")
-                    await self.page.keyboard.press('ArrowRight')
+                    await self.keyboard_press('ArrowRight')
                     await asyncio.sleep(IMAGE_NAVIGATION_DELAY)
 
                 except Exception as e:
@@ -670,10 +688,14 @@ class GooglePhotosScraper:
                     break
 
         # Return to album view
-        await self.page.keyboard.press('Escape')
+        await self.keyboard_press('Escape')
         await asyncio.sleep(0.5)
-        await self.page.keyboard.press('Escape')
+        await self.page.wait_for_load_state("domcontentloaded")
+        await self.keyboard_press('Escape')
         await asyncio.sleep(1)
+        await self.page.wait_for_load_state("domcontentloaded")
+        
+        await self.navigate_to_album(album_position)
 
         album_info.pictures = pictures
         console.print(f"[green]Processed {len(pictures)} pictures from {album_info.title}[/green]")
@@ -681,11 +703,18 @@ class GooglePhotosScraper:
             console.print(f"[blue]Associated users: {', '.join(processed_users)}[/blue]")
         return album_info
 
-    async def navigate_to_next_album(self, current_index: int) -> None:
+    async def navigate_to_album(self, album_position: int) -> None:
         """Navigate to the next album using arrow keys."""
-        for _ in range(current_index + 1):
-            await self.page.keyboard.press('ArrowRight')
-        await asyncio.sleep(0.2)
+        console.print(f"[blue]Navigating to album {album_position}[/blue]")
+        for _ in range(album_position ):
+            await self.keyboard_press('ArrowRight')
+            await asyncio.sleep(ALBUM_NAVIGATION_DELAY//2)
+        console.print(f"[blue]Done[/blue]")
+            
+    async def keyboard_press(self, key: str, delay: int = 0.2):
+        console.print(f"[orange]Pressing {key}[/]")
+        await self.page.keyboard.press(key)
+        await asyncio.sleep(delay)
 
     async def scrape_albums(self) -> ProcessingResult:
         """Main scraping workflow."""
@@ -693,11 +722,15 @@ class GooglePhotosScraper:
 
         # Initialize browser context here to keep it alive during scraping
         async with async_playwright() as p:
+            # Get storage clearing arguments
+            storage_args = self.get_clear_storage_args()
+            all_args = STEALTH_ARGS + storage_args
+            
             self.context = await p.chromium.launch_persistent_context(
                 user_data_dir=USER_DATA_DIR,
                 headless=False,
                 executable_path=BRAVE_EXECUTABLE,
-                args=STEALTH_ARGS,
+                args=all_args,
                 ignore_default_args=["--enable-automation"],
                 viewport={"width": 1280, "height": 720},
                 slow_mo=40,
@@ -724,29 +757,21 @@ class GooglePhotosScraper:
                 # Navigate to the first album to process
                 if self.start_album > 0:
                     console.print(f"[yellow]Navigating to album index {self.start_album}...[/yellow]")
-                    await self.navigate_to_next_album(self.start_album - 1)
+                    await self.navigate_to_album(self.start_album - 1)
                 
-                for album_index in range(self.start_album, self.start_album + self.max_albums):
+                for album_position in range(self.start_album, self.start_album + self.max_albums):
                     try:
                         # Navigate to next album (only one step from current position)
-                        if album_index > self.start_album:
-                            await self.page.keyboard.press('ArrowRight')
+                        if album_position >= self.start_album:
+                            console.print(f"[blue]Navigating to album {album_position}... (start album: {self.start_album})[/blue]")
+                            await self.keyboard_press('ArrowRight')
                             await asyncio.sleep(0.2)
-
-                        # Get album info
-                        album_info = await self.get_album_info()
-
                         # Process album
-                        processed_album = await self.process_album(album_info)
+                        processed_album = await self.process_album(album_position)
                         albums_processed.append(processed_album)
-                        
-                        # In albums_only mode, return to album view after processing each album
-                        if self.albums_only:
-                            await self.page.keyboard.press('Escape')
-                            await asyncio.sleep(0.5)
 
                     except Exception as e:
-                        error_msg = f"Error processing album {album_index + 1}: {e}"
+                        error_msg = f"Error processing album {album_position}: {e}"
                         logger.error(error_msg)
                         errors.append(error_msg)
                         # Save error to database
@@ -870,17 +895,20 @@ class GooglePhotosScraper:
 
 @click.command()
 @click.option('-m', '--max-albums', default=MAX_ALBUMS, help='Maximum number of albums to process')
-@click.option('-s', '--start-album', default=0, help='Start processing from this album index (0-based)')
+@click.option('-s', '--start-album', default=1, help='Start processing from this album position (1-based)')
 @click.option('-f', '--start-album-fresh', is_flag=True, help='Start processing from the beginning, ignoring existing albums')
-@click.option('-n', '--no-skip-existing', is_flag=True, help='Process all albums, including existing ones')
+@click.option('-x', '--clear-storage', is_flag=True, help='Clear browser storage (localStorage, sessionStorage) before starting')
 @click.option('-a', '--albums-only', is_flag=True, help='Only add albums to database without processing photos')
 @click.option('-d', '--db-path', default=DATABASE_PATH, help='Path to the SQLite database file')
 @click.option('-c', '--chrome-bin', default=BRAVE_EXECUTABLE, help='Path to Chrome/Brave binary')
 @click.option('-r', '--reset-db', is_flag=True, help='Delete and recreate the database')
 @click.option('-i', '--init-db-only', is_flag=True, help='Only initialize the database and exit')
 @click.option('-t', '--show-stats', is_flag=True, help='Show database statistics and exit')
-def main(max_albums: int, start_album: int, start_album_fresh: bool, no_skip_existing: bool, albums_only: bool, db_path: str, chrome_bin: str, reset_db: bool, init_db_only: bool, show_stats: bool):
+def main(max_albums: int, start_album: int, start_album_fresh: bool, clear_storage: bool, albums_only: bool, db_path: str, chrome_bin: str, reset_db: bool, init_db_only: bool, show_stats: bool):
     """Main entry point."""
+    if start_album < 1:
+        raise click.UsageError("Start album must be 1 or higher (--start-album)")
+
     # Update global database path and chrome binary
     global DATABASE_PATH, BRAVE_EXECUTABLE
     DATABASE_PATH = db_path
@@ -904,20 +932,17 @@ def main(max_albums: int, start_album: int, start_album_fresh: bool, no_skip_exi
         return
     
     # Determine skip_existing logic
-    skip_existing = not no_skip_existing and not start_album_fresh
-    
-    if start_album_fresh:
-        start_album = 0
-        console.print("[yellow]Starting fresh from album 0, ignoring existing albums[/yellow]")
+    skip_existing = reset_db
     
     if show_stats:
-        scraper = GooglePhotosScraper(max_albums=max_albums, skip_existing=skip_existing)
+        scraper = GooglePhotosScraper(max_albums=max_albums, skip_existing=skip_existing, clear_storage=clear_storage)
         scraper.print_database_summary()
         return
     
     # Run the scraper
     async def run_scraper():
-        scraper = GooglePhotosScraper(max_albums=max_albums, start_album=start_album, skip_existing=skip_existing, albums_only=albums_only)
+        scraper = GooglePhotosScraper(max_albums=max_albums, start_album=start_album, album_fresh=start_album_fresh, skip_existing=skip_existing, albums_only=albums_only, clear_storage=clear_storage)
+        
         result = await scraper.scrape_albums()
         
         # Print database summary
