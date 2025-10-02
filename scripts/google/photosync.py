@@ -204,6 +204,7 @@ def insert_or_update_album(album_info: "AlbumInfo") -> int:
             # Create new album
             new_album = Album(
                 gphoto_title=album_info.title,
+                immich_title=album_info.title,  # Set immich_title to gphoto_title by default
                 items=album_info.items,
                 processed_items=0,  # Start with 0 processed items
                 shared=album_info.shared,
@@ -232,7 +233,10 @@ def insert_or_update_user(gphoto_name: str) -> int:
             user_id = existing_user.id
         else:
             # Create new user
-            new_user = User(gphoto_name=gphoto_name)
+            new_user = User(
+                gphoto_name=gphoto_name,
+                immich_name=gphoto_name  # Set immich_name to gphoto_name by default
+            )
             session.add(new_user)
             session.flush()  # To get the ID
             user_id = new_user.id
