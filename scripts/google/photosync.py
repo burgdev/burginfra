@@ -52,19 +52,19 @@ DATABASE_PATH = "photos.db"
 Base = declarative_base()
 engine = create_engine(f"sqlite:///{DATABASE_PATH}")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 class Album(Base):
     """SQLAlchemy model for albums."""
     __tablename__ = "albums"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(String, unique=False, nullable=False)
+    gphoto_title = Column(String, unique=False, nullable=False)
+    immich_title = Column(String, unique=False, nullable=True)
     items = Column(Integer)
     processed_items = Column(Integer, default=0)
     shared = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    href = Column(String, unique=True, nullable=False)
+    gphoto_url = Column(String, unique=True, nullable=False)
     
     # Relationships
     photos = relationship("Photo", back_populates="album", cascade="all, delete-orphan")
@@ -72,15 +72,16 @@ class Album(Base):
     users = relationship("User", secondary="album_users", back_populates="albums")
     
     def __repr__(self):
-        return f"<Album(title='{self.title}', items={self.items}, shared={self.shared})>"
+        return f"<Album(gphoto_title='{self.gphoto_title}', items={self.items}, shared={self.shared})>"
 
 class User(Base):
     """SQLAlchemy model for users."""
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, unique=True, nullable=False)
-    email = Column(String, nullable=True)  # Email field, nullable for manual filling later
+    gphoto_name = Column(String, unique=True, nullable=False)
+    immich_name = Column(String, unique=False, nullable=True)
+    immich_email = Column(String, nullable=True)  # Email field, nullable for manual filling later
     created_at = Column(DateTime, default=func.now())
     
     # Relationships
@@ -88,7 +89,7 @@ class User(Base):
     photos = relationship("Photo", back_populates="user")
     
     def __repr__(self):
-        return f"<User(name='{self.name}', email='{self.email}')>"
+        return f"<User(gphoto_name='{self.gphoto_name}', immich_name='{self.immich_name}', immich_email='{self.immich_email}')>"
 
 class Photo(Base):
     """SQLAlchemy model for photos."""
@@ -189,24 +190,24 @@ def insert_or_update_album(album_info: "AlbumInfo") -> int:
     session = get_db_session()
     try:
         # Check if album exists
-        existing_album = session.query(Album).filter_by(href=album_info.href).first()
+        existing_album = session.query(Album).filter_by(gphoto_url=album_info.href).first()
         
         if existing_album:
             # Update existing album
             existing_album.items = album_info.items
             existing_album.shared = album_info.shared
-            existing_album.href = album_info.href
+            existing_album.gphoto_url = album_info.href
             # Don't reset processed_items when updating album info
             existing_album.updated_at = func.now()
             album_id = existing_album.id
         else:
             # Create new album
             new_album = Album(
-                title=album_info.title,
+                gphoto_title=album_info.title,
                 items=album_info.items,
                 processed_items=0,  # Start with 0 processed items
                 shared=album_info.shared,
-                href=album_info.href
+                gphoto_url=album_info.href
             )
             session.add(new_album)
             session.flush()  # To get the ID
@@ -220,18 +221,18 @@ def insert_or_update_album(album_info: "AlbumInfo") -> int:
     finally:
         session.close()
 
-def insert_or_update_user(name: str) -> int:
+def insert_or_update_user(gphoto_name: str) -> int:
     """Insert or update a user and return their ID."""
     session = get_db_session()
     try:
         # Check if user exists
-        existing_user = session.query(User).filter_by(name=name).first()
+        existing_user = session.query(User).filter_by(gphoto_name=gphoto_name).first()
         
         if existing_user:
             user_id = existing_user.id
         else:
             # Create new user
-            new_user = User(name=name)
+            new_user = User(gphoto_name=gphoto_name)
             session.add(new_user)
             session.flush()  # To get the ID
             user_id = new_user.id
@@ -321,10 +322,10 @@ def link_user_to_album(album_id: int, user_id: int) -> None:
         session.close()
 
 def album_exists(album_info: "AlbumInfo") -> bool:
-    """Check if an album with the given title exists."""
+    """Check if an album with the given gphoto_url exists."""
     session = get_db_session()
     try:
-        album = session.query(Album).filter_by(href=album_info.href).first()
+        album = session.query(Album).filter_by(gphoto_url=album_info.href).first()
         return album is not None
     finally:
         session.close()
@@ -372,29 +373,30 @@ def create_photos_with_album_view() -> None:
         session.execute(text("DROP VIEW IF EXISTS photos_with_album"))
         
         # Create the view with joins to get album and user information
-        # Users are aggregated into a JSON array of objects with name and email to have one entry per photo
+        # Users are aggregated into a JSON array of objects with gphoto_name, immich_name, and immich_email to have one entry per photo
         create_view_sql = """
         CREATE VIEW photos_with_album AS
         SELECT 
             p.id as photo_id,
-            p.filename,
-            p.date_taken,
+            p.filename as photo_filename,
+            p.date_taken as photo_date_taken,
             p.created_at as photo_created_at,
             a.id as album_id,
-            a.title as album_title,
+            a.gphoto_title as album_gphoto_title,
+            a.immich_title as album_immich_title,
             a.items as album_items,
             a.processed_items as album_processed_items,
             a.shared as album_shared,
-            a.href as album_href,
+            a.gphoto_url as album_gphoto_url,
             json_group_array(
-                json_object('name', u.name, 'email', u.email)
-            ) FILTER (WHERE u.name IS NOT NULL) as users
+                json_object('gphoto_name', u.gphoto_name, 'immich_name', u.immich_name, 'immich_email', u.immich_email)
+            ) FILTER (WHERE u.gphoto_name IS NOT NULL) as users
         FROM photos p
         LEFT JOIN albums a ON p.album_id = a.id
         LEFT JOIN album_users au ON a.id = au.album_id
         LEFT JOIN users u ON au.user_id = u.id
         GROUP BY p.id, p.filename, p.date_taken, p.created_at, 
-                 a.id, a.title, a.items, a.processed_items, a.shared
+                 a.id, a.gphoto_title, a.immich_title, a.items, a.processed_items, a.shared, a.gphoto_url
         ORDER BY p.album_id, p.date_taken DESC
         """
         
@@ -412,15 +414,15 @@ def get_albums_from_db(limit: int = None, offset: int = 0) -> List[Tuple[int, st
     """Get albums from database for processing.
     
     Returns:
-        List of tuples (album_id, album_href, album_title, album_items)
+        List of tuples (album_id, album_gphoto_url, album_gphoto_title, album_items)
     """
     session = get_db_session()
     try:
-        query = session.query(Album.id, Album.href, Album.title, Album.items).order_by(Album.id)
+        query = session.query(Album.id, Album.gphoto_url, Album.gphoto_title, Album.items).order_by(Album.id)
         if limit:
             query = query.limit(limit).offset(offset)
         albums = query.all()
-        return [(album.id, album.href, album.title, album.items) for album in albums]
+        return [(album.id, album.gphoto_url, album.gphoto_title, album.items) for album in albums]
     finally:
         session.close()
 
@@ -579,38 +581,38 @@ class GooglePhotosScraper:
             return None, date_str
 
 
-    async def process_album_from_db(self, album_id: int, album_href: str, album_title: str, album_items: int) -> AlbumInfo:
-        """Process images from an album using its href URL."""
-        console.print(f"[green]Processing album from database: {album_title}[/green]")
+    async def process_album_from_db(self, album_id: int, album_gphoto_url: str, album_gphoto_title: str, album_items: int) -> AlbumInfo:
+        """Process images from an album using its gphoto_url URL."""
+        console.print(f"[green]Processing album from database: {album_gphoto_title}[/green]")
         
         # Check if album should be skipped BEFORE any navigation
         processed_images = 0
         # If album_fresh is True, ignore existing processed count and start from 0
         if self.skip_existing and not self.album_fresh:
             if is_album_fully_processed(album_id):
-                console.print(f"[yellow]Skipping fully processed album: {album_title}[/yellow]")
+                console.print(f"[yellow]Skipping fully processed album: {album_gphoto_title}[/yellow]")
                 # Create AlbumInfo object for return
                 album_info = AlbumInfo(
-                    title=album_title,
+                    title=album_gphoto_title,
                     items=album_items,
                     shared=False,  # We'll get this from DB if needed
                     pictures=[],
-                    href=album_href
+                    href=album_gphoto_url
                 )
                 return album_info
             elif album_items > 0:  # Only continue if we know the item count
                 processed_images = get_album_photos_count(album_id)
-                console.print(f"[blue]Continuing partially processed album: {album_title} (has {processed_images}/{album_items} photos)[/blue]")
+                console.print(f"[blue]Continuing partially processed album: {album_gphoto_title} (has {processed_images}/{album_items} photos)[/blue]")
         elif self.album_fresh:
-            console.print(f"[blue]Starting fresh processing for album: {album_title} (ignoring existing processed count)[/blue]")
+            console.print(f"[blue]Starting fresh processing for album: {album_gphoto_title} (ignoring existing processed count)[/blue]")
         
         # Navigate to the album URL - construct absolute URL from relative href
-        if album_href.startswith('./'):
-            album_url = f"https://photos.google.com{album_href[1:]}"
-        elif album_href.startswith('/'):
-            album_url = f"https://photos.google.com{album_href}"
+        if album_gphoto_url.startswith('./'):
+            album_url = f"https://photos.google.com{album_gphoto_url[1:]}"
+        elif album_gphoto_url.startswith('/'):
+            album_url = f"https://photos.google.com{album_gphoto_url}"
         else:
-            album_url = album_href
+            album_url = album_gphoto_url
             
         console.print(f"[blue]Navigating to album URL: {album_url}[/blue]")
         await self.page.goto(album_url)
@@ -657,11 +659,11 @@ class GooglePhotosScraper:
                 await self.page.reload(wait_until="domcontentloaded")
         
         if not first_image_url:
-            console.print(f"[red]Could not find first photo for album {album_title}, please fix it manually and press Enter to continue.")
+            console.print(f"[red]Could not find first photo for album {album_gphoto_title}, please fix it manually and press Enter to continue.")
             input()
             
         # Get picture info for the first image after navigation
-        picture_info = await self.get_picture_info(album_title)
+        picture_info = await self.get_picture_info(album_gphoto_title)
         cnt = 0
         while picture_info is None and cnt < 5:
             cnt += 1
@@ -670,9 +672,9 @@ class GooglePhotosScraper:
             #await self.keyboard_press('ArrowRight', delay=0.2 * cnt) # select 1st image
             #await self.keyboard_press('Enter', delay=0.8 * cnt) # open first photo
             await self.page.wait_for_load_state("domcontentloaded")
-            picture_info = await self.get_picture_info(album_title)
+            picture_info = await self.get_picture_info(album_gphoto_title)
             if cnt > 3:
-                console.print(f"[red]Could not find first photo for album {album_title}, please fix it manually and press Enter to continue.")
+                console.print(f"[red]Could not find first photo for album {album_gphoto_title}, please fix it manually and press Enter to continue.")
                 input()
         
         pictures = []
@@ -689,7 +691,7 @@ class GooglePhotosScraper:
             console=console
         ) as progress:
             task = progress.add_task(
-                f"Processing {album_title}...",
+                f"Processing {album_gphoto_title}...",
                 total=album_items,
                 completed=processed_images
             )
@@ -703,7 +705,7 @@ class GooglePhotosScraper:
                     continue
                     
                 try:
-                    picture_info = await self.get_picture_info(album_title)
+                    picture_info = await self.get_picture_info(album_gphoto_title)
 
                     if not picture_info:
                         logger.error("Could not extract info for current image")
@@ -767,7 +769,7 @@ class GooglePhotosScraper:
 
                 except Exception as e:
                     logger.error(f"Error processing picture: {e}")
-                    insert_error(f"Error processing picture in album {album_title}: {e}", album_id)
+                    insert_error(f"Error processing picture in album {album_gphoto_title}: {e}", album_id)
                     break
 
         # Return to albums view
@@ -776,14 +778,14 @@ class GooglePhotosScraper:
         
         # Create AlbumInfo object for return
         album_info = AlbumInfo(
-            title=album_title,
+            title=album_gphoto_title,
             items=album_items,
             shared=False,  # We'll get this from DB if needed
             pictures=pictures,
-            href=album_href
+            href=album_gphoto_url
         )
         
-        console.print(f"[green]Processed {len(pictures)} pictures from {album_title}[/green]")
+        console.print(f"[green]Processed {len(pictures)} pictures from {album_gphoto_title}[/green]")
         if processed_users:
             console.print(f"[blue]Associated users: {', '.join(processed_users)}[/blue]")
         return album_info
@@ -936,22 +938,22 @@ class GooglePhotosScraper:
                 console.print(f"[green]Found {len(albums)} albums to process from database[/green]")
                 
                 # Process each album
-                for i, (album_id, album_href, album_title, album_items) in enumerate(albums):
+                for i, (album_id, album_gphoto_url, album_gphoto_title, album_items) in enumerate(albums):
                     try:
-                        console.print(f"[blue]Processing album {i + 1}/{len(albums)}: {album_title}[/blue]")
+                        console.print(f"[blue]Processing album {i + 1}/{len(albums)}: {album_gphoto_title}[/blue]")
                         
                         # Process the album from database
                         processed_album = await self.process_album_from_db(
                             album_id=album_id,
-                            album_href=album_href,
-                            album_title=album_title,
+                            album_gphoto_url=album_gphoto_url,
+                            album_gphoto_title=album_gphoto_title,
                             album_items=album_items
                         )
                         
                         albums_processed.append(processed_album)
                         
                     except Exception as e:
-                        error_msg = f"Error processing album {album_title}: {e}"
+                        error_msg = f"Error processing album {album_gphoto_title}: {e}"
                         logger.error(error_msg)
                         errors.append(error_msg)
                         # Save error to database
@@ -1028,23 +1030,23 @@ class GooglePhotosScraper:
             
             # Get photos per album with processed items
             photos_per_album = session.query(
-                Album.title,
+                Album.gphoto_title,
                 Album.items,
                 Album.processed_items,
                 func.count(Photo.id).label('photo_count')
-            ).outerjoin(Photo).group_by(Album.id, Album.title, Album.items, Album.processed_items).order_by(
+            ).outerjoin(Photo).group_by(Album.id, Album.gphoto_title, Album.items, Album.processed_items).order_by(
                 func.count(Photo.id).desc()
             ).all()
-            stats['photos_per_album'] = [(album_title, total_items, processed_items, photo_count) for album_title, total_items, processed_items, photo_count in photos_per_album]
+            stats['photos_per_album'] = [(album_gphoto_title, total_items, processed_items, photo_count) for album_gphoto_title, total_items, processed_items, photo_count in photos_per_album]
             
             # Get users per album
             users_per_album = session.query(
-                Album.title,
+                Album.gphoto_title,
                 func.count(User.id).label('user_count')
-            ).join(Album.users).group_by(Album.id, Album.title).order_by(
+            ).join(Album.users).group_by(Album.id, Album.gphoto_title).order_by(
                 func.count(User.id).desc()
             ).all()
-            stats['users_per_album'] = [(album_title, user_count) for album_title, user_count in users_per_album]
+            stats['users_per_album'] = [(album_gphoto_title, user_count) for album_gphoto_title, user_count in users_per_album]
             
             return stats
         finally:
@@ -1064,21 +1066,21 @@ class GooglePhotosScraper:
         console.print("\n[bold blue]=== Photos per Album ===[/bold blue]")
         for album_data in stats['photos_per_album'][:10]:  # Show top 10
             if len(album_data) == 4:
-                album_title, total_items, processed_items, photo_count = album_data
+                album_gphoto_title, total_items, processed_items, photo_count = album_data
                 # Format processed items as x/y photos
                 processed_str = f"{processed_items or 0}/{total_items or '?'}" if total_items else f"{processed_items or 0}"
-                console.print(f"  [blue]{album_title}:[/blue] {processed_str} photos ({photo_count} in database)")
+                console.print(f"  [blue]{album_gphoto_title}:[/blue] {processed_str} photos ({photo_count} in database)")
             else:
                 # Fallback for old format
-                album_title, photo_count = album_data
-                console.print(f"  [blue]{album_title}:[/blue] {photo_count} photos")
+                album_gphoto_title, photo_count = album_data
+                console.print(f"  [blue]{album_gphoto_title}:[/blue] {photo_count} photos")
         
         if len(stats['photos_per_album']) > 10:
             console.print(f"  ... and {len(stats['photos_per_album']) - 10} more albums")
         
         console.print("\n[bold blue]=== Users per Album ===[/bold blue]")
-        for album_title, user_count in stats['users_per_album'][:10]:  # Show top 10
-            console.print(f"  [blue]{album_title}:[/blue] {user_count} users")
+        for album_gphoto_title, user_count in stats['users_per_album'][:10]:  # Show top 10
+            console.print(f"  [blue]{album_gphoto_title}:[/blue] {user_count} users")
         
         if len(stats['users_per_album']) > 10:
             console.print(f"  ... and {len(stats['users_per_album']) - 10} more albums")
