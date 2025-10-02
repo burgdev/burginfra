@@ -41,7 +41,7 @@ USER_DATA_DIR = "./brave_playwright_profile2"
 BRAVE_EXECUTABLE = "/usr/bin/brave-browser"
 DEFAULT_TIMEOUT = 10000
 INFO_PANEL_TIMEOUT = 2000
-ALBUM_NAVIGATION_DELAY = 0.01
+ALBUM_NAVIGATION_DELAY = 0
 IMAGE_NAVIGATION_DELAY = 0.05
 DUPLICATE_THRESHOLD = 10
 DUPLICATE_LOG_THRESHOLD = 4
@@ -85,6 +85,7 @@ class User(Base):
     
     # Relationships
     albums = relationship("Album", secondary="album_users", back_populates="users")
+    photos = relationship("Photo", back_populates="user")
     
     def __repr__(self):
         return f"<User(name='{self.name}', email='{self.email}')>"
@@ -97,10 +98,12 @@ class Photo(Base):
     filename = Column(String, nullable=False)
     date_taken = Column(DateTime)
     album_id = Column(Integer, ForeignKey("albums.id", ondelete="CASCADE"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
     created_at = Column(DateTime, default=func.now())
     
     # Relationships
     album = relationship("Album", back_populates="photos")
+    user = relationship("User", back_populates="photos")
     
     def __repr__(self):
         return f"<Photo(filename='{self.filename}', date_taken={self.date_taken})>"
@@ -241,14 +244,18 @@ def insert_or_update_user(name: str) -> int:
     finally:
         session.close()
 
-def insert_photo(filename: str, date_taken: Optional[datetime], album_id: int) -> Optional[int]:
+def insert_photo(photo: "PictureInfo", user_id: None | int, album_id: int) -> Optional[int]:
     """Insert a photo and return its ID. Returns None if photo already exists."""
+    filename = photo.filename
+    date_taken = photo.date
+    
     session = get_db_session()
     try:
         # Check if photo already exists
         existing_photo = session.query(Photo).filter_by(
             filename=filename, 
-            album_id=album_id
+            album_id=album_id,
+            user_id=user_id
         ).first()
         
         if existing_photo:
@@ -258,7 +265,8 @@ def insert_photo(filename: str, date_taken: Optional[datetime], album_id: int) -
         new_photo = Photo(
             filename=filename,
             date_taken=date_taken,
-            album_id=album_id
+            album_id=album_id,
+            user_id=user_id
         )
         session.add(new_photo)
         session.flush()  # To get the ID
@@ -400,6 +408,22 @@ def create_photos_with_album_view() -> None:
     finally:
         session.close()
 
+def get_albums_from_db(limit: int = None, offset: int = 0) -> List[Tuple[int, str, str, int]]:
+    """Get albums from database for processing.
+    
+    Returns:
+        List of tuples (album_id, album_href, album_title, album_items)
+    """
+    session = get_db_session()
+    try:
+        query = session.query(Album.id, Album.href, Album.title, Album.items).order_by(Album.id)
+        if limit:
+            query = query.limit(limit).offset(offset)
+        albums = query.all()
+        return [(album.id, album.href, album.title, album.items) for album in albums]
+    finally:
+        session.close()
+
 @dataclass
 class PictureInfo:
     """Data class for individual picture information."""
@@ -441,7 +465,7 @@ class GooglePhotosScraper:
     async def setup_browser(self) -> None:
         """Initialize and setup the browser context."""
         Path(USER_DATA_DIR).mkdir(exist_ok=True)
-        # Note: Browser context is now managed in scrape_albums()
+        # Note: Browser context is now managed in scrape_albums_from_db()
         # This method just prepares the configuration
         pass
     
@@ -494,7 +518,7 @@ class GooglePhotosScraper:
                     return None
                     
                 if not filename:
-                    logger.error("Could not find filename, make page reload and try again")
+                    logger.warning("Could not find filename, make page reload and try again")
                     await self.page.reload(wait_until="domcontentloaded") 
                     await asyncio.sleep(1.0 * cnt)
                     if cnt > 3:
@@ -554,71 +578,124 @@ class GooglePhotosScraper:
             logger.warning(f"Error parsing date '{date_str}': {e}")
             return None, date_str
 
-    async def process_album(self, album_position: int) -> AlbumInfo:
-        """Process all pictures in an album and save to database."""
-        # Get album info
-        album_info = await self.get_album_info()
-        console.print(f"[green]Processing album: {album_info.title}[/green]")
 
-        # Insert or update album in database first to get album_id
-        album_id = insert_or_update_album(album_info)
+    async def process_album_from_db(self, album_id: int, album_href: str, album_title: str, album_items: int) -> AlbumInfo:
+        """Process images from an album using its href URL."""
+        console.print(f"[green]Processing album from database: {album_title}[/green]")
         
-        # If albums_only mode, just add the album and return
-        if self.albums_only:
-            console.print(f"[blue]Albums-only mode: Added album {album_info.title} to database[/blue]")
-            await asyncio.sleep(0.3)
-            return album_info
-
-        # Check if album should be skipped
+        # Check if album should be skipped BEFORE any navigation
         processed_images = 0
-        if self.skip_existing:
+        # If album_fresh is True, ignore existing processed count and start from 0
+        if self.skip_existing and not self.album_fresh:
             if is_album_fully_processed(album_id):
-                console.print(f"[yellow]Skipping fully processed album: {album_info.title}[/yellow]")
+                console.print(f"[yellow]Skipping fully processed album: {album_title}[/yellow]")
+                # Create AlbumInfo object for return
+                album_info = AlbumInfo(
+                    title=album_title,
+                    items=album_items,
+                    shared=False,  # We'll get this from DB if needed
+                    pictures=[],
+                    href=album_href
+                )
                 return album_info
-            elif album_exists(album_info) and not self.album_fresh:
+            elif album_items > 0:  # Only continue if we know the item count
                 processed_images = get_album_photos_count(album_id)
-                console.print(f"[blue]Continuing partially processed album: {album_info.title} (has {processed_images}/{album_info.items} photos)[/blue]")
+                console.print(f"[blue]Continuing partially processed album: {album_title} (has {processed_images}/{album_items} photos)[/blue]")
+        elif self.album_fresh:
+            console.print(f"[blue]Starting fresh processing for album: {album_title} (ignoring existing processed count)[/blue]")
         
-
-        # Open the album
-        await self.keyboard_press('Enter', delay=1.5) # open album
-        await self.page.wait_for_load_state("domcontentloaded") # reload page to make sure we are on the first image
-        await self.keyboard_press('Enter', delay=0.5) # open first photo
-        picture_info = await self.get_picture_info(album_info.title)
+        # Navigate to the album URL - construct absolute URL from relative href
+        if album_href.startswith('./'):
+            album_url = f"https://photos.google.com{album_href[1:]}"
+        elif album_href.startswith('/'):
+            album_url = f"https://photos.google.com{album_href}"
+        else:
+            album_url = album_href
+            
+        console.print(f"[blue]Navigating to album URL: {album_url}[/blue]")
+        await self.page.goto(album_url)
+        await self.page.wait_for_load_state("domcontentloaded")
+        
+        # Find and navigate to the first image
+        console.print("[blue]Looking for first image in album...[/blue]")
+        first_image_url = None
+        cnt = 0
+        
+        while first_image_url is None and cnt < 5:
+            cnt += 1
+            try:
+                # Look for the first a tag with aria-label containing "Photo -"
+                first_image_element = await self.page.wait_for_selector(
+                    'a[aria-label*="Photo -"]', 
+                    timeout=5000
+                )
+                
+                # Get the href attribute directly from the a tag
+                first_image_url = await first_image_element.get_attribute('href')
+                
+                if first_image_url:
+                    logger.debug(f"Found first image URL: {first_image_url}")
+                    # Construct absolute URL if needed
+                    if first_image_url.startswith('./'):
+                        first_image_url = f"https://photos.google.com{first_image_url[1:]}"
+                    elif first_image_url.startswith('/'):
+                        first_image_url = f"https://photos.google.com{first_image_url}"
+                    
+                    # Navigate to the first image
+                    logger.debug("Navigating to first image...")
+                    await self.page.goto(first_image_url)
+                    await self.page.wait_for_load_state("domcontentloaded")
+                    break
+                else:
+                    console.print(f"[yellow]Attempt {cnt}: Could not get href from first image element[/yellow]")
+                    
+            except Exception as e:
+                console.print(f"[yellow]Attempt {cnt}: Could not find first image element: {e}[/yellow]")
+            
+            if cnt < 5:
+                await asyncio.sleep(1.0 * cnt)
+                await self.page.reload(wait_until="domcontentloaded")
+        
+        if not first_image_url:
+            console.print(f"[red]Could not find first photo for album {album_title}, please fix it manually and press Enter to continue.")
+            input()
+            
+        # Get picture info for the first image after navigation
+        picture_info = await self.get_picture_info(album_title)
         cnt = 0
         while picture_info is None and cnt < 5:
             cnt += 1
             await self.page.reload(wait_until="domcontentloaded")
             await asyncio.sleep(1.0 * cnt)
-            await self.keyboard_press('ArrowRight', delay=0.2 * cnt) # select 1st image
-            await self.keyboard_press('Enter', delay=0.8 * cnt) # open first photo
+            #await self.keyboard_press('ArrowRight', delay=0.2 * cnt) # select 1st image
+            #await self.keyboard_press('Enter', delay=0.8 * cnt) # open first photo
             await self.page.wait_for_load_state("domcontentloaded")
-            picture_info = await self.get_picture_info(album_info.title)
+            picture_info = await self.get_picture_info(album_title)
             if cnt > 3:
-                console.print(f"[red]Could not find first photo for album {album_info.title}, please fix it manually an press Enter to continue.")
+                console.print(f"[red]Could not find first photo for album {album_title}, please fix it manually and press Enter to continue.")
                 input()
-            
-
+        
         pictures = []
         last_filename = None
         duplicate_count = 0
         processed_users = set()
         
+        # Skip check already done at the beginning of the method
+        
         # Get current photo count to continue from where we left off
-
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=console
         ) as progress:
             task = progress.add_task(
-                f"Processing {album_info.title}...",
-                total=album_info.items,
+                f"Processing {album_title}...",
+                total=album_items,
                 completed=processed_images
             )
 
             photo_position = 1
-            while processed_images < album_info.items:
+            while processed_images < album_items:
                 # go to the correct photo position (needed if some where already processed)
                 if photo_position < processed_images:
                     await self.keyboard_press('ArrowRight', delay=IMAGE_NAVIGATION_DELAY)
@@ -626,7 +703,7 @@ class GooglePhotosScraper:
                     continue
                     
                 try:
-                    picture_info = await self.get_picture_info(album_info.title)
+                    picture_info = await self.get_picture_info(album_title)
 
                     if not picture_info:
                         logger.error("Could not extract info for current image")
@@ -638,13 +715,16 @@ class GooglePhotosScraper:
                         if duplicate_count >= DUPLICATE_LOG_THRESHOLD:
                             await asyncio.sleep(1)
                             logger.warning(f"Duplicate filename detected: {picture_info.filename} ({duplicate_count})")
+                            console.print("[red]Press Enter to continue...[/red]")
+                            input()
 
                         if duplicate_count >= DUPLICATE_THRESHOLD:
                             logger.error("Reached end of album before expected (duplicate threshold met)")
-                            break
-
-                        await asyncio.sleep(0.15)
-                        continue
+                            # we add the same name to the album
+                            
+                        else:
+                            await asyncio.sleep(0.15)
+                            continue
                         
 
                     # New picture found
@@ -654,53 +734,56 @@ class GooglePhotosScraper:
 
                     # Save to database
                     try:
-                        # Insert photo
-                        photo_id = insert_photo(
-                            picture_info.filename,
-                            picture_info.date,
-                            album_id
-                        )
-                        
-                        photo_position += 1
-                        # Update processed items count
-                        processed_images += 1
-                        update_album_processed_items(album_id, processed_images)
-                        
-                        # Handle user information
                         if picture_info.shared_by and picture_info.shared_by != "N/A":
                             user_id = insert_or_update_user(picture_info.shared_by)
                             link_user_to_album(album_id, user_id)
                             processed_users.add(picture_info.shared_by)
+
+                        # Insert photo
+                        photo_id = insert_photo(picture_info, user_id=user_id, album_id=album_id)
+                        
+                        if photo_id is not None:
+                            # Photo was successfully inserted (not a duplicate)
+                            photo_position += 1
+                            # Update processed items count
+                            processed_images += 1
+                            update_album_processed_items(album_id, processed_images)
+                            
+                            # Link user to album for shared photos
+                            
+                            # Display progress for successfully processed photo
+                            progress.update(task, advance=1, description=
+                                f"[green]{processed_images}/{album_items} - {picture_info.filename}[/green]")
+                        else:
+                            # Photo is a duplicate, skip it but continue processing
+                            console.print(f"[yellow]Skipping duplicate photo: {picture_info.filename}[/yellow]")
                             
                     except Exception as e:
                         logger.error(f"Error saving picture to database: {e}")
                         insert_error(f"Error saving picture {picture_info.filename}: {e}", album_id)
 
-                    # Display progress
-                    #actual_processed = current_photo_count + len(pictures) + (1 if photo_id is not None else 0)
-                    progress.update(task, advance=1, description=
-                        f"[green]{processed_images}/{album_info.items} - {picture_info.filename}[/green]")
-
-                    # Navigate to next image
+                    # Navigate to next image (always advance, even for duplicates)
                     await self.keyboard_press('ArrowRight', delay=IMAGE_NAVIGATION_DELAY)
 
                 except Exception as e:
                     logger.error(f"Error processing picture: {e}")
-                    insert_error(f"Error processing picture in album {album_info.title}: {e}", album_id)
+                    insert_error(f"Error processing picture in album {album_title}: {e}", album_id)
                     break
 
-        # Return to album view
+        # Return to albums view
         await self.page.goto("https://photos.google.com/albums")
         await self.page.wait_for_load_state("domcontentloaded")
-        #await self.keyboard_press('Escape', delay=1.5)
-        #await self.page.wait_for_load_state("domcontentloaded")
-        #await self.keyboard_press('Escape', delay=2)
-        #await self.page.wait_for_load_state("domcontentloaded")
         
-        await self.navigate_to_album(album_position)
-
-        album_info.pictures = pictures
-        console.print(f"[green]Processed {len(pictures)} pictures from {album_info.title}[/green]")
+        # Create AlbumInfo object for return
+        album_info = AlbumInfo(
+            title=album_title,
+            items=album_items,
+            shared=False,  # We'll get this from DB if needed
+            pictures=pictures,
+            href=album_href
+        )
+        
+        console.print(f"[green]Processed {len(pictures)} pictures from {album_title}[/green]")
         if processed_users:
             console.print(f"[blue]Associated users: {', '.join(processed_users)}[/blue]")
         return album_info
@@ -712,100 +795,181 @@ class GooglePhotosScraper:
             await self.keyboard_press('ArrowRight', delay=ALBUM_NAVIGATION_DELAY)
         console.print(f"[blue]Done[/blue]")
             
-    async def keyboard_press(self, key: str, delay: int = 0.2):
+    async def keyboard_press(self, key: str, delay: int | None = 0.2):
         logger.debug(f"Pressing key '{key}'")
         await self.page.keyboard.press(key)
-        await asyncio.sleep(delay)
+        if delay is not None and delay > 0:
+            await asyncio.sleep(delay)
 
-    async def scrape_albums(self) -> ProcessingResult:
-        """Main scraping workflow."""
+
+    async def collect_albums(self, max_albums: int = None, start_album: int = 1) -> List[AlbumInfo]:
+        """Collect albums from Google Photos UI and add them to database."""
+        albums_processed = []
+        
+        # Navigate to Google Photos albums
+        await self.page.goto("https://photos.google.com/albums")
+        if self.login:
+            click.confirm("Press Enter when logged in and on the albums site ...", default=True)
+        else:
+            await self.page.wait_for_load_state("domcontentloaded")
+            await asyncio.sleep(1)
+
+        console.print(f"[blue]Starting to collect {max_albums} albums from index {start_album}...[/blue]")
+        
+        # Navigate to the first album to process
+        if start_album > 1:
+            console.print(f"[yellow]Navigating to album index {start_album}...[/yellow]")
+            await self.navigate_to_album(start_album - 2)  # Convert to 0-based and adjust for starting position
+        
+        prev_album: None | AlbumInfo = None
+        for album_position in range(start_album - 1, start_album - 1 + max_albums):
+            try:
+                # Navigate to next album (only one step from current position)
+                if album_position >= start_album - 1:
+                    logger.debug(f"Navigating to album {album_position}... (start album: {start_album})")
+                    await self.keyboard_press('ArrowRight', delay=ALBUM_NAVIGATION_DELAY)
+                
+                # Get album info
+                album_info = await self.get_album_info()
+                console.print(f"[green]Collecting album: {album_info.title}[/green]")
+                
+                # Insert album into database
+                album_id = insert_or_update_album(album_info)
+                albums_processed.append(album_info)
+
+                if prev_album and prev_album.href == album_info.href:
+                    console.print(f"[yellow]All albums collected[/yellow]")
+                    break
+                prev_album = album_info
+                
+                # Small delay between albums
+                await asyncio.sleep(0.3)
+
+            except Exception as e:
+                error_msg = f"Error collecting album {album_position}: {e}"
+                logger.error(error_msg)
+                # Continue with next album instead of breaking
+                continue
+        
+        return albums_processed
+
+    async def scrape_albums_from_db(self, max_albums: int = None, start_album: int = 1) -> ProcessingResult:
+        """Process images from albums stored in the database."""
         await self.setup_browser()
-
+        
+        albums_processed = []
+        errors = []
+        
         # Initialize browser context here to keep it alive during scraping
         async with async_playwright() as p:
-            # Add storage clearing arguments by default
-            storage_args = [
-                '--clear-browsing-data',
-                '--clear-browsing-data-on-exit',
-                '--disable-session-crashed-bubble',
-                '--disable-infobars',
-                '--disable-restore-session-state'
-            ]
-            all_args = STEALTH_ARGS + storage_args
-            
-            self.context = await p.chromium.launch_persistent_context(
-                user_data_dir=USER_DATA_DIR,
-                headless=False,
-                executable_path=BRAVE_EXECUTABLE,
-                args=all_args,
-                ignore_default_args=["--enable-automation"],
-                viewport={"width": 1280, "height": 720},
-                slow_mo=40,
-            )
-            await self.context.add_init_script(STEALTH_INIT_SCRIPT)
-
-            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
-            self.page.set_default_timeout(DEFAULT_TIMEOUT)
-
             try:
-                # Navigate to Google Photos albums
-                await self.page.goto("https://photos.google.com/albums")
+                # Add storage clearing arguments by default
+                storage_args = [
+                    '--clear-browsing-data',
+                    '--clear-browsing-data-on-exit',
+                    '--disable-session-crashed-bubble',
+                    '--disable-infobars',
+                    '--disable-restore-session-state'
+                ]
+                all_args = STEALTH_ARGS + storage_args
+                
+                self.context = await p.chromium.launch_persistent_context(
+                    user_data_dir=USER_DATA_DIR,
+                    headless=False,
+                    executable_path=BRAVE_EXECUTABLE,
+                    args=all_args,
+                    ignore_default_args=["--enable-automation"],
+                    viewport={"width": 1280, "height": 720},
+                    slow_mo=40,
+                )
+                
+                self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+                
+                # Set up stealth mode
+                await self.page.add_init_script(STEALTH_INIT_SCRIPT)
+                
+                # Navigate to Google Photos
+                await self.page.goto("https://photos.google.com")
+                await self.page.wait_for_load_state("domcontentloaded")
+                
+                # Wait for login if needed
                 if self.login:
-                    click.confirm("Press Enter when logged in and on the albums site ...", default=True)
-                else:
-                    await self.page.wait_for_load_state("domcontentloaded")
-                    await asyncio.sleep(1)
-
-                albums_processed = []
-                errors = []
-
-                console.print(f"[blue]Starting to process {self.max_albums} albums from index {self.start_album}...[/blue]")
-                if self.skip_existing:
-                    console.print("[yellow]Skip existing albums mode enabled[/yellow]")
-                if self.albums_only:
-                    console.print("[yellow]Albums-only mode enabled - will not open albums or process photos[/yellow]")
+                    console.print("[yellow]Waiting for login... Please log in to Google Photos in the browser.[/yellow]")
+                    console.print("[yellow]Press Enter in the console once you're logged in.[/yellow]")
+                    input()
                 
-                # Navigate to the first album to process
-                if self.start_album > 0:
-                    console.print(f"[yellow]Navigating to album index {self.start_album}...[/yellow]")
-                    await self.navigate_to_album(self.start_album - 1)
+                # Get albums from database
+                offset = start_album - 1  # Convert to 0-based offset
+                albums = get_albums_from_db(limit=max_albums, offset=offset)
                 
-                prev_album: None | AlbumInfo = None
-                for album_position in range(self.start_album, self.start_album + self.max_albums):
+                if not albums:
+                    if self.albums_only:
+                        console.print("[yellow]No albums found in database. Collecting albums now...[/yellow]")
+                        # Collect albums from UI
+                        collected_albums = await self.collect_albums(max_albums=max_albums, start_album=start_album)
+                        if collected_albums:
+                            console.print(f"[green]Successfully collected {len(collected_albums)} albums[/green]")
+                            # In albums-only mode, we're done after collecting
+                            return ProcessingResult(
+                                total_albums=len(collected_albums),
+                                total_pictures=0,
+                                albums_processed=collected_albums,
+                                errors=[]
+                            )
+                        else:
+                            console.print("[red]No albums were collected[/red]")
+                            return ProcessingResult(
+                                total_albums=0,
+                                total_pictures=0,
+                                albums_processed=[],
+                                errors=[]
+                            )
+                    else:
+                        console.print("[yellow]No albums found in database. Run with --albums-only first to collect albums.[/yellow]")
+                        return ProcessingResult(
+                            total_albums=0,
+                            total_pictures=0,
+                            albums_processed=[],
+                            errors=[]
+                        )
+                
+                console.print(f"[green]Found {len(albums)} albums to process from database[/green]")
+                
+                # Process each album
+                for i, (album_id, album_href, album_title, album_items) in enumerate(albums):
                     try:
-                        # Navigate to next album (only one step from current position)
-                        if album_position >= self.start_album:
-                            logger.debug(f"Navigating to album {album_position}... (start album: {self.start_album})")
-                            await self.keyboard_press('ArrowRight', delay=ALBUM_NAVIGATION_DELAY)
-                        # Process album
-                        processed_album = await self.process_album(album_position)
+                        console.print(f"[blue]Processing album {i + 1}/{len(albums)}: {album_title}[/blue]")
+                        
+                        # Process the album from database
+                        processed_album = await self.process_album_from_db(
+                            album_id=album_id,
+                            album_href=album_href,
+                            album_title=album_title,
+                            album_items=album_items
+                        )
+                        
                         albums_processed.append(processed_album)
-
-                        if prev_album and prev_album.href == processed_album.href:
-                            console.print(f"[yellow]All albums processed[/yellow]")
-                            break
-                        prev_album = processed_album
-
+                        
                     except Exception as e:
-                        error_msg = f"Error processing album {album_position}: {e}"
+                        error_msg = f"Error processing album {album_title}: {e}"
                         logger.error(error_msg)
                         errors.append(error_msg)
                         # Save error to database
                         try:
-                            insert_error(error_msg)
+                            insert_error(error_msg, album_id)
                         except Exception as db_error:
                             logger.error(f"Error saving error to database: {db_error}")
-
+                
                 # Print summary
                 self._print_summary(albums_processed, errors)
-
+                
                 return ProcessingResult(
-                    total_albums=self.max_albums,
+                    total_albums=len(albums),
                     total_pictures=sum(len(album.pictures) for album in albums_processed),
                     albums_processed=albums_processed,
                     errors=errors
                 )
-
+                
             finally:
                 if self.context:
                     try:
@@ -925,13 +1089,14 @@ class GooglePhotosScraper:
 @click.option('-s', '--start-album', default=1, help='Start processing from this album position (1-based)')
 @click.option('-f', '--start-album-fresh', is_flag=True, help='Start processing from the beginning, ignoring existing albums')
 @click.option('-a', '--albums-only', is_flag=True, help='Only add albums to database without processing photos')
+@click.option('-p', '--process-images', is_flag=True, help='Process images from albums in database (requires albums to be collected first)')
 @click.option('-d', '--db-path', default=DATABASE_PATH, help='Path to the SQLite database file')
 @click.option('-c', '--chrome-bin', default=BRAVE_EXECUTABLE, help='Path to Chrome/Brave binary')
 @click.option('-r', '--reset-db', is_flag=True, help='Delete and recreate the database')
 @click.option('-i', '--init-db-only', is_flag=True, help='Only initialize the database and exit')
 @click.option('-t', '--show-stats', is_flag=True, help='Show database statistics and exit')
 @click.option('--log-level', type=click.Choice(['debug', 'info', 'warning', 'error']), default='warning', help='Set the logging level (default: WARNING)')
-def main(login: bool, max_albums: int, start_album: int, start_album_fresh: bool, albums_only: bool, db_path: str, chrome_bin: str, reset_db: bool, init_db_only: bool, show_stats: bool, log_level: str):
+def main(login: bool, max_albums: int, start_album: int, start_album_fresh: bool, albums_only: bool, process_images: bool, db_path: str, chrome_bin: str, reset_db: bool, init_db_only: bool, show_stats: bool, log_level: str):
     """Main entry point."""
     max_albums = max_albums if max_albums > 0 else 100000
     if start_album < 1:
@@ -982,7 +1147,12 @@ def main(login: bool, max_albums: int, start_album: int, start_album_fresh: bool
     async def run_scraper():
         scraper = GooglePhotosScraper(login=login, max_albums=max_albums, start_album=start_album, album_fresh=start_album_fresh, skip_existing=skip_existing, albums_only=albums_only)
         
-        result = await scraper.scrape_albums()
+        # Process images from albums in database
+        if albums_only:
+            console.print("[green]Albums-only mode: Collecting albums only (no image processing)...[/green]")
+        else:
+            console.print("[green]Processing images from albums in database...[/green]")
+        result = await scraper.scrape_albums_from_db(max_albums=max_albums, start_album=start_album)
         
         # Print database summary
         scraper.print_database_summary()
