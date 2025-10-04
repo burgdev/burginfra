@@ -4,7 +4,7 @@
 certs
 
 # Kubernetes generated files
-kustomization.yaml
+#kustomization.yaml
 
 # Sensitive files
 secrets.yaml
