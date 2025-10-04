@@ -2,6 +2,7 @@
 .env
 .env.secret
 certs
+.immich-values.yaml
 
 # Kubernetes generated files
 #kustomization.yaml

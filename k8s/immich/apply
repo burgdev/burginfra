@@ -8,5 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOMAIN=$(grep -m1 '^DOMAIN=' "$SCRIPT_DIR/.env" | cut -d '=' -f2-)
 $SCRIPT_DIR/../../scripts/bin/bui-local-certs "$DOMAIN"
 
+$SCRIPT_DIR/update-immich-values
+
 # Apply kustomization
 kubectl apply -k "$SCRIPT_DIR"

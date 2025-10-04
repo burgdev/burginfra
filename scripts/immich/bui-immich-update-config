@@ -2,16 +2,18 @@
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 cd $SCRIPT_DIR
 
-TEMPLATE=config.template.json
-CONFIG=.immich-config.json
+TEMPLATE=immich-values.template.yaml
+CONFIG=.immich-values.yaml
 
 set -a
 source .env
 set +a
 
-envsubst < "$TEMPLATE" > "$CONFIG"
-sed -i '/^\s*\(#\|\/\/\)/d' $CONFIG
+# Create a temporary file with the header
+echo "# $(date) -- DO NOT EDIT: Auto-generated from $TEMPLATE" > "$CONFIG"
+echo "" >> "$CONFIG"
 
-echo "Update '$CONFIG' from template '$TEMPLATE'"
+# Process the template and append to the file
+envsubst < "$TEMPLATE" | sed '/^\s*\(#\|\/\)/d' >> "$CONFIG"
 
-
+echo "Updated '$CONFIG' from template '$TEMPLATE' at $(date)"
