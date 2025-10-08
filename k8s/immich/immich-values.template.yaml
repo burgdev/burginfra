@@ -19,7 +19,7 @@ env:
         key: password
   database: immich
 
-# Enable Redis
+# Enable Redis -> TODO: replace with valkey
 redis:
   enabled: false
 

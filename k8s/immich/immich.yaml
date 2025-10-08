@@ -44,8 +44,8 @@ metadata:
 spec:
   chart: immich
   repo: https://immich-app.github.io/immich-charts
-  targetNamespace: immich
   version: 0.9.3
+  targetNamespace: immich
   valuesContent: ""  # Will be replaced by kustomize, changes are made in `immich-values.yaml`
 ---
 # IMMICH INGRESS =============================================
