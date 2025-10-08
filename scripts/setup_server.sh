@@ -2,13 +2,13 @@
 # Description: Securely configure system for k3s, Traefik, and general hardening.
 # Safe to re-run (idempotent design).
 #
+# IMPORTANT: This script need to run on the serve!
+
 set -euo pipefail
 
 ### GLOBALS (can be overridden by environment variables) ###
 USER_NAME="${USER_NAME:-$USER}"
-K3S_PORT="${K3S_PORT:-6443}"
-HTTP_PORT="${HTTP_PORT:-80}"
-HTTPS_PORT="${HTTPS_PORT:-443}"
+TIMEZONE="${TIMEZONE:-'Europe/Zurich'}"
 
 DISK_DEVICE="${DISK_DEVICE:-/dev/vda}"
 MOUNT_POINT="${MOUNT_POINT:-/mnt/disk1}"
@@ -53,16 +53,28 @@ section() {
   echo -e "${b}${G}==> $1${rst}"
 }
 
-setup_locale_help="Configures system locale settings to prevent warnings and ensure proper character encoding."
+setup_locale_help="Configures system locale and timezone settings. Uses TIMEZONE environment variable (default: Europe/Zurich)."
 setup_locale() {
-  section "Configuring system locale"
+  section "Configuring system locale and timezone"
   sudo apt update -qq
-  sudo apt install -y locales
+  sudo apt install -y locales tzdata
+  
+  # Set timezone from environment variable
+  echo "Setting timezone to: $TIMEZONE"
+  sudo timedatectl set-timezone "$TIMEZONE"
+  
+  # Configure locales
   sudo locale-gen en_US.UTF-8 de_CH.UTF-8
   sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+  
+  # Export locale settings for current session
   export LANG=en_US.UTF-8
   export LC_ALL=en_US.UTF-8
+  
+  # Show current timezone setting
+  echo "Current time zone: $(timedatectl | grep 'Time zone')"
 }
+
 update_system_help="Updates package lists and upgrades installed packages. Installs unattended-upgrades for automatic security patches."
 update_system() {
   section "Updating system packages"
@@ -76,16 +88,21 @@ configure_ssh_help="Configures SSH for key-only login, disables root login, and 
 configure_ssh() {
   section "Configuring SSH"
   local ssh_config="/etc/ssh/sshd_config"
-  sudo sed -i \
-    -e 's/^#\?PermitRootLogin.*/PermitRootLogin no/' \
-    -e 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' \
-    -e 's/^#\?PermitEmptyPasswords.*/PermitEmptyPasswords no/' \
-    -e 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' \
-    -e 's/^#\?UsePAM.*/UsePAM yes/' \
-    -e 's/^#\?X11Forwarding.*/X11Forwarding no/' \
-    -e "/^#\?AllowUsers/ d" "$ssh_config"
-
-  echo "AllowUsers $USER_NAME" | sudo tee -a "$ssh_config" > /dev/null
+  
+  # Remove any existing settings (except TOTP-specific ones)
+  sudo sed -i -E \
+    -e '/^(#\s*)?(PermitRootLogin|PasswordAuthentication|PermitEmptyPasswords|X11Forwarding|AllowUsers)\s+/d' \
+    "$ssh_config"
+  
+  # Add the basic security settings at the end of the file
+  {
+    echo "PermitRootLogin no"
+    echo "PasswordAuthentication no"
+    echo "PermitEmptyPasswords no"
+    echo "X11Forwarding no"
+    echo "AllowUsers $USER_NAME"
+  } | sudo tee -a "$ssh_config" > /dev/null
+  
   sudo systemctl restart ssh
 }
 
@@ -99,13 +116,23 @@ setup_firewall() {
   sudo ufw default deny incoming
   sudo ufw default allow outgoing
 
-  sudo ufw allow ssh
-  sudo ufw allow ${K3S_PORT}/tcp
-  sudo ufw allow 10250/tcp
-  sudo ufw allow ${HTTP_PORT}/tcp
-  sudo ufw allow ${HTTPS_PORT}/tcp
+  # Allow SSH (with rate limiting to prevent brute force)
+  sudo ufw limit 22/tcp comment 'Rate limit SSH'
 
-  echo "y" | sudo ufw enable || true
+  sudo ufw allow 80/tcp comment 'HTTP'
+  sudo ufw allow 443/tcp comment 'HTTPS'
+
+  sudo ufw allow 6443/tcp comment 'k3s API'
+  sudo ufw allow 10250/tcp comment 'k3s kubelet'
+  
+  # Allow Kubernetes node port range (30000-32767)
+  sudo ufw allow 30000:32767/tcp comment 'Kubernetes NodePort range'
+  sudo ufw allow 30000:32767/udp comment 'Kubernetes NodePort range'
+  
+  # Enable UFW with a 30-second timeout to prevent lockout
+  echo "Enabling UFW with 30-second timeout..."
+  echo "y" | sudo ufw enable
+
   sudo ufw status verbose
 }
 
@@ -133,18 +160,12 @@ enable_apparmor() {
 
 enable_time_sync_help="Ensures system time synchronization using systemd-timesyncd."
 enable_time_sync() {
-  : '
-  Ensures system time synchronization using systemd-timesyncd.
-  '
   section "Enabling time synchronization"
   sudo timedatectl set-ntp true
 }
 
 _secure_kubeconfig_help="Secures the kubeconfig file by setting proper ownership and permissions."
 _secure_kubeconfig() {
-  : '
-  Sets secure permissions for the kubeconfig file.
-  '
   section "Securing kubeconfig"
   local cfg="/etc/rancher/k3s/k3s.yaml"
   if [ -f "$cfg" ]; then
@@ -153,11 +174,35 @@ _secure_kubeconfig() {
   fi
 }
 
+install_utils_help="Install commonly used tools, like rsync, rclone, ..."
+install_utils() {
+  if ! command -v gpg >/dev/null 2>&1; then
+    sudo apt install -y gpg
+  fi
+  if ! command -v vim >/dev/null 2>&1; then
+    section "Installing vim"
+    sudo apt install -y vim
+  fi
+  if ! command -v rsync >/dev/null 2>&1; then
+    section "Installing rsync"
+    sudo apt install -y rsync
+  fi
+  # In your install_utils function
+  section "Installing/updating rclone"
+  curl -s https://rclone.org/install.sh | sudo bash -s -- --yes || {
+      echo "$(s Y "Warning: Failed to install/update rclone. Continuing...")" >&2
+  }
+  if ! command -v kopia >/dev/null 2>&1; then
+    section "Installing kopia"
+    curl -s https://kopia.io/signing-key | sudo gpg --dearmor -o /usr/share/keyrings/kopia-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/kopia-keyring.gpg] https://packages.kopia.io/apt/ stable main" | sudo tee /etc/apt/sources.list.d/kopia.list
+    sudo apt update
+    sudo apt install -y kopia
+  fi
+}
+
 install_k3s_help="Installs k3s lightweight Kubernetes distribution."
 install_k3s() {
-  : '
-  Installs k3s (lightweight Kubernetes) with Traefik enabled.
-  '
   section "Installing k3s"
   if ! command -v k3s >/dev/null 2>&1; then
     curl -sfL https://get.k3s.io | sh -
@@ -167,6 +212,77 @@ install_k3s() {
   fi
 }
 
+configure_totp_help="Configures TOTP (Google Authenticator) for SSH authentication."
+configure_totp() {
+    section "Configuring TOTP Authentication"
+    
+    # Install required packages
+    sudo apt install -y libpam-google-authenticator qrencode
+    
+    # Configure PAM for Google Authenticator
+    # Remove any existing google_authenticator line first
+    sudo sed -i '/pam_google_authenticator.so/d' /etc/pam.d/sshd
+    # Add our configuration at the beginning of the auth section
+    echo "auth required pam_google_authenticator.so nullok" | sudo tee -a /etc/pam.d/sshd
+    
+    # Configure SSH for TOTP
+    local ssh_config="/etc/ssh/sshd_config"
+    
+    # Remove any existing TOTP-related SSH settings
+    sudo sed -i -E \
+        -e '/^(#\s*)?(ChallengeResponseAuthentication|UsePAM|AuthenticationMethods|KbdInteractiveAuthentication)\s+/d' \
+        "$ssh_config"
+    
+    # Add TOTP-specific SSH settings
+    {
+        echo "# TOTP Authentication Settings"
+        echo "ChallengeResponseAuthentication yes"
+        echo "UsePAM yes"
+        echo "# Use PAM for authentication (will require both public key and TOTP)"
+        echo "AuthenticationMethods publickey,keyboard-interactive"
+    } | sudo tee -a "$ssh_config" > /dev/null
+    
+    # Restart SSH to apply changes
+    sudo systemctl restart ssh
+    
+    # Create TOTP config directory
+    mkdir -p ~/.google_authenticator
+    chmod 700 ~/.google_authenticator
+    
+    # Generate or use existing TOTP secret
+    if [ -f ~/.google_authenticator/totp_secret ]; then
+        echo "Using existing TOTP configuration"
+        cp ~/.google_authenticator/totp_secret ~/.google_authenticator/$(hostname)
+    else
+        echo "Generating new TOTP configuration"
+        google-authenticator -t -d -f -r 3 -R 30 -w 3 -Q UTF8 -l "$(hostname)" -s ~/.google_authenticator/$(hostname)
+        cp ~/.google_authenticator/$(hostname) ~/.google_authenticator/totp_secret
+    fi
+    
+    # Set permissions
+    chmod 600 ~/.google_authenticator/*
+    
+    # Restart SSH
+    sudo systemctl restart sshd
+    
+    # Show QR code if running in terminal
+    if [ -t 1 ]; then
+        echo "Scan this QR code with Google Authenticator:"
+        secret=$(head -n1 ~/.google_authenticator/$(hostname) | cut -d' ' -f1)
+        qrencode -t UTF8 "otpauth://totp/$(hostname)?secret=$secret&issuer=$(hostname)"
+    fi
+    
+    echo -e "\n$(s Y "IMPORTANT: Backup these recovery codes in a secure location:")"
+    echo "----------------------------------------"
+    tail -n +6 ~/.google_authenticator/$(hostname) | head -n 5
+    echo "----------------------------------------"
+    echo -e "\n$(s R "You will need these if you lose your TOTP device!")"
+    
+    # Save a copy of the secret in a secure location
+    echo -e "\n$(s G "TOTP configuration complete. Test with:")"
+    echo "ssh $USER@$(hostname -f)"
+}
+
 mount_webdav_help="Mount webdav source. WEBDAV_USER|PASSWORD and KDRIVE_* or WEBDAV_URL env variables required."
 mount_webdav() {
     section "Mount WebDAV"
@@ -174,8 +290,9 @@ mount_webdav() {
     # Install davfs2 if not installed
     if ! command -v mount.davfs &> /dev/null; then
         section "Installing davfs2..."
+        echo "davfs2 davfs2/suid_install boolean false" | sudo debconf-set-selections
         sudo apt update
-        sudo apt install -y davfs2
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y davfs2
     fi
 
     if [ -z "$WEBDAV_URL" ]; then
@@ -215,7 +332,7 @@ mount_webdav() {
     sudo sed -i "\|$WEBDAV_MOUNT_PATH|d" /etc/fstab
 
     # Add fstab entry
-    FSTAB_LINE="$WEBDAV_URL $WEBDAV_MOUNT_PATH davfs file_mode=666,dir_mode=777,uid=$(id -u),gid=$(id -g),rw,noauto,user,_netdev 0 0"
+    FSTAB_LINE="$WEBDAV_URL $WEBDAV_MOUNT_PATH davfs file_mode=665,dir_mode=775,uid=$(id -u),gid=$(id -g),rw,_netdev 0 0"
     echo "$FSTAB_LINE" | sudo tee -a /etc/fstab
 
     # Configure credentials
@@ -236,12 +353,17 @@ mount_webdav() {
     echo "Mounted on $(s B $WEBDAV_MOUNT_PATH)"
 }
 
-install_rootkit_hunter_help="Installs rkhunter to detect common rootkits and backdoors."
-install_rootkit_hunter() {
-  section "Installing Rootkit Hunter"
-  sudo apt install -y rkhunter
-  sudo rkhunter --update
-  sudo rkhunter --propupd
+install_lynis_help="Installs rkhunter to detect common rootkits and backdoors."
+install_lynis() {
+  section "Installing Lynis (security auditing tool)"
+  sudo apt install -y lynis
+  echo "Run $(s B $0 security_audit) to check your system."
+}
+
+run_system_check_help="Runs Lynis (security auditing tool) to check your system."
+run_system_check() {
+  section "Running Lynis (security auditing tool)"
+  sudo lynis audit system
 }
 
 format_and_mount_disk_help="Formats the specified DISK_DEVICE (default /dev/vda) as ext4 and mounts it to MOUNT_POINT (default /mnt/disk1)."
@@ -291,6 +413,47 @@ format_and_mount_disk() {
 }
 
 
+security_audit_help="Runs comprehensive security audit using Lynis and other tools."
+security_audit() {
+  section "Running security audit"
+  
+  # Create log directory
+  local log_dir="/var/log/security-audit"
+  sudo mkdir -p "$log_dir"
+  
+  # Install Lynis if not present
+  if ! command -v lynis >/dev/null 2>&1; then
+    install_lynis
+  fi
+  
+  # Run Lynis audit
+  local lynis_report="$log_dir/lynis-report-$(date +%Y%m%d-%H%M%S).txt"
+  section "Running Lynis security audit"
+  sudo lynis audit system > "$lynis_report" 2>&1
+  
+  # Check firewall status
+  section "Checking firewall status"
+  local firewall_report="$log_dir/firewall-report-$(date +%Y%m%d-%H%M%S).txt"
+  sudo ufw status verbose > "$firewall_report" 2>&1
+  
+  # Check for open ports
+  section "Checking open ports"
+  local ports_report="$log_dir/ports-report-$(date +%Y%m%d-%H%M%S).txt"
+  sudo netstat -tuln | grep LISTEN > "$ports_report" 2>&1
+  
+  # Check running services
+  section "Checking running services"
+  local systemd_report="$log_dir/systemd-report-$(date +%Y%m%d-%H%M%S).txt"
+  sudo systemctl list-units --type=service --state=running > "$systemd_report" 2>&1
+  
+  echo "$(s G Security audit complete!)"
+  echo "Reports saved to: $(s B $log_dir)"
+  echo "  - Lynis: $(s B $(basename "$lynis_report"))"
+  echo "  - Firewall: $(s B $(basename "$firewall_report"))"
+  echo "  - Ports: $(s B $(basename "$ports_report"))"
+  echo "  - Systemd: $(s B $(basename "$systemd_report"))"
+}
+
 backup_config_help="Backs up the current configuration to a timestamped file."
 backup_config() {
   : '
@@ -313,26 +476,32 @@ run_all() {
   setup_auditd
   enable_apparmor
   enable_time_sync
+  install_utils
+  install_lynis
   install_k3s
   #install_rootkit_hunter
   #format_and_mount_disk
   #backup_config
-  echo $(s r Reboot your system)
+  echo $(s R "Reboot your system")
+  echo $(s d "https://www.servercontrolpanel.de")
 }
 
 help_menu() {
   echo "$(s d Usage:) sudo [$(s i ENV_OVERRIDES)] $(s b $0) [command...]
+  
+It is recomanded to run $(s b run_all) first to setup the system and then mount webdav.
+After this a $(s b security_audit) is recommended to check the system.
 
-$(s Y Examples:)
-  sudo ./setup_infra.sh run_all
-  sudo ./setup_infra.sh install_k3s setup_firewall
-  USER_NAME=root DISK_DEVICE=/dev/sdb ./setup_infra.sh format_and_mount_disk
+$(s Y Execute this Commands:)
+  sudo $0 run_all
+  KDRIVE_ID=1234xxx WEBDAV_USER=xxx@burgdev.ch WEBDAV_PASSWORD=xxx sudo $0 mount_webdav
+  sudo $0 security_audit
+  
+It is also possible to run multiple commands:
+  sudo $0 update_system setup_firewall
 
 $(s Y Environment variables:)
   $(s b USER_NAME)               User for SSH and kubeconfig ownership (default: $(s B ${USER_NAME}))
-  $(s b K3S_PORT)                k3s API port (default: $(s B ${K3S_PORT}))
-  $(s b HTTP_PORT)               HTTP port (default: $(s B ${HTTP_PORT}))
-  $(s b HTTPS_PORT)              HTTPS port (default: $(s B ${HTTPS_PORT}))
 
 $(s d "(optional)") Used for $(s i "${Y}format_and_mount_disk"):
   $(s b DISK_DEVICE)             Target disk for mounting (default: $(s B ${DISK_DEVICE}))
@@ -340,10 +509,10 @@ $(s d "(optional)") Used for $(s i "${Y}format_and_mount_disk"):
   
 $(s d "(optional)") Used for $(s i "${Y}mount_webdav"):
   $(s b KDRIVE_ID)               $(s R required) - kDrive id (used of $(s b WEBDAV_URL) is not set)
-  $(s b KDRIVE_PATH)             $(s R required) - kDrive path (used of $(s b WEBDAV_URL) is not set) (default: $(s B ${KDRIVE_PATH}))
   $(s b WEBDAV_USER)             $(s R required) - WebDAV user (usally email)
   $(s b WEBDAV_PASSWORD)         $(s R required) - WebDAV password
   $(s b WEBDAV_MOUNT_PATH)       Local mount path (default: $(s B ${WEBDAV_MOUNT_PATH}))
+  $(s b KDRIVE_PATH)             kDrive path (used of $(s b WEBDAV_URL) is not set) (default: $(s B ${KDRIVE_PATH}))
   $(s b WEBDAV_URL)              Full webdav URL if $(s b KDRIVE_ID) and $(s b KDRIVE_PATH) is not set
 
 $(s Y Commands:)
@@ -356,11 +525,14 @@ $(s Y Commands:)
   $(s b setup_auditd)            $(s d $setup_auditd_help)
   $(s b enable_apparmor)         $(s d $enable_apparmor_help)
   $(s b enable_time_sync)        $(s d $enable_time_sync_help)
+  $(s b install_utils)           $(s d $install_utils_help)
+  $(s b install_lynis)           $(s d $install_lynis_help)
   $(s b install_k3s)             $(s d $install_k3s_help)
 
 $(s Y Optional Commands:)
+  $(s b security_audit)          $(s d $security_audit_help)
   $(s b mount_webdav)            $(s d $mount_webdav_help)
-  $(s b install_rootkit_hunter)  $(s d $install_rootkit_hunter_help)
+  $(s b configure_totp)          $(s d $configure_totp_help)
   $(s b format_and_mount_disk)   $(s d $format_and_mount_disk_help)
   $(s b backup_config)           $(s d $backup_config_help)
 "
@@ -381,5 +553,20 @@ main() {
     fi
   done
 }
+
+
+handle_exit() {
+    local exit_code=$?
+    local line_number=$1
+    local command_name=$2
+    if [[ "$exit_code" != "0" ]]; then
+        echo "$(s R "Error in $command_name at line $line_number with status $exit_code")" >&2
+        echo "$(s Y "Warning: Script exited with error. Some operations may not have completed successfully.")" >&2
+        exit $exit_code
+    fi
+}
+
+# Set up trap to check exit code
+trap 'handle_exit $LINENO "$BASH_COMMAND"' EXIT
 
 main "$@"
