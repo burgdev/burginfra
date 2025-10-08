@@ -5,12 +5,20 @@
 set -euo pipefail
 
 ### GLOBALS (can be overridden by environment variables) ###
-USER_NAME="${USER_NAME:-infra}"
+USER_NAME="${USER_NAME:-$USER}"
 K3S_PORT="${K3S_PORT:-6443}"
 HTTP_PORT="${HTTP_PORT:-80}"
 HTTPS_PORT="${HTTPS_PORT:-443}"
+
 DISK_DEVICE="${DISK_DEVICE:-/dev/vda}"
 MOUNT_POINT="${MOUNT_POINT:-/mnt/disk1}"
+
+KDRIVE_ID="${KDRIVE_ID:-}"
+KDRIVE_PATH="${KDRIVE_PATH:-burgdev/burginfra/mnt}"
+WEBDAV_USER="${WEBDAV_USER:-}"
+WEBDAV_PASSWORD="${WEBDAV_PASSWORD:-}"
+WEBDAV_MOUNT_PATH="${WEBDAV_MOUNT_PATH:-/mnt/kdrive}"
+WEBDAV_URL="${WEBDAV_URL:-}"
 
 # Color definitions (using tput for better compatibility)
 if [ -t 1 ]; then
@@ -42,16 +50,26 @@ s() {
 }
 
 section() {
-  echo -e "\n${b}${G}==> $1${rst}"
+  echo -e "${b}${G}==> $1${rst}"
 }
 
+setup_locale_help="Configures system locale settings to prevent warnings and ensure proper character encoding."
+setup_locale() {
+  section "Configuring system locale"
+  sudo apt update -qq
+  sudo apt install -y locales
+  sudo locale-gen en_US.UTF-8 de_CH.UTF-8
+  sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+  export LANG=en_US.UTF-8
+  export LC_ALL=en_US.UTF-8
+}
 update_system_help="Updates package lists and upgrades installed packages. Installs unattended-upgrades for automatic security patches."
 update_system() {
   section "Updating system packages"
   sudo apt update -qq
   sudo apt full-upgrade -y -qq
   sudo apt install -y unattended-upgrades apt-listchanges
-  sudo dpkg-reconfigure --priority=low unattended-upgrades
+  sudo dpkg-reconfigure -f noninteractive --priority=low unattended-upgrades
 }
 
 configure_ssh_help="Configures SSH for key-only login, disables root login, and restricts access to the selected user."
@@ -113,14 +131,6 @@ enable_apparmor() {
   sudo aa-status || true
 }
 
-install_rootkit_hunter_help="Installs rkhunter to detect common rootkits and backdoors."
-install_rootkit_hunter() {
-  section "Installing Rootkit Hunter"
-  sudo apt install -y rkhunter
-  sudo rkhunter --update
-  sudo rkhunter --propupd
-}
-
 enable_time_sync_help="Ensures system time synchronization using systemd-timesyncd."
 enable_time_sync() {
   : '
@@ -128,6 +138,110 @@ enable_time_sync() {
   '
   section "Enabling time synchronization"
   sudo timedatectl set-ntp true
+}
+
+_secure_kubeconfig_help="Secures the kubeconfig file by setting proper ownership and permissions."
+_secure_kubeconfig() {
+  : '
+  Sets secure permissions for the kubeconfig file.
+  '
+  section "Securing kubeconfig"
+  local cfg="/etc/rancher/k3s/k3s.yaml"
+  if [ -f "$cfg" ]; then
+    sudo chmod 600 "$cfg"
+    sudo chown "$USER_NAME:$USER_NAME" "$cfg"
+  fi
+}
+
+install_k3s_help="Installs k3s lightweight Kubernetes distribution."
+install_k3s() {
+  : '
+  Installs k3s (lightweight Kubernetes) with Traefik enabled.
+  '
+  section "Installing k3s"
+  if ! command -v k3s >/dev/null 2>&1; then
+    curl -sfL https://get.k3s.io | sh -
+    _secure_kubeconfig
+  else
+    echo "k3s already installed, skipping."
+  fi
+}
+
+mount_webdav_help="Mount webdav source. WEBDAV_USER|PASSWORD and KDRIVE_* or WEBDAV_URL env variables required."
+mount_webdav() {
+    section "Mount WebDAV"
+
+    # Install davfs2 if not installed
+    if ! command -v mount.davfs &> /dev/null; then
+        section "Installing davfs2..."
+        sudo apt update
+        sudo apt install -y davfs2
+    fi
+
+    if [ -z "$WEBDAV_URL" ]; then
+      # Ask for KDrive ID (or use env KDRIVE_ID)
+      if [ -z "$KDRIVE_ID" ]; then
+          read -p "Enter your kDrive ID: " KDRIVE_ID
+      fi
+      # Encode spaces in folder path
+      ENCODED_PATH=$(echo "$KDRIVE_PATH" | sed 's/ /%20/g')
+      WEBDAV_URL="https://${KDRIVE_ID}.connect.kdrive.infomaniak.com/$ENCODED_PATH"
+    fi
+
+    if [ -z "$WEBDAV_USER" ]; then
+        read -p "Enter your webdav username (email): " WEBDAV_USER
+    fi
+    if [ -z "$WEBDAV_PASSWORD" ]; then
+      read -s -p "Enter your webdav password: " WEBDAV_PASSWORD
+      echo
+    fi
+    # Check if WEBDAV_MOUNT_PATH is already mounted
+    if mountpoint -q "$WEBDAV_MOUNT_PATH"; then
+        echo "$WEBDAV_MOUNT_PATH is already mounted. Unmounting..."
+        sudo umount "$WEBDAV_MOUNT_PATH"
+    fi
+
+    echo "WebDAV URL: $(s B $WEBDAV_URL)"
+    echo "Local mount point: $(s B $WEBDAV_MOUNT_PATH)"
+
+    sudo mkdir -p "$WEBDAV_MOUNT_PATH"
+    sudo chown "$(id -u)":"$(id -g)" "$WEBDAV_MOUNT_PATH"
+
+    # Backup fstab
+    sudo cp /etc/fstab /etc/fstab.bak
+
+    # Remove existing entries for this URL or mount point
+    sudo sed -i "\|$WEBDAV_URL|d" /etc/fstab
+    sudo sed -i "\|$WEBDAV_MOUNT_PATH|d" /etc/fstab
+
+    # Add fstab entry
+    FSTAB_LINE="$WEBDAV_URL $WEBDAV_MOUNT_PATH davfs file_mode=666,dir_mode=777,uid=$(id -u),gid=$(id -g),rw,noauto,user,_netdev 0 0"
+    echo "$FSTAB_LINE" | sudo tee -a /etc/fstab
+
+    # Configure credentials
+    SECRETS_FILE="/etc/davfs2/secrets"
+    # Remove existing entry
+    sudo sed -i "\|$WEBDAV_URL|d" "$SECRETS_FILE" || true
+    # Add new entry
+    echo "$WEBDAV_URL $WEBDAV_USER $WEBDAV_PASSWORD" | sudo tee -a "$SECRETS_FILE" > /dev/null
+
+    # Set permissions
+    sudo chmod 600 "$SECRETS_FILE"
+    sudo chown root:root "$SECRETS_FILE"
+
+    sudo systemctl daemon-reload
+
+    sudo mount $WEBDAV_MOUNT_PATH
+    echo $(s G "Setup complete!")
+    echo "Mounted on $(s B $WEBDAV_MOUNT_PATH)"
+}
+
+install_rootkit_hunter_help="Installs rkhunter to detect common rootkits and backdoors."
+install_rootkit_hunter() {
+  section "Installing Rootkit Hunter"
+  sudo apt install -y rkhunter
+  sudo rkhunter --update
+  sudo rkhunter --propupd
 }
 
 format_and_mount_disk_help="Formats the specified DISK_DEVICE (default /dev/vda) as ext4 and mounts it to MOUNT_POINT (default /mnt/disk1)."
@@ -175,31 +289,7 @@ format_and_mount_disk() {
   sudo mount -a
   echo "Disk mounted at $MOUNT_POINT"
 }
-install_k3s_help="Installs k3s lightweight Kubernetes distribution."
-install_k3s() {
-  : '
-  Installs k3s (lightweight Kubernetes) with Traefik enabled.
-  '
-  section "Installing k3s"
-  if ! command -v k3s >/dev/null 2>&1; then
-    curl -sfL https://get.k3s.io | sh -
-  else
-    echo "k3s already installed, skipping."
-  fi
-}
 
-secure_kubeconfig_help="Secures the kubeconfig file by setting proper ownership and permissions."
-secure_kubeconfig() {
-  : '
-  Sets secure permissions for the kubeconfig file.
-  '
-  section "Securing kubeconfig"
-  local cfg="/etc/rancher/k3s/k3s.yaml"
-  if [ -f "$cfg" ]; then
-    sudo chmod 600 "$cfg"
-    sudo chown "$USER_NAME:$USER_NAME" "$cfg"
-  fi
-}
 
 backup_config_help="Backs up the current configuration to a timestamped file."
 backup_config() {
@@ -215,21 +305,21 @@ backup_config() {
 
 run_all_help="Runs all the following commands:"
 run_all() {
+  setup_locale
   update_system
   configure_ssh
   setup_firewall
   setup_fail2ban
   setup_auditd
   enable_apparmor
-  install_rootkit_hunter
   enable_time_sync
-  #format_and_mount_disk
   install_k3s
-  secure_kubeconfig
+  #install_rootkit_hunter
+  #format_and_mount_disk
   #backup_config
+  echo $(s r Reboot your system)
 }
 
-### 15. Help Menu ###
 help_menu() {
   echo "$(s d Usage:) sudo [$(s i ENV_OVERRIDES)] $(s b $0) [command...]
 
@@ -243,23 +333,34 @@ $(s Y Environment variables:)
   $(s b K3S_PORT)                k3s API port (default: $(s B ${K3S_PORT}))
   $(s b HTTP_PORT)               HTTP port (default: $(s B ${HTTP_PORT}))
   $(s b HTTPS_PORT)              HTTPS port (default: $(s B ${HTTPS_PORT}))
+
+$(s d "(optional)") Used for $(s i "${Y}format_and_mount_disk"):
   $(s b DISK_DEVICE)             Target disk for mounting (default: $(s B ${DISK_DEVICE}))
   $(s b MOUNT_POINT)             Mount location (default: $(s B ${MOUNT_POINT}))
+  
+$(s d "(optional)") Used for $(s i "${Y}mount_webdav"):
+  $(s b KDRIVE_ID)               $(s R required) - kDrive id (used of $(s b WEBDAV_URL) is not set)
+  $(s b KDRIVE_PATH)             $(s R required) - kDrive path (used of $(s b WEBDAV_URL) is not set) (default: $(s B ${KDRIVE_PATH}))
+  $(s b WEBDAV_USER)             $(s R required) - WebDAV user (usally email)
+  $(s b WEBDAV_PASSWORD)         $(s R required) - WebDAV password
+  $(s b WEBDAV_MOUNT_PATH)       Local mount path (default: $(s B ${WEBDAV_MOUNT_PATH}))
+  $(s b WEBDAV_URL)              Full webdav URL if $(s b KDRIVE_ID) and $(s b KDRIVE_PATH) is not set
 
 $(s Y Commands:)
   $(s b run_all)                 $(s d $run_all_help)  
+  $(s b setup_locale)            $(s d $setup_locale_help)  
   $(s b update_system)           $(s d $update_system_help)  
   $(s b configure_ssh)           $(s d $configure_ssh_help)  
   $(s b setup_firewall)          $(s d $setup_firewall_help)
   $(s b setup_fail2ban)          $(s d $setup_fail2ban_help)
   $(s b setup_auditd)            $(s d $setup_auditd_help)
   $(s b enable_apparmor)         $(s d $enable_apparmor_help)
-  $(s b install_rootkit_hunter)  $(s d $install_rootkit_hunter_help)
   $(s b enable_time_sync)        $(s d $enable_time_sync_help)
   $(s b install_k3s)             $(s d $install_k3s_help)
-  $(s b secure_kubeconfig)       $(s d $secure_kubeconfig_help)
 
 $(s Y Optional Commands:)
+  $(s b mount_webdav)            $(s d $mount_webdav_help)
+  $(s b install_rootkit_hunter)  $(s d $install_rootkit_hunter_help)
   $(s b format_and_mount_disk)   $(s d $format_and_mount_disk_help)
   $(s b backup_config)           $(s d $backup_config_help)
 "
@@ -272,8 +373,7 @@ main() {
   fi
   for cmd in "$@"; do
     if declare -f "$cmd" >/dev/null 2>&1; then
-       echo "run '$cmd'"
-      # "$cmd"
+       "$cmd"
     else
       echo "Unknown command: $cmd"
       help_menu
