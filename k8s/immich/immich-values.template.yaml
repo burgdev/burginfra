@@ -21,7 +21,7 @@ env:
 
 # Enable Redis
 redis:
-  enabled: true
+  enabled: false
 
 # Application configuration
 immich:

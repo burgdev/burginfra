@@ -16,7 +16,8 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/mnt/k8s/immich/library
+    #path: /home/tobias/mnt/k8s/immich/library
+    path: /mnt/kubernetes/volumes/immich/server/library
     type: DirectoryOrCreate
 ---
 # PRESISTEND VOLUME CLAIM =====================================
@@ -57,7 +58,7 @@ spec:
   tls:
     - hosts:
         - $DOMAIN
-      secretName: traefik-me-tls
+      # secretName: traefik-me-tls # only for local
   rules:
     - host: $DOMAIN
       http:

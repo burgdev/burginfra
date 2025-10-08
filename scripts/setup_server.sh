@@ -8,7 +8,7 @@ set -euo pipefail
 
 ### GLOBALS (can be overridden by environment variables) ###
 USER_NAME="${USER_NAME:-$USER}"
-TIMEZONE="${TIMEZONE:-'Europe/Zurich'}"
+TIMEZONE="${TIMEZONE:-Europe/Zurich}"
 
 DISK_DEVICE="${DISK_DEVICE:-/dev/vda}"
 MOUNT_POINT="${MOUNT_POINT:-/mnt/disk1}"
@@ -89,15 +89,24 @@ configure_ssh() {
   section "Configuring SSH"
   local ssh_config="/etc/ssh/sshd_config"
   
-  # Remove any existing settings (except TOTP-specific ones)
+  # Check if TOTP Authentication is already set
+  if ! grep -q '^\s*# TOTP Authentication\s' "$ssh_config"; then
+    # Remove existing AuthenticationMethods if it's commented out
+    sudo sed -i -E \
+      -e '/^(#\s*)?(PasswordAuthentication|AuthenticationMethods)\s+/d' \
+      "$ssh_config"
+    # Add default AuthenticationMethods
+    echo "AuthenticationMethods publickey,password" | sudo tee -a "$ssh_config" > /dev/null
+  fi
+  
+  # Remove other settings we want to manage
   sudo sed -i -E \
-    -e '/^(#\s*)?(PermitRootLogin|PasswordAuthentication|PermitEmptyPasswords|X11Forwarding|AllowUsers)\s+/d' \
+    -e '/^(#\s*)?(PermitRootLogin|PermitEmptyPasswords|X11Forwarding|AllowUsers)\s+/d' \
     "$ssh_config"
   
   # Add the basic security settings at the end of the file
   {
     echo "PermitRootLogin no"
-    echo "PasswordAuthentication no"
     echo "PermitEmptyPasswords no"
     echo "X11Forwarding no"
     echo "AllowUsers $USER_NAME"
@@ -237,7 +246,8 @@ configure_totp() {
     {
         echo "# TOTP Authentication Settings"
         echo "ChallengeResponseAuthentication yes"
-        echo "UsePAM yes"
+        #echo "UsePAM yes"
+        echo "PasswordAuthentication no"
         echo "# Use PAM for authentication (will require both public key and TOTP)"
         echo "AuthenticationMethods publickey,keyboard-interactive"
     } | sudo tee -a "$ssh_config" > /dev/null
@@ -366,6 +376,18 @@ run_system_check() {
   sudo lynis audit system
 }
 
+update_bashrc_help="Updates .bashrc to disable color aliases and common ls aliases."
+update_bashrc() {
+    section "Updating .bashrc configuration"
+    local bashrc_file="$HOME/.bashrc"
+    
+    # Uncomment all aliases by removing '#' before 'alias' while preserving indentation
+    sed -i -E 's/^(\s*)#(\s*alias )/\1\2/' "$bashrc_file"
+
+    echo "Updated .bashrc - all aliases have been uncommented."
+    echo "To apply changes in the current session, run: source ~/.bashrc"
+}
+
 format_and_mount_disk_help="Formats the specified DISK_DEVICE (default /dev/vda) as ext4 and mounts it to MOUNT_POINT (default /mnt/disk1)."
 format_and_mount_disk() {
   section "Formatting and mounting disk"
@@ -468,6 +490,7 @@ backup_config() {
 
 run_all_help="Runs all the following commands:"
 run_all() {
+  update_bashrc
   setup_locale
   update_system
   configure_ssh
@@ -482,8 +505,7 @@ run_all() {
   #install_rootkit_hunter
   #format_and_mount_disk
   #backup_config
-  echo $(s R "Reboot your system")
-  echo $(s d "https://www.servercontrolpanel.de")
+  echo "$(s R Reboot your system:) '$(s B sudo reboot)'"
 }
 
 help_menu() {
@@ -502,6 +524,7 @@ It is also possible to run multiple commands:
 
 $(s Y Environment variables:)
   $(s b USER_NAME)               User for SSH and kubeconfig ownership (default: $(s B ${USER_NAME}))
+  $(s b TIMEZONE)                Timezone to use (default: $(s B ${TIMEZONE}))
 
 $(s d "(optional)") Used for $(s i "${Y}format_and_mount_disk"):
   $(s b DISK_DEVICE)             Target disk for mounting (default: $(s B ${DISK_DEVICE}))
@@ -517,6 +540,7 @@ $(s d "(optional)") Used for $(s i "${Y}mount_webdav"):
 
 $(s Y Commands:)
   $(s b run_all)                 $(s d $run_all_help)  
+  $(s b update_bashrc)           $(s d $update_bashrc_help)  
   $(s b setup_locale)            $(s d $setup_locale_help)  
   $(s b update_system)           $(s d $update_system_help)  
   $(s b configure_ssh)           $(s d $configure_ssh_help)  
