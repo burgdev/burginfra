@@ -1,0 +1,20 @@
+# NAMESPACE ====
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+---
+# CERT_MANAGER HELM ====
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  chart: oci://quay.io/jetstack/charts/cert-manager
+  version: 1.19.0
+  targetNamespace: cert-manager
+  valuesContent: |-
+    installCRDs: true
+    prometheus:
+      enabled: false
