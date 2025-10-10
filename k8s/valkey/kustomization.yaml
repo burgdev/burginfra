@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- valkey.yaml
+
+configMapGenerator:
+- name: valkey-values
+  files:
+    - values.yaml
+  options:
+    disableNameSuffixHash: true
+
+# Add replacements for both HelmChart values and Ingress
+replacements:
+# For HelmChart values
+- source:
+    kind: ConfigMap
+    name: valkey-values
+    fieldPath: data.values\.yaml
+  targets:
+  - select:
+      kind: HelmChart
+      name: valkey
+    fieldPaths:
+    - spec.valuesContent
+    options:
+      create: true
+
