@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
 - whoami.yaml
+- ingress.yaml
 
 configMapGenerator:
 - name: whoami-config
@@ -20,3 +21,4 @@ replacements:
       name: whoami
     fieldPaths:
     - spec.rules.0.host
+    - spec.tls.0.hosts.0

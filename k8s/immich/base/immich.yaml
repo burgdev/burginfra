@@ -11,7 +11,7 @@ metadata:
   name: immich-library-pv
 spec:
   capacity:
-    storage: 5Gi
+    storage: 400Gi
   accessModes:
     - ReadWriteOnce
   storageClassName: local-path
@@ -31,7 +31,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: 400Gi
   storageClassName: local-path   # or whatever StorageClass you use in k3s
   volumeName: immich-library-pv
 ---
@@ -58,7 +58,6 @@ spec:
   tls:
     - hosts:
         - $DOMAIN
-      secretName: traefik-me-tls # only for local
   rules:
     - host: $DOMAIN
       http:
@@ -67,6 +66,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: immich-server
+                name: ENV-immich-server # use correct name in kustomization
                 port:
                   number: 2283

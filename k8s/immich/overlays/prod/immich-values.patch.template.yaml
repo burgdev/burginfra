@@ -1,0 +1,15 @@
+# Default values for Immich
+image:
+  tag: v2.0.1
+
+# Application configuration
+immich:
+  configuration:
+    logging:
+      enabled: true
+      level: $IMMICH_LOG_LEVEL
+
+    server:
+      externalDomain: $EXTERNAL_DOMAIN 
+      loginPageMessage: <div><b>PROD</b>$WELCOME_TEXT_HTML</div>
+      publicUsers: true

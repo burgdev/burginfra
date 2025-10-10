@@ -1,0 +1,22 @@
+# IMMICH INGRESS =============================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich  # Must match the target resource name
+  namespace: immich
+spec:
+  rules:
+  - host: $DOMAIN
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: local-immich-server
+              port:
+                number: 2283
+  tls:
+    - hosts:
+        - $DOMAIN
+      secretName: traefik-me-tls # only for local

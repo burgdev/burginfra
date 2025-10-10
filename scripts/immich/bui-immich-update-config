@@ -2,18 +2,42 @@
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 cd $SCRIPT_DIR
 
-TEMPLATE=immich-values.template.yaml
+TEMPLATE=immich-values.patch.template.yaml
+BASE=../../base/immich-values.template.yaml
 CONFIG=.immich-values.yaml
 
 set -a
-source .env
+source base/.env.template
 set +a
 
-# Create a temporary file with the header
-echo "# $(date) -- DO NOT EDIT: Auto-generated from $TEMPLATE" > "$CONFIG"
-echo "" >> "$CONFIG"
+for ENV in $(ls overlays/); do
+    echo "Updating '$ENV'"
+    cd overlays/$ENV
+    if [ ! -f .env ]; then
+        echo "No .env file found in '$ENV'"
+        break
+    fi
+    set -a
+    source .env
+    set +a
+    if [ ! -f $TEMPLATE ]; then
+        echo "No $TEMPLATE file found in '$ENV'"
+        cp $BASE $CONFIG.merge
+    else
+        # merge with the file in the base
+        echo "Merging $BASE and $TEMPLATE"
+        yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' $BASE $TEMPLATE > $CONFIG.merge
+    fi
+    # Create a temporary file with the header
+    echo "# $(date) -- DO NOT EDIT: Auto-generated from $TEMPLATE" > "$CONFIG"
+    echo "" >> "$CONFIG"
 
-# Process the template and append to the file
-envsubst < "$TEMPLATE" | sed '/^\s*\(#\|\/\)/d' >> "$CONFIG"
+    # Process the template and append to the file
+    envsubst < "$CONFIG.merge" | sed '/^\s*\(#\|\/\)/d' >> "$CONFIG"
 
-echo "Updated '$CONFIG' from template '$TEMPLATE' at $(date)"
+    echo "Updated '$CONFIG' from template '$TEMPLATE' at $(date)"
+    rm $CONFIG.merge
+    
+    cd -
+
+done

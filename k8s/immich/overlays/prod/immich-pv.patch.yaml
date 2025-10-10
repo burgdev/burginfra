@@ -1,0 +1,9 @@
+# PRESISTEND VOLUME ===========================================
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-library-pv
+spec:
+  hostPath:
+    path: /mnt/kubernetes/volumes/immich/server/library
+    type: DirectoryOrCreate

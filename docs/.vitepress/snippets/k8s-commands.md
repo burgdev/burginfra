@@ -12,6 +12,7 @@ defineProps({
 ```bash-vue [apply]
 cd {{path}}
 kubectl kustomize .     # see resulting files
+# ./apply.sh            # run 'apply' script if available
 kubectl apply -k .      # apply changes:
 ```
 <details>

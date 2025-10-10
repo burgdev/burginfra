@@ -1,0 +1,12 @@
+# PERSISTENT VOLUME =========================================
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-database-pv
+spec:
+  capacity:
+    storage: 15Gi
+  hostPath:
+    path: /mnt/kubernetes/volumes/immich/database
+    type: DirectoryOrCreate

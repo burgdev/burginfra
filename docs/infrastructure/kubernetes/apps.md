@@ -28,8 +28,8 @@ cp .env.secret.template .env.secret
 vi .env
 vi .env.secret
 ```
-<<< @/../k8s/immich/.env.template{dotenv}
-<<< @/../k8s/immich/.env.secret.template{dotenv}
+<<< @/../k8s/immich/base/.env.template{dotenv}
+<<< @/../k8s/immich/base/.env.secret.template{dotenv}
 :::
 
 ### Commands

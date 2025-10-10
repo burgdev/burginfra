@@ -1,0 +1,11 @@
+# PERSISTEN VOLUME CLAIM =====================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-cache
+  namespace: immich
+spec:
+  resources:
+    requests:
+      storage: 10Gi
+---
