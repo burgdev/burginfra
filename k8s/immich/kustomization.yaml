@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - immich.yaml
 - immich-db.yaml
+- immich-cache.yaml
 
 # Create secrets from .env.secret (sensitive data)
 secretGenerator:
