@@ -11,5 +11,5 @@ immich:
 
     server:
       externalDomain: $EXTERNAL_DOMAIN 
-      loginPageMessage: <div><b>PROD</b>$WELCOME_TEXT_HTML</div>
+      loginPageMessage: <div>$WELCOME_TEXT_HTML</div>
       publicUsers: true
