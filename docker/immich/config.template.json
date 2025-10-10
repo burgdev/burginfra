@@ -48,17 +48,17 @@
     "extractEmbedded": false,
     "fullsize": {
       "enabled": false,
-      "format": "jpeg",
+      "format": "webp",
       "quality": 80
     },
     "preview": {
       "format": "webp",
-      "quality": 80,
+      "quality": 65,
       "size": 1440
     },
     "thumbnail": {
       "format": "webp",
-      "quality": 60,
+      "quality": 50,
       "size": 250
     }
   },
@@ -200,7 +200,7 @@
   "storageTemplate": {
     "enabled": true,
     "hashVerificationEnabled": true,
-    "template": "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}{{MM}}_NoAlbum{{/if}}/{{yy}}{{MM}}{{dd}}{{hh}}{{mm}}_{{filetype}}_{{assetIdShort}}"
+    "template": "$STORAGE_TEMPLATE"
   },
   "templates": {
     "email": {
@@ -210,7 +210,7 @@
     }
   },
   "theme": {
-    "customCss": ""
+    "customCss": ":root { /* light */ --immich-primary: 66 80 175 !important; --immich-bg: 255 255 255 !important; --immich-fg: 0 0 0 !important; --immich-gray: 246 246 244 !important; --immich-error: 229 115 115 !important; --immich-success: 129 199 132 !important; --immich-warning: 255 183 77 !important; /* dark */ --immich-dark-primary: 172 203 250 !important; --immich-dark-bg: 0 0 0 !important; --immich-dark-fg: 229 231 235 !important; --immich-dark-gray: 33 33 33 !important; --immich-dark-error: 211 47 47 !important; --immich-dark-success: 56 142 60 !important; --immich-dark-warning: 245 124 0 !important; }"
   },
   "trash": {
     "days": 30,
@@ -220,4 +220,3 @@
     "deleteDelay": 7
   }
 }
-

@@ -11,7 +11,8 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/tmb/k8s/immich/database
+    path: /home/tobias/mnt/k8s/immich/database
+    #path: /mnt/kubernetes/volumes/immich/database
     type: DirectoryOrCreate
 ---
 # PERSISTEN VOLUME CLAIM =====================================
@@ -47,33 +48,26 @@ spec:
     spec:
       containers:
         - name: immich-postgres
-          image: "docker.io/tensorchord/pgvecto-rs:pg16-v0.3.0"
+          image: "docker.io/tensorchord/vchord-postgres:pg17-v0.4.3"
           imagePullPolicy: Always
           ports:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: immich
-              #valueFrom:
-              #  configMapKeyRef:
-              #    name: immich-env
-              #    key: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: immich-secrets
+                  key: username
             - name: POSTGRES_PASSWORD
-              value: immich
-              #valueFrom:
-              #  configMapKeyRef:
-              #    name: immich-env
-              #    key: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-secrets
+                  key: password
             - name: POSTGRES_DB
               value: immich
-              #valueFrom:
-              #  configMapKeyRef:
-              #    name: immich-env
-              #    key: DB_DATABASE_NAME
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
-              #subPath: immich-db
           resources: {}
       volumes:
         - name: pgdata

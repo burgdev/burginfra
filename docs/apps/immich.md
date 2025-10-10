@@ -1,8 +1,8 @@
 ---
 title: Immich
+order: 20
 ---
-
-## Overview
+<a target="_blank" href="https://immich.app"><img src="/logos/immich_with_name.png" width="300"/></a>
 
 [Immich](https://immich.app) is a self-hosted photo and video backup solution that provides a Google Photos-like experience.
 
@@ -64,7 +64,7 @@ export API_KEY="my_key"
 . ../../scripts/bin/activate # source activate script
 bui-immich-auto-album -m DELETE_ALL --delete-confirm / http://localhost:2283/api $API_KEY
 ```
-## Additional Resources
+## Resources
 
 - [Official Documentation](https://immich.app/docs)
 - [GitHub Repository](https://github.com/immich-app/immich)

@@ -16,7 +16,8 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/tmb/k8s/immich/library
+    path: /home/tobias/mnt/k8s/immich/library
+    #path: /mnt/kubernetes/volumes/immich/server/library
     type: DirectoryOrCreate
 ---
 # PRESISTEND VOLUME CLAIM =====================================
@@ -41,28 +42,11 @@ metadata:
   name: immich
   namespace: immich
 spec:
-  repo: https://immich-app.github.io/immich-charts
   chart: immich
+  repo: https://immich-app.github.io/immich-charts
   version: 0.9.3
   targetNamespace: immich
-  valuesContent: |-
-    image:
-      tag: v1.142.1
-    env:
-      DB_HOSTNAME: immich-database.immich.svc.cluster.local
-    postgresql:
-      enabled: false        # disable built-in
-      global:
-        auth:
-          username: immich
-          password: immich
-          database: immich
-    redis:
-      enabled: true
-    immich:
-      persistence:
-        library:
-          existingClaim: immich-library
+  valuesContent: ""  # Will be replaced by kustomize, changes are made in `immich-values.yaml`
 ---
 # IMMICH INGRESS =============================================
 apiVersion: networking.k8s.io/v1
@@ -71,8 +55,12 @@ metadata:
   name: immich
   namespace: immich
 spec:
+  tls:
+    - hosts:
+        - $DOMAIN
+      secretName: traefik-me-tls # only for local
   rules:
-    - host: pix.burginfra
+    - host: $DOMAIN
       http:
         paths:
           - path: /

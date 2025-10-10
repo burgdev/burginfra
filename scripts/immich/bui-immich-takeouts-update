@@ -2,7 +2,11 @@
 #
 # /// script
 # requires-python = ">=3.10"
+<<<<<<< HEAD
+# dependencies = ["click"]
+=======
 # dependencies = ["click", "prompt_toolkit"]
+>>>>>>> origin/main
 # ///
 
 import zipfile
@@ -11,6 +15,19 @@ import os
 import glob
 import click
 import tempfile
+<<<<<<< HEAD
+from pathlib import Path
+from collections import defaultdict
+
+
+def process_zip(zip_path: str, output_dir: str | None = None, dry_run: bool = False, auto_yes: bool = False):
+    if output_dir is None:
+        dry_run = True
+        output_dir = tempfile.gettempdir()
+    output_zip_path = os.path.join(
+        output_dir,
+        os.path.basename(zip_path).replace(".zip", "_renamed.zip")
+=======
 import webbrowser
 import time
 from pathlib import Path
@@ -51,6 +68,7 @@ def process_zip(zip_path: str, output_dir: str | None = None, dry_run: bool = Fa
     output_zip_path = os.path.join(
         output_dir,
         os.path.basename(zip_path)
+>>>>>>> origin/main
     )
 
     # Group files by album folder
@@ -72,6 +90,47 @@ def process_zip(zip_path: str, output_dir: str | None = None, dry_run: bool = Fa
                 # Determine proposed album name
                 if ',' in album_name:
                     proposed_name, removed = album_name.rsplit(',', 1)
+<<<<<<< HEAD
+                    removed = removed.strip()
+                elif "_" in album_name:
+                    proposed_name = album_name.replace('_', " ")
+                    removed = ""
+                else:
+                    proposed_name = album_name
+                    removed = ""
+                proposed_name = proposed_name.strip()
+
+                # Decide on new name
+                if auto_yes or proposed_name == album_name:
+                    new_name = proposed_name
+                    action = "accept"
+                else:
+                    click.echo()
+                    click.echo(f"Proposed new name: '", nl=False)
+                    click.secho(proposed_name, bold=True, nl=False)
+                    click.secho(f", {removed}", strikethrough=True, dim=True, nl=False)
+                    click.secho("'", nl=False)
+
+                    action = click.prompt(
+                        (click.style(f" (", dim=True) +
+                          click.style('Enter', bold=True, fg='green') +
+                          click.style('=accept, ', dim=True) +
+                          click.style('n', bold=True) +
+                          click.style('=edit name, ', dim=True) +
+                          click.style('d', bold=True, fg='red') +
+                          click.style('=delete) ', dim=True)),
+                        default="accept",
+                        show_default=False,
+                    ).lower()
+
+                    if action == 'd':
+                        click.echo(f"Deleting album {album_name}")
+                        continue
+                    elif action == 'n':
+                        new_name = click.prompt("Enter new name").strip()
+                    else:
+                        new_name = proposed_name
+=======
                     styled_proposed_name = click.style(proposed_name, bold=True) + click.style(f", {removed}", strikethrough=True, dim=True)
                 elif "_" in album_name:
                     proposed_name = album_name.replace('_', " ")
@@ -147,11 +206,41 @@ def process_zip(zip_path: str, output_dir: str | None = None, dry_run: bool = Fa
                             new_name = prompt_with_default("Enter new name", album_name).strip()
                 processed_albums[album_name] = new_name
 
+>>>>>>> origin/main
                 output = click.style("DRY RUN: ", fg="yellow") if dry_run else ""
                 output += f"Adding album '{click.style(album_name, bold=True)}'"
                 if new_name != album_name:
                     output += f" as '{click.style(new_name, bold=True)}'"
                 output += click.style(f" ({len(items)} files) ", dim=True)
+<<<<<<< HEAD
+                click.secho(output, nl=False)
+
+                for item in items:
+                    data = zin.read(item.filename)
+                    parts = item.filename.split('/')
+                    parts[2] = new_name
+
+                    # If JSON file, update metadata
+                    if item.filename.endswith("metadata.json"):
+                        try:
+                            json_data = json.loads(data)
+
+                            if 'title' in json_data:
+                                json_data['title'] = new_name
+
+                            data = json.dumps(json_data, indent=2).encode('utf-8')
+                        except json.JSONDecodeError:
+                            click.echo(f"Failed to decode JSON: {item.filename}", err=True)
+                            pass
+
+                    new_filename = '/'.join(parts)
+                    if not dry_run:
+                        zout.writestr(new_filename, data)
+                padding = 150 - len(output) if new_name != album_name else 150 - len(output) - 8
+                padding = 1 if padding < 1 else padding
+                click.secho("." * padding, dim=True, nl=False)
+                click.secho(" ok", fg="green")
+=======
                 click.secho(output, nl=False if not dry_run else True)
 
                 with click.progressbar(items, label=f"Add Album {click.style(new_name, bold=True, fg='yellow')}",
@@ -184,6 +273,7 @@ def process_zip(zip_path: str, output_dir: str | None = None, dry_run: bool = Fa
                 #padding = 1 if padding < 1 else padding
                 #click.secho("." * padding, dim=True, nl=False)
                 #click.secho(" ok", fg="green")
+>>>>>>> origin/main
                         
     if dry_run:
         Path(output_zip_path).unlink()
@@ -198,11 +288,17 @@ def process_zip(zip_path: str, output_dir: str | None = None, dry_run: bool = Fa
 @click.command()
 @click.argument("input_glob")
 @click.argument("output_dir", type=click.Path(file_okay=False))
+<<<<<<< HEAD
+@click.option("--dry-run", is_flag=True, help="Show what would be done, but don’t modify anything.")
+@click.option("--yes", "auto_yes", is_flag=True, help="Automatically accept proposed names.")
+def main(input_glob: str, output_dir: str, dry_run: bool, auto_yes: bool):
+=======
 @click.option("-s", "--skip-same", is_flag=True, help="Skip asking for albums with the same name.")
 @click.option("-n", "--dry-run", is_flag=True, help="Show what would be done, but don’t modify anything.")
 @click.option("-y", "--yes", "auto_yes", is_flag=True, help="Automatically accept proposed names.")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose output.")
 def main(input_glob: str, output_dir: str, dry_run: bool, auto_yes: bool, skip_same: bool, verbose: bool):
+>>>>>>> origin/main
     """
     Process Google Photos Takeout ZIP(s).
 
@@ -210,6 +306,16 @@ def main(input_glob: str, output_dir: str, dry_run: bool, auto_yes: bool, skip_s
     OUTPUT_DIR: Directory for processed zips
     """
     os.makedirs(output_dir, exist_ok=True)
+<<<<<<< HEAD
+    files = glob.glob(input_glob)
+
+    if not files:
+        click.secho("No matching files found.", fg="red")
+        raise SystemExit(1)
+
+    for f in files:
+        process_zip(f, output_dir, dry_run, auto_yes)
+=======
     files = sorted(glob.glob(os.path.expanduser(input_glob)))
 
     if not files:
@@ -218,6 +324,7 @@ def main(input_glob: str, output_dir: str, dry_run: bool, auto_yes: bool, skip_s
 
     for f in files:
         process_zip(zip_path=f, output_dir=output_dir, dry_run=dry_run, auto_yes=auto_yes, ask_everytime=not skip_same, verbose=verbose)
+>>>>>>> origin/main
 
 
 if __name__ == "__main__":

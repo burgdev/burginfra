@@ -50,20 +50,22 @@ const vitePressOptions = {
       next: 'Next page'
     },
 
-    // Sidebar configuration
-    //sidebar: {
-    //  '/infrastructure/': getInfrastructureSidebar(),
-    //  '/apps/': getAppsSidebar(),
-    //  '/scripts/': getScriptsSidebar()
-    //},
-
     // Navigation bar
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Services',
+        items: [
+          { text: 'pix.crux.li', link: '/services/pix.crux.li' },
+          { text: 'wodo.re', link: '/services/wodo.re' },
+        ]
+      },
       { text: 'Documentation',
         items: [
-          { text: 'Applications', link: '/apps/overview' },
-          { text: 'Infrastructure', link: '/infrastructure' },
+          { text: 'Applications', link: '/apps/' },
+          { text: 'Infrastructure', items: [
+            { text: 'Docker', link: '/infrastructure/docker/' },
+            { text: 'Kubernetes', link: '/infrastructure/kubernetes/' },
+          ] },
           { text: 'Scripts', link: '/scripts/' }
         ]
       },
@@ -125,58 +127,9 @@ const vitePressSidebarOptions = {
   sortMenusByFrontmatterOrder: true,
   frontmatterOrderDefaultValue: 100,
   excludeFilesByFrontmatterFieldName: 'exclude',
-  excludeByFolderDepth: 4,
-  manualSortFileNameByPriority: ["overview.md"]
+  excludeByFolderDepth: 6,
+  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md"],
+  includeFolderIndexFile: true
 };
 
 export default defineConfig(withSidebar(vitePressOptions, vitePressSidebarOptions))
-
-// Sidebar generators
-function getInfrastructureSidebar() {
-  return [
-    {
-      text: 'Infrastructure',
-      items: [
-        { text: 'Overview', link: '/infrastructure/' },
-        { 
-          text: 'Kubernetes',
-          collapsed: true,
-          items: [
-            { text: 'Getting Started', link: '/infrastructure/kubernetes/' },
-            { text: 'k3s Setup', link: '/infrastructure/kubernetes/k3s-setup' },
-            { text: 'k9s Setup', link: '/infrastructure/kubernetes/k9s-setup' },
-            { text: 'Applications', link: '/infrastructure/kubernetes/apps' }
-          ]
-        },
-        { 
-          text: 'Networking',
-          link: '/infrastructure/networking/'
-        }
-      ]
-    }
-  ]
-}
-
-function getAppsSidebar() {
-  return [
-    {
-      text: 'Applications',
-      items: [
-        { text: 'Overview', link: '/apps/' },
-        // Add more applications here as needed
-      ]
-    }
-  ]
-}
-
-function getScriptsSidebar() {
-  return [
-    {
-      text: 'Scripts',
-      items: [
-        { text: 'Overview', link: '/scripts/' },
-        // Add more script categories here as needed
-      ]
-    }
-  ]
-}
