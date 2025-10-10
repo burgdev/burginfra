@@ -30,7 +30,7 @@ spec:
   storageClassName: local-path   # or whatever StorageClass you use in k3s
   volumeName: immich-cache-pv
 ---
-# IMMICH CACHE ====
+# IMMICH DATABASE ========================= immich-database ==
 apiVersion: apps/v1
 kind: Deployment
 metadata:
