@@ -11,30 +11,10 @@ namePrefix: prod-
 
 # Add your patch
 patches:
-- path: immich-pv.patch.yaml
-  target:
-    kind: PersistentVolume
-    name: immich-library-pv
-- path: immich-ing.patch.yaml
+- path: immich-ingress.patch.yaml
   target:
     kind: Ingress
     name: immich
-- path: immich-cache-pv.patch.yaml
-  target:
-    kind: PersistentVolume
-    name: immich-cache-pv
-- path: immich-cache-pvc.patch.yaml
-  target:
-    kind: PersistentVolumeClaim
-    name: immich-cache
-- path: immich-db-pv.patch.yaml
-  target:
-    kind: PersistentVolume
-    name: immich-database-pv
-- path: immich-db-pvc.patch.yaml
-  target:
-    kind: PersistentVolumeClaim
-    name: immich-database
 
 #labels:
 #- includeSelectors: true

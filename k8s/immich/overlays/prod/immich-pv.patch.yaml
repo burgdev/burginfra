@@ -1,9 +1,0 @@
-# PRESISTEND VOLUME ===========================================
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: immich-data-pv
-spec:
-  hostPath:
-    path: /mnt/kubernetes/volumes/immich/server/data
-    type: DirectoryOrCreate

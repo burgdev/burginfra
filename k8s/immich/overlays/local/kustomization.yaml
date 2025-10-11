@@ -11,7 +11,7 @@ namePrefix: local-
 
 # Add your patch
 patches:
-- path: immich.patch.yaml
+- path: immich-ingress.patch.yaml
   target:
     kind: Ingress
     name: immich

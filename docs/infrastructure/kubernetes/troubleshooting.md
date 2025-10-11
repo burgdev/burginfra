@@ -11,17 +11,22 @@ This will delete all resources in the namespace!
 :::
 
 ```bash
-kubectl delete namespace immich
+NS=immich
+kubectl delete namespace $NS
 ```
 Check if the namespace is deleted:
 
 ```bash
-kubectl get namespace immich
+kubectl get namespace $NS
 ```
 If it "hangs" try this:
 
 ```bash
-kubectl get namespace immich -o json | tr -d "\n" \
+kubectl get namespace $NS -o json | tr -d "\n" \
     | sed "s/\"finalizers\": \[[^]]*\]/\"finalizers\": []/" \
-    | kubectl replace --raw /api/v1/namespaces/immich/finalize -f -
+    | kubectl replace --raw /api/v1/namespaces/$NS/finalize -f -
 ```
+
+## Delete persistent volumes and claims
+
+See [storage](/infrastructure/kubernetes/storage#delete).

@@ -1,14 +1,29 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR="$(realpath $SCRIPT_DIR/../../../../)"
+. $ROOT_DIR/scripts/_base.sh
+cd $SCRIPT_DIR
 
-# Get the directory of this script
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ "$(basename $KUBECONFIG)" != "config-infra.burgdev.ch" ]; then
+    warn "$(s yellow KUBECONFIG) is not set to '$(s blue config-infra.burgdev.ch)'"
+    read -p "Are you sure to coninue? [y/N] " -n 1 -r
+    echo    # (optional) move to a new line
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        error "Aborted."
+        exit 1
+    fi
+fi
 
-# Generate certificates if they don't exist
-DOMAIN=$(grep -m1 '^DOMAIN=' "$SCRIPT_DIR/.env" | cut -d '=' -f2-)
-$SCRIPT_DIR/../../../../scripts/bin/bui-local-certs "$DOMAIN"
+title "Update immich values"
+$ROOT_DIR/scripts/immich/bui-immich-update-config "local"
 
-$SCRIPT_DIR/../../update-immich-values
-
-# Apply kustomization
+echo $(s d "=============================================")
+title "Apply kustomization"
+echo "$(s d kubectl apply -k $(realpath --relative-to="." $SCRIPT_DIR))"
+echo
 kubectl apply -k "$SCRIPT_DIR"
+success "DONE"
+title "Show pods"
+echo "$(s d kubectl get pods -n immich)"
+kubectl get pods -n immich
