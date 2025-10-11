@@ -11,8 +11,8 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/mnt/k8s/immich/cache
-    #path: /mnt/kubernetes/volumes/immich/cache
+    #path: /home/tobias/mnt/k8s/immich/cache
+    path: /mnt/kubernetes/volumes/immich/cache
     type: DirectoryOrCreate
 ---
 # PERSISTEN VOLUME CLAIM =====================================

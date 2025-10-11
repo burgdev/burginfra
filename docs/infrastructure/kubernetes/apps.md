@@ -36,10 +36,12 @@ vi .env.secret
 
 <K8sCommandsSnippet namespace="immich" path="k8s/immich" />
 
-### Backup
+### Backup & Restore
 
 
-### Restore
+[Immich documentation](https://docs.immich.app/administration/backup-and-restore/)
+
+The backup is done automatically or manually inside immich.
 
 Create database if it does not exist:
 
@@ -50,20 +52,46 @@ kubectl exec -i -n immich $POD -- \
 ```
 
 Restore the dump:
-```bash
+::: code-group
+```bash [restore commands]
 BACKUP_FILE=path/to/immich_dump.dump
-kubectl cp $BACKUP_FILE immich/$POD:/tmp/immich_dump.dump
+DB_USERNAME=immich
 
+# using restore script
+./k8s/immich/restore-db.sh
+
+# MANUALLY ------------------
+ENV=prod # or local
+DP=${ENV}-immich-server
+# stop immich server -- set it to replicas 1 again after everthing is done!
+kubectl scale deployment $DP --replicas=0 -n immich
+
+# which runs this command
+gunzip --stdout "$BACKUP_FILE" \
+    | sed "s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', true);/g" \
+    |  kubectl exec -it -n immich $POD -- psql --username=$DB_USERNAME --dbname=postgres
+
+# custom commands if manuel dump was used
+kubectl cp $BACKUP_FILE immich/$POD:$BACKUP_FILE
 # dump
 kubectl exec -it -n immich $POD -- \
-  pg_restore --username=immich --dbname=immich -v --clean --format=custom --if-exists --verbose /tmp/immich_dump.dump
+  pg_restore --username=immich --dbname=immich -v --clean --format=custom --if-exists --verbose $BACKUP_FILE
 
 # from sql
-kubectl exec -it -n immich $POD -- psql --username=immich --dbname=immich -f /tmp/immich_dump.dump
+kubectl exec -it -n immich $POD -- psql --username=immich --dbname=immich -f $BACKUP_FILE
 
 # all
-kubectl exec -it -n immich $POD -- psql --username=immich -f /tmp/immich_dump.dump
+kubectl exec -it -n immich $POD -- psql --username=immich -f $BACKUP_FILE
 ```
+<<< @/../k8s/immich/restore-db.sh{bash} [restore-db.sh script]
+
+```bash [backup command]
+BACKUP_FILE=path/to/immich_dump.dump
+DB_USERNAME=immich
+kubectl exec -it -n immich $POD -- \
+  pg_dumpall --clean --format=custom--if-exists --username=$DB_USERNAME | gzip > "$BACKUP_FILE"
+```
+:::
 
 ## DB Access
 

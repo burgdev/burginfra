@@ -23,10 +23,19 @@ env:
 redis:
   enabled: false
 
+server:
+  persistence:
+    external:
+      enabled: true
+      type: pvc
+      mountPath: /mnt/external
+      readOnly: true
+      existingClaim: $ENV-immich-external-pvc
+
 immich:
   persistence:
     library:
-      existingClaim: $ENV-immich-library
+      existingClaim: $ENV-immich-data-pvc
   configuration:
     image:
       colorspace: p3
@@ -43,7 +52,13 @@ immich:
         format: webp
         quality: 50
         size: 250
-
+    library:
+      scan:
+                      #  m h d M d   # e.g. 0/10 * * * * every 10 minutes
+        cronExpression: "* 0 * * *" # every day
+        enabled: true
+      watch: # experimental
+        enabled: true
     logging:
       enabled: true
       level: log
@@ -111,17 +126,17 @@ immich:
         albumUpdateTemplate: ""
         welcomeTemplate: ""
 
-    theme:
-      customCss: |
-        .dark {
-          --immich-ui-light: 40 44 52
-          --immich-ui-dark: 229 231 235
-        }
-        :root, .light {
-          --immich-ui-dark: 20 22 26
-          --immich-ui-light: 240 244 248
-        }
-
+#    theme:
+#      customCss: |
+#        .dark {
+#          --immich-ui-light: 40 44 52
+#          --immich-ui-dark: 229 231 235
+#        }
+#        :root, .light {
+#          --immich-ui-dark: 20 22 26
+#          --immich-ui-light: 240 244 248
+#        }
+#
     trash:
       days: 30
       enabled: true

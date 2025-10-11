@@ -16,8 +16,8 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/mnt/k8s/valkey
-    #path: /mnt/kubernetes/volumes/immich/server/library
+    #path: /home/tobias/mnt/k8s/valkey
+    path: /mnt/kubernetes/volumes/valkey/data
     type: DirectoryOrCreate
 ---
 # PRESISTEND VOLUME CLAIM =====================================

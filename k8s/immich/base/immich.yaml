@@ -4,11 +4,11 @@ kind: Namespace
 metadata:
   name: immich
 ---
-# PRESISTEND VOLUME ===========================================
+# PRESISTEND VOLUME DATA ====
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: immich-library-pv
+  name: immich-data-pv
 spec:
   capacity:
     storage: 400Gi
@@ -16,15 +16,31 @@ spec:
     - ReadWriteOnce
   storageClassName: local-path
   hostPath:
-    path: /home/tobias/mnt/k8s/immich/library
-    #path: /mnt/kubernetes/volumes/immich/server/library
+    #path: /home/tobias/mnt/k8s/immich/library
+    path: /mnt/kubernetes/volumes/immich/server/data
     type: DirectoryOrCreate
 ---
-# PRESISTEND VOLUME CLAIM =====================================
+# PRESISTEND VOLUME EXTERNAL LIBRARY ====
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-external-pv
+spec:
+  capacity:
+    storage: 400Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  hostPath:
+    #path: /home/tobias/mnt/k8s/immich/library
+    path: /mnt/kubernetes/volumes/immich/server/external
+    type: DirectoryOrCreate
+---
+# PRESISTEND VOLUME CLAIM DATA ====
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: immich-library
+  name: immich-data-pvc
   namespace: immich
 spec:
   accessModes:
@@ -33,7 +49,22 @@ spec:
     requests:
       storage: 400Gi
   storageClassName: local-path   # or whatever StorageClass you use in k3s
-  volumeName: immich-library-pv
+  volumeName: immich-data-pv
+---
+# PRESISTEND VOLUME CLAIM EXTERNAL ====
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-external-pvc
+  namespace: immich
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 400Gi
+  storageClassName: local-path   # or whatever StorageClass you use in k3s
+  volumeName: immich-external-pv
 ---
 # IMMICH HELM ================================ immich-server ==
 apiVersion: helm.cattle.io/v1

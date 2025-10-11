@@ -70,9 +70,15 @@ info "Restore database from '$(s blue $BACKUP_FILE)' file into '$(s yellow $POD)
 read -p "Are you sure? [y/N] " -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]; then
+    DEPLOYMENT=${ENV}-immich-server
+    replicas=$(kubectl get deployment -n immich $DEPLOYMENT -o jsonpath="{.spec.replicas}")
+    info "Stopping deployment $(s yellow $DEPLOYMENT)"
+    kubectl scale deployment $DEPLOYMENT --replicas=0 -n immich
     gunzip --stdout "$BACKUP_FILE" \
         | sed "s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', true);/g" \
         |  kubectl exec -it -n immich $POD -- psql --username=$DB_USERNAME --dbname=postgres
+    info "Starting deployment $(s yellow $DEPLOYMENT) (replicas=$(s blue $replicas))"
+    kubectl scale deployment $DEPLOYMENT --replicas=$replicas -n immich
 else
     error "Aborted."
     exit 1

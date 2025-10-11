@@ -11,5 +11,5 @@ immich:
 
     server:
       externalDomain: $EXTERNAL_DOMAIN 
-      loginPageMessage: <div><b>DEV</b>$WELCOME_TEXT_HTML</div>
+      loginPageMessage: "<div><b style='color: red;'>DEV</b></br>$WELCOME_TEXT_HTML</div>"
       publicUsers: true
