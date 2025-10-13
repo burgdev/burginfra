@@ -119,4 +119,5 @@ kubectl port-forward -n immich pod/$POD 6543:5432
 ## Additional Infos
 
 * Immich kubernetes setup by [jasjeetsri](https://github.com/jasjeetsuri/myk3s/tree/main/yaml_configs/immich)
+* Immich kubernetes setup by [frankzhao](https://www.frankzhao.com.au/Kubernetes/Immich)
 * Immich helm chart: [github.com/immich-app/immich-charts](https://github.com/immich-app/immich-charts)
