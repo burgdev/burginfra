@@ -1,0 +1,28 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  annotations:
+    helmcharts.cattle.io/managed-by: helm-controller
+  name: longhorn
+  namespace: kube-system
+spec:
+  chart: longhorn
+  repo: https://charts.longhorn.io
+  version: 1.10.0
+  failurePolicy: abort
+  targetNamespace: longhorn-system
+  createNamespace: true
+  valuesContent: |-
+    persistence:
+      defaultClassReplicaCount: 1
+    defaultSettings:
+      defaultDataPath: /mnt/kubernetes/longhorn
+      defaultReplicaCount: "1"
+      allowCollectingLonghornUsageMetrics: false
+    csi:
+      attacherReplicaCount: 1
+      provisionerReplicaCount: 1
+      resizerReplicaCount: 1
+      snapshotterReplicaCount: 1
+    longhornUI:
+      replicas: 1

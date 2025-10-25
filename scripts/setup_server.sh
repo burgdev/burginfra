@@ -221,6 +221,61 @@ install_k3s() {
   fi
 }
 
+install_longhorn_deps_help="Installs Longhorn dependencies."
+install_longhorn_deps() {
+  section "Installing Longhorn dependencies"
+  if ! command -v iscsid >/dev/null 2>&1; then
+    sudo apt install -y open-iscsi
+  else
+    echo "open-iscsi already installed, skipping."
+  fi
+  if lsmod | grep dm_crypt; then
+    echo "dm_crypt already loaded, skipping."
+  else
+    echo "Loading kernel module:"
+    sudo modprobe dm_crypt
+    echo "dm_crypt" | sudo tee /etc/modules-load.d/dm_crypt.conf
+  fi
+}
+
+setup_longhorn_storage_help="Sets up Longhorn storage."
+setup_longhorn_storage() {
+  section "Setting up Longhorn storage"
+  local longhorn_dir="/mnt/kubernetes/longhorn"
+  local longhorn_uid=1000
+  local longhorn_gid=1000
+  
+  # Create directory if it doesn't exist
+  if [ ! -d "$longhorn_dir" ]; then
+    echo "Creating Longhorn directory at $longhorn_dir"
+    sudo mkdir -p "$longhorn_dir"
+  fi
+
+  # Create longhorn user/group if they don't exist
+  if ! getent group $longhorn_gid >/dev/null; then
+    sudo groupadd -g $longhorn_gid longhorn || true
+  fi
+  
+  if ! id -u longhorn >/dev/null 2>&1; then
+    sudo useradd -u $longhorn_uid -g $longhorn_gid -r -s /sbin/nologin longhorn || true
+  fi
+
+  # Set ownership and permissions
+  echo "Setting permissions for $longhorn_dir"
+  sudo chown -R $longhorn_uid:$longhorn_gid "$longhorn_dir"
+  sudo chmod -R 775 "$longhorn_dir"  # Allow group write access
+  
+  # Set GID bit so new files inherit the group
+  sudo chmod g+s "$longhorn_dir"
+  
+  # For SELinux systems
+  if command -v sestatus >/dev/null 2>&1 && [ "$(sestatus | grep -c 'enabled')" -gt 0 ]; then
+    if command -v chcon >/dev/null 2>&1; then
+      sudo chcon -R -t container_file_t "$longhorn_dir" || true
+    fi
+  fi
+}
+
 configure_totp_help="Configures TOTP (Google Authenticator) for SSH authentication."
 configure_totp() {
     section "Configuring TOTP Authentication"
@@ -510,6 +565,8 @@ run_all() {
   install_utils
   install_lynis
   install_k3s
+  install_longhorn_deps
+  setup_longhorn_storage
   #install_rootkit_hunter
   #format_and_mount_disk
   #backup_config
@@ -560,6 +617,8 @@ $(s Y Commands:)
   $(s b install_utils)           $(s d $install_utils_help)
   $(s b install_lynis)           $(s d $install_lynis_help)
   $(s b install_k3s)             $(s d $install_k3s_help)
+  $(s b install_longhorn_deps)   $(s d $install_longhorn_deps_help)
+  $(s b setup_longhorn_storage)  $(s d $setup_longhorn_storage_help)
 
 $(s Y Optional Commands:)
   $(s b security_audit)          $(s d $security_audit_help)
