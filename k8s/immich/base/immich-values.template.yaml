@@ -56,7 +56,7 @@ immich:
         cronExpression: "* 0 * * *" # every day
         enabled: true
       watch: # experimental
-        enabled: true
+        enabled: false
     logging:
       enabled: true
       level: log
