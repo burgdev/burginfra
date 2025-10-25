@@ -5,7 +5,7 @@ cd $SCRIPT_DIR
 if [ -t 1 ]; then
   # Only define colors if output is a terminal
   b=$(tput bold); d=$(tput dim); i=$(tput sitm); rst=$(tput sgr0); u=$(tput smul); nu=$(tput rmul)
-  red=$(tput setaf 1); green=$(tput setaf 2); yellow=$(tput setaf 3); blue=$(tput setaf 4); 
+  red=$(tput setaf 1); green=$(tput setaf 2); yellow=$(tput setaf 3); blue=$(tput setaf 4);
   cyan=$(tput setaf 6); magenta=$(tput setaf 5); white=$(tput setaf 7)
 else
   # No colors if not a terminal
@@ -35,6 +35,11 @@ error() {
 
 USAGE="$(s d Usage:) BACKUP_FILE=<backup_file> $(s d '[POD=<pod_name>] [DB_USERNAME=<db_username>]') $(s b $0)"
 
+if [ -z $BACKUP_FILE ]; then
+    printf "$USAGE\n\n"
+    warn "Set 'BACKUP_FILE' environment variable to the path of the backup file."
+    exit 1
+fi
 
 # get pod name
 if [ -z "$POD" ]; then
@@ -62,7 +67,7 @@ cd - > /dev/null
 
 if [ ! -f $BACKUP_FILE ]; then
     printf "$USAGE\n\n"
-    warn "Set 'BACKUP_FILE' environment variable to the path of the backup file."
+    warn "Could not find file 'BACKUP_FILE' (env variable BACKUP_FILE)."
     exit 1
 fi
 

@@ -3,7 +3,7 @@ controllers:
     containers:
       main:
         image:
-          tag: v2.0.1
+          tag: v2.1.0
         env:
           # IMMICH_MEDIA_LOCATION: /usr/src/app/upload
           DB_HOSTNAME: $ENV-immich-database.immich.svc.cluster.local
@@ -25,7 +25,7 @@ server:
   persistence:
     external:
       enabled: true
-      type: pvc
+      type: persistentVolumeClaim
       mountPath: /mnt/external
       readOnly: true
       existingClaim: $ENV-immich-external-pvc

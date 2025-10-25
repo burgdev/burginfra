@@ -24,6 +24,7 @@ echo "$(s d kubectl apply -k $(realpath --relative-to="." $SCRIPT_DIR))"
 echo
 kubectl apply -k "$SCRIPT_DIR"
 success "DONE"
+
 title "Show pods"
 echo "$(s d kubectl get pods -n immich)"
 kubectl get pods -n immich
