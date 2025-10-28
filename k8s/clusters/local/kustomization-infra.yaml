@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10s
-  path: "../../infrastructure/traefik"  
+  path: "./k8s/infrastructure/traefik"  
   prune: true
   sourceRef:
     kind: GitRepository
