@@ -4,7 +4,7 @@ metadata:
   name: app-whoami
   namespace: flux-system
 spec:
-  #interval: 10s
+  interval: 10s
   path: "../../apps/whoami/overlays/local" 
   prune: true
   sourceRef:
