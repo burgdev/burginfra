@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10s
-  path: "../../apps/whoami/overlays/local" 
+  path: "../../apps/whoami" 
   prune: true
   sourceRef:
     kind: GitRepository

@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10s
-  path: "../../infrastructure/traefik/overlays/local"  
+  path: "../../infrastructure/traefik"  
   prune: true
   sourceRef:
     kind: GitRepository
