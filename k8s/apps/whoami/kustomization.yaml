@@ -5,20 +5,20 @@ resources:
 - whoami.yaml
 - ingress.yaml
 
-configMapGenerator:
-- name: whoami-config
-  envs:
-    - .env # copy .env.template to .env
-
-replacements:
-- source:
-    kind: ConfigMap
-    name: whoami-config
-    fieldPath: data.DOMAIN
-  targets:
-  - select:
-      kind: Ingress
-      name: whoami
-    fieldPaths:
-    - spec.rules.0.host
-    - spec.tls.0.hosts.0
+#configMapGenerator:
+#- name: whoami-config
+#  envs:
+#    - .env # copy .env.template to .env
+#
+#replacements:
+#- source:
+#    kind: ConfigMap
+#    name: whoami-config
+#    fieldPath: data.DOMAIN
+#  targets:
+#  - select:
+#      kind: Ingress
+#      name: whoami
+#    fieldPaths:
+#    - spec.rules.0.host
+#    - spec.tls.0.hosts.0

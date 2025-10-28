@@ -6,5 +6,5 @@ resources:
   - ../../infrastructure/longhorn/base/
   #- ../../infrastructure/rclone/base # no kustomize yet
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  - ../../apps/immich/overlays/local/
-  - ../../apps/whoami/
+  #- ../../apps/immich/overlays/local/
+  #- ../../apps/whoami/

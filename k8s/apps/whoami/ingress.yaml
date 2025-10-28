@@ -8,7 +8,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls.certresolver: default
 spec:
   rules:
-  - host: $DOMAIN  # This will be replaced by kustomize
+  - host: ${DOMAIN}
     http:
       paths:
       - path: /
@@ -20,4 +20,4 @@ spec:
               number: 80
   tls:
     - hosts:
-      - $DOMAIN
+      - ${DOMAIN}
