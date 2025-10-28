@@ -25,9 +25,17 @@ flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.
 # add deploy key to github
 ```
 
+Check connection:
 
+```bash
+kubectl -n flux-system get gitrepositories
 ```
 
+Force uodate:
+
+```bash
+flux reconcile source git local-gitops --namespace flux-system
+```
 
 <!-- # --8<-- [end:readme_index] <!-- -->
 
