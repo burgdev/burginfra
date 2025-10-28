@@ -12,6 +12,22 @@
 ---
 <!-- # --8<-- [start:readme_index] <!-- -->
 
+## Initial Setup
+
+### Local
+
+```bash
+kubectl apply -f k8s/clusters/local/flux-system/gotk-components.yaml
+kubectl get pods -n flux-system # wait until ready
+kubectl apply -k k8s/clusters/local/flux-system
+# create deploy key
+flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
+# add deploy key to github
+```
+
+
+```
+
 
 <!-- # --8<-- [end:readme_index] <!-- -->
 

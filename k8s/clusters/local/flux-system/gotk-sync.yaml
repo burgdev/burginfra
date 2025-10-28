@@ -1,0 +1,25 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: local-gitops
+  namespace: flux-system
+spec:
+  interval: 10s
+  url: ssh://git@github.com/burgdev/burginfra.git
+  ref:
+    branch: flux
+  secretRef:
+    name: flux-system  
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: local-sync
+  namespace: flux-system
+spec:
+  interval: 10s
+  path: ./k8s/clusters/local
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: local-gitops
