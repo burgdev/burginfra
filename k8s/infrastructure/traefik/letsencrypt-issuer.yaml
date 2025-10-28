@@ -7,8 +7,8 @@ spec:
   acme:
     email: ${EMAIL}
     server: https://acme-v02.api.letsencrypt.org/directory
-    privateKeySecretRef:
-      name: letsencrypt-prod
+    # privateKeySecretRef:
+    #   name: letsencrypt-prod
     solvers:
     - http01:
         ingress:
