@@ -1,0 +1,22 @@
+storageClass:
+  enabled: true
+  name: rclone-storage
+  defaultClass: false
+  parameters:
+    remote: "webdav:$WEBDAV_PATH"
+    vfsCacheMode: "writes"
+    vfsCacheMaxAge: "24h"
+    vfsCachePollInterval: "1m"
+    vfsReadAhead: "128M"
+rclone:
+  config: 
+    valueFrom:
+      secretKeyRef:
+        name: $ENV-rclone-secrets
+        key: rclone-config
+    #[webdav]
+    #type = webdav
+    #url = $(WEBDAV_URL)
+    #vendor = other
+    #user = $(WEBDAV_USER)
+    #pass = $(WEBDAV_PASSWORD)
