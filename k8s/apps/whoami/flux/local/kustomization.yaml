@@ -18,7 +18,7 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: whoami-config-vars
-        namespace: whoami-local # make sure to have the same as in namespace.yaml and kustomization.yaml
+        #namespace: whoami-local # make sure to have the same as in namespace.yaml and kustomization.yaml
         # optional: true
     #  - kind: Secret
     #    name: local-cluster-secret-vars
