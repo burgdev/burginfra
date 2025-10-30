@@ -5,5 +5,5 @@ metadata:
 spec:
   tls:
     - hosts:
-        - $DOMAIN
+        - ${DOMAIN}
       secretName: kube-system/traefik-local-tls # only for local
