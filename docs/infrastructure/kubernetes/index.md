@@ -19,6 +19,29 @@ Install `k3s` as described in the [k3s setup](/infrastructure/kubernetes/k3s-set
 
 Very helpful is the `k9s` tool ([setup](/infrastructure/kubernetes/k9s-setup.md)) as a terminal UI for `kubectl`.
 
+## Initial Flux Setup
+
+[Flux](https://fluxcd.io) is used for continuous delivery of Kubernetes resources.
+
+```bash
+kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
+kubectl get pods -n flux-system # wait until ready
+kubectl apply -k k8s/clusters/flux-system/overlays/local
+# create deploy key
+flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
+# add deploy key to github
+```
+Check connection:
+
+```bash
+kubectl -n flux-system get gitrepositories
+```
+
+Force update:
+
+```bash
+flux reconcile source git git-burginfra --namespace flux-system
+```
 
 
 ## Common Commands

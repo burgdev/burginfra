@@ -17,7 +17,7 @@
 ### Local
 
 ```bash
-kubectl apply -f k8s/clusters/local/flux-system/gotk-components.yaml
+kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
 kubectl get pods -n flux-system # wait until ready
 kubectl apply -k k8s/clusters/flux-system/overlays/local
 # create deploy key

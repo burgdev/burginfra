@@ -1,6 +1,19 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-resources:
-- helm.yaml
+namespace: ${NAMESPACE}
 
+commonLabels:
+  app.kubernetes.io/component: longhorn
+  app.kubernetes.io/part-of: infrastructure
+  app.kubernetes.io/environment: ${ENVIRONMENT}
+  app.kubernetes.io/managed-by: flux
+
+resources:
+- helmrelease.yaml
+
+
+configMapGenerator:
+- name: longhorn-values
+  files:
+    - values.yaml=values.yaml

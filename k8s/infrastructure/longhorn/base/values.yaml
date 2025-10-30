@@ -1,0 +1,13 @@
+persistence:
+  defaultClassReplicaCount: 1
+defaultSettings:
+  defaultDataPath: /mnt/kubernetes/longhorn
+  defaultReplicaCount: "1"
+  allowCollectingLonghornUsageMetrics: false
+csi:
+  attacherReplicaCount: 1
+  provisionerReplicaCount: 1
+  resizerReplicaCount: 1
+  snapshotterReplicaCount: 1
+longhornUI:
+  replicas: 1
