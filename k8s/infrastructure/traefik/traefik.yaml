@@ -9,6 +9,11 @@ spec:
       - "--certificatesresolvers.default.acme.email=${EMAIL}"
       - "--certificatesresolvers.default.acme.storage=/data/acme.json"
       - "--certificatesresolvers.default.acme.httpchallenge.entrypoint=web"
+    tls:
+      stores:
+        default:
+          defaultCertificate:
+            secretName: traefik-local-tls
     ports:
       web:
         redirections:
@@ -16,16 +21,10 @@ spec:
             to: websecure
             scheme: https
             permanent: true
+      websecure:
+        tls:
+          enabled: true
       #web:
       #  exposedPort: 80
       #websecure:
       #  exposedPort: 443
---- 
-apiVersion: traefik.containo.us/v1alpha1
-kind: TLSStore
-metadata:
-  name: default
-  namespace: kube-system
-spec:
-  defaultCertificate:
-    secretName: traefik-local-tls
