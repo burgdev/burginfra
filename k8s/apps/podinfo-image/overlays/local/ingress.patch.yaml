@@ -5,6 +5,4 @@ metadata:
 spec:
   tls:
     - hosts:
-        #- ${DOMAIN}
-        - podinfo-image.burginfra
-      secretName: kube-system/traefik-local-tls # only for local
+        - ${DOMAIN}

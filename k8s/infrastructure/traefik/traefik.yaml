@@ -20,3 +20,8 @@ spec:
       #  exposedPort: 80
       #websecure:
       #  exposedPort: 443
+    tls:
+      stores:
+        default:
+          defaultCertificate:
+            secretName: traefik-local-tls
