@@ -16,11 +16,12 @@ $ROOT_DIR/scripts/bin/bui-local-certs "*.burginfra" "burginfra" "localhost"
 #  --key=certs/privkey.pem \
 #  --namespace=kube-system
 # Create or update the TLS secret in kube-system
-kubectl create secret tls traefik-local-tls \
-  --cert=certs/fullchain.pem \
-  --key=certs/privkey.pem \
-  --namespace=kube-system \
-  --dry-run=client -o yaml | \
-  kubectl apply -f -
-
+for namespace in "kube-system" "podinfo-image-local"; do
+    kubectl create secret tls traefik-local-tls \
+      --cert=certs/fullchain.pem \
+      --key=certs/privkey.pem \
+      --namespace=$namespace \
+      --dry-run=client -o yaml | \
+      kubectl apply -f -
+done
 #kubectl get secret traefik-local-tls --namespace=kube-system -o yaml
