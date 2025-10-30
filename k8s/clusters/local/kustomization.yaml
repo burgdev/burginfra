@@ -6,5 +6,6 @@ resources:
   - ../../infrastructure/traefik/flux/local/flux-kustom.yaml
   - ../../infrastructure/longhorn/flux/local/flux-kustom.yaml
   - ../../infrastructure/cert-manager/flux/local/flux-kustom.yaml
+  - ../../infrastructure/openbao/flux/local/flux-kustom.yaml
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   - ../../apps/podinfo-image/flux/local/flux-kustom.yaml
