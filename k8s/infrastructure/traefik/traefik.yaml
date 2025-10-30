@@ -20,12 +20,12 @@ spec:
       #  exposedPort: 80
       #websecure:
       #  exposedPort: 443
-    tls:
-      stores:
-        default:
-          defaultCertificate:
-            secretName: traefik-local-tls
-      options:
-        default:
-          minVersion: VersionTLS12
-          sniStrict: true
+--- 
+apiVersion: traefik.containo.us/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: kube-system
+spec:
+  defaultCertificate:
+    secretName: traefik-local-tls
