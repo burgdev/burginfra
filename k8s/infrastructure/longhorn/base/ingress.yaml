@@ -1,11 +1,19 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-ui-basic-auth
+  namespace: longhorn-system  # adjust namespace
+spec:
+  basicAuth:
+    secret: longhorn-ui-auth-secret
+    # optional: removeHeader: true
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: longhorn-ui
   annotations:
-      traefik.ingress.kubernetes.io/auth-type: basic
-      traefik.ingress.kubernetes.io/auth-secret: longhorn-ui-auth-secret
-      traefik.ingress.kubernetes.io/auth-realm: "Authentication Required"
+    traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-longhorn-ui-basic-auth@kubernetescrd
   #  cert-manager.io/cluster-issuer: letsencrypt-prod
   #  traefik.ingress.kubernetes.io/router.tls.certresolver: default
 spec:
