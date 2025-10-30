@@ -15,10 +15,6 @@ metadata:
   name: longhorn-ui
   annotations:
     #traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-longhorn-ui-basic-auth@kubernetescrd
-    traefik.ingress.kubernetes.io/router.middlewares: default-auth@kubernetescrd
-    traefik.ingress.kubernetes.io/auth-type: basic
-    traefik.ingress.kubernetes.io/auth-secret: longhorn-ui-auth-secret
-    traefik.ingress.kubernetes.io/auth-header-field: "Authorization"
   #  cert-manager.io/cluster-issuer: letsencrypt-prod
   #  traefik.ingress.kubernetes.io/router.tls.certresolver: default
 spec:
