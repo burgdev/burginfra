@@ -22,5 +22,9 @@ spec:
         name: cert-manager
       version: "1.19.*"
   install:
-    createNamespace: true
-  interval: 1m0s
+    createNamespace: false
+  valuesFrom:
+    - kind: ConfigMap
+      name: cert-manager-values
+      valuesKey: values.yaml 
+  interval: 1h0s

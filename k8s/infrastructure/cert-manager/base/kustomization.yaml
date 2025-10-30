@@ -12,3 +12,9 @@ commonLabels:
 resources:
 - namespace.yaml
 - helmrelease.yaml
+
+
+configMapGenerator:
+- name: cert-manager-values
+  files:
+    - values.yaml=values.yaml
