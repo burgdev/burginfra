@@ -13,7 +13,7 @@ resources:
 - namespace.yaml
 - helmrelease.yaml
 - ingress.yaml
-- service.yaml
+#- service.yaml
 
 
 configMapGenerator:
