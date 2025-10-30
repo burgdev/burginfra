@@ -19,6 +19,7 @@ spec:
   postBuild:
     substitute:
       NAMESPACE: "whoami-local"
+      ENVIRONMENT: "local"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: whoami-config-vars
