@@ -23,4 +23,4 @@ spec:
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: podinfo-image-config-vars
-        # optional: true
+        optional: true
