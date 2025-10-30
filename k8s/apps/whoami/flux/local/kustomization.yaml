@@ -17,14 +17,9 @@ spec:
     kind: GitRepository
     name: local-gitops
   postBuild:
-    #substitute:
-    #  DOMAIN: "whoami.burginfra"
+    substitute:
+      NAMESPACE: "whoami-local"
     substituteFrom:
-      - kind: ConfigMap
-        namespace: whoami-local
+      - kind: ConfigMap # takes configmap from namespace flux-system
         name: whoami-config-vars
-        #namespace: whoami-local # make sure to have the same as in namespace.yaml and kustomization.yaml
         # optional: true
-    #  - kind: Secret
-    #    name: local-cluster-secret-vars
-    #    optional: false
