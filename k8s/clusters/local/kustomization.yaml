@@ -9,7 +9,4 @@ resources:
   - ../../infrastructure/cert-manager/flux/local/kustomization.yaml
   #- ../../infrastructure/rclone/base # no kustomize yet
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  #- ../../apps/immich/overlays/local/
-  - ../../apps/whoami/flux/local/kustomization.yaml
   - ../../apps/podinfo-image/flux/local/kustomization.yaml
-  #- ../../flux/local
