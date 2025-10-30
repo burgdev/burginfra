@@ -12,7 +12,7 @@ commonLabels:
 resources:
 - namespace.yaml
 - helmrelease.yaml
-- service.yaml
+#- service.yaml
 - ingress.yaml
 
 configMapGenerator:
