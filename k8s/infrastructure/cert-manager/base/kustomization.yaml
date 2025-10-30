@@ -18,5 +18,6 @@ configMapGenerator:
 - name: cert-manager-values
   files:
     - values.yaml=values.yaml
-  options:
-    disableNameSuffixHash: true
+
+generatorOptions:
+  disableNameSuffixHash: true
