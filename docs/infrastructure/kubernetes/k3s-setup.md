@@ -23,10 +23,10 @@ For non-root users to use kubectl:
 
 ```bash
 mkdir -p $HOME/.kube
-sudo cp /etc/rancher/k3s/k3s.yaml $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+sudo cp /etc/rancher/k3s/k3s.yaml $HOME/.kube/config-localhost
+sudo chown $(id -u):$(id -g) $HOME/.kube/config-localhost
 
-export KUBECONFIG=$HOME/.kube/config
+export KUBECONFIG=$HOME/.kube/config-localhost
 ```
 
 Add the export line to your `~/.bashrc` or `~/.zshrc` to make it permanent.

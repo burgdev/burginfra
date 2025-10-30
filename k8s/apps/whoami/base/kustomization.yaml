@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: whoami
+
+resources:
+#- namespace.yaml
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+# - kustomize-flux.yaml # DO NOT INCLUDE, it is referenced in k8s/kustomize/*/kustomization.yaml
+# - configs/kustomization.yaml # DO NOT INCLUDE, it is used to manually create config/secrets map

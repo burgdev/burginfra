@@ -1,0 +1,85 @@
+# k8s/immich/overlays/local/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- namespace.yaml
+- ../../base
+
+## Patch the values for local environment
+namespace: whoami-local
+
+# Add your patch
+#patches:
+#- path: whoami-ingress.patch.yaml
+#  target:
+#    kind: Ingress
+#    name: whoami
+
+#labels:
+#- includeSelectors: true
+#  pairs:
+#    app.kubernetes.io/instance:local-immich
+#    app.kubernetes.io/name:server
+
+  
+# Create secrets from .env.secret (sensitive data)
+
+configMapGenerator:
+- name: immich-config
+  envs:
+    - .env  # Environment variables
+  options:
+    disableNameSuffixHash: true
+
+- name: immich-values
+  files:
+    - .immich-values.yaml
+  options:
+    disableNameSuffixHash: true
+
+# Add replacements for both HelmChart values and Ingress
+replacements:
+# For HelmChart values
+- source:
+    kind: ConfigMap
+    name: immich-values
+    fieldPath: data.\.immich-values\.yaml
+  targets:
+  - select:
+      kind: HelmChart
+      name: immich
+    fieldPaths:
+    - spec.valuesContent
+    options:
+      create: true
+
+# For Ingress host
+- source:
+    kind: ConfigMap
+    name: immich-config
+    fieldPath: data.DOMAIN
+  targets:
+  - select:
+      kind: Ingress
+      name: immich
+    fieldPaths:
+    - spec.rules.0.host
+    - spec.tls.0.hosts.0
+
+secretGenerator:
+- name: immich-secrets
+  type: kubernetes.io/basic-auth
+  envs:
+    - .env.secret
+  options:
+    disableNameSuffixHash: true
+
+- name: traefik-me-tls
+  namespace: immich
+  type: kubernetes.io/tls
+  files:
+    - tls.crt=certs/fullchain.pem
+    - tls.key=certs/privkey.pem
+  options:
+    disableNameSuffixHash: true
