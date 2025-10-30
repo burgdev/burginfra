@@ -20,3 +20,8 @@ spec:
     substitute:
       NAMESPACE: "longhorn-local"
       ENVIRONMENT: "local"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: longhorn-config-vars
+        optional: true
+
