@@ -6,7 +6,7 @@ resources:
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   - ../../infrastructure/traefik/flux/local/kustomization.yaml
   - ../../infrastructure/longhorn/base/
-  - ../../infrastructure/cert-manager/flux/local/
+  - ../../infrastructure/cert-manager/flux/local/kustomization.yaml
   #- ../../infrastructure/rclone/base # no kustomize yet
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  - ../../apps/podinfo-image/flux/local/
+  - ../../apps/podinfo-image/flux/local/kustomization.yaml
