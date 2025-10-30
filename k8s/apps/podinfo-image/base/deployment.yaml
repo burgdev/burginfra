@@ -48,7 +48,7 @@ spec:
         - name: PODINFO_UI_COLOR
           value: "${PODINFO_UI_COLOR:-#34577c}"
         - name: PODINFO_UI_MESSAGE
-          value: "${PODINFO_UI_MESSAGE:-Greetins from Podinfo (<code>PODINFO_UI_COLOR</code> not set)}"
+          value: "Greetins from Podinfo (Namespace: $NAMESPACE, Environment: $ENVIRONMENT)"
         livenessProbe:
           exec:
             command:
