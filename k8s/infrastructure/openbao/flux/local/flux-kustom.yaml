@@ -20,3 +20,7 @@ spec:
     substitute:
       NAMESPACE: "openbao-local"
       ENVIRONMENT: "local"
+    substituteFrom:
+      - kind: ConfigMap
+        name: openbao-config-vars
+        optional: false
