@@ -4,7 +4,7 @@ resources:
   - flux-system/
   #- kustomization-infra.yaml
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
-  - ../../infrastructure/traefik/flux/local/
+  - ../../infrastructure/traefik/flux/local/kustomization.yaml
   - ../../infrastructure/longhorn/base/
   - ../../infrastructure/cert-manager/flux/local/
   #- ../../infrastructure/rclone/base # no kustomize yet
