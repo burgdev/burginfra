@@ -6,6 +6,7 @@ resources:
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   #- ../../infrastructure/traefik/
   - ../../infrastructure/longhorn/base/
+  - ../../infrastructure/cert-manager/flux/local/kustomization.yaml
   #- ../../infrastructure/rclone/base # no kustomize yet
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   #- ../../apps/immich/overlays/local/
