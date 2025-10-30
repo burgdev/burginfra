@@ -1,0 +1,8 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux-sync-local
+  namespace: flux-system
+spec:
+  interval: 10s
+  path: ./k8s/clusters/local

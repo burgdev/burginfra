@@ -1,0 +1,8 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux-sync-staging
+  namespace: flux-system
+spec:
+  interval: 10min
+  path: ./k8s/clusters/staging
