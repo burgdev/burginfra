@@ -4,4 +4,4 @@ spec:
   tls:
     - hosts:
         - $DOMAIN
-      secretName: traefik-me-tls # only for local
+      secretName: kube-system/traefik-local-tls # only for local

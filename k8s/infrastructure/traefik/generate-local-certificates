@@ -1,0 +1,19 @@
+#!/bin/bash
+set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR="$(realpath $SCRIPT_DIR/../../../)"
+. $ROOT_DIR/scripts/_base.sh
+cd $SCRIPT_DIR
+
+kubeconfig_check local
+
+title "Generate local certificates"
+$ROOT_DIR/scripts/bin/bui-local-certs "*.burginfra" "burginfra" "localhost"
+
+
+kubectl create secret tls traefik-local-tls \
+  --cert=certs/fullchain.pem \
+  --key=certs/privkey.pem \
+  --namespace=kube-system
+
+kubectl get secret traefik-local-tls --namespace=kube-system -o yaml
