@@ -15,8 +15,8 @@ spec:
         backend:
           service:
             name: podinfo
-            port:
-              number: 9898
+            port: 80
+            targetPort: 9898
   tls:
     - hosts:
       - ${DOMAIN}
