@@ -22,6 +22,6 @@ spec:
       ENVIRONMENT: "local"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
-        name: longhorn-config-vars
+        name: longhorn-ui-config-vars
         optional: true
 

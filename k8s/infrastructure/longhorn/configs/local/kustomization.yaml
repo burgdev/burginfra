@@ -9,7 +9,7 @@ kind: Kustomization
 namespace: flux-system
 
 configMapGenerator:
-- name: longhorn-config-vars
+- name: longhorn-ui-config-vars
   envs:
     - .env  # copy .env.template to .env
 
