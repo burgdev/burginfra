@@ -6,12 +6,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: whoami
+namespace: whoami-local
 
 configMapGenerator:
 - name: whoami-config-vars
   envs:
-    - ../.env.local # copy .env.template to .env
+    - .env  # copy .env.template to .env
 
 generatorOptions:
   disableNameSuffixHash: true

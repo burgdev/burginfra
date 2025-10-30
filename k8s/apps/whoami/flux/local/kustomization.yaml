@@ -5,6 +5,10 @@ kind: Kustomization
 metadata:
   name: app-whoami-local
   namespace: flux-system # do not change!
+  
+#dependsOn:
+    #- name: base-configs  # optional, only if you have one
+
 spec:
   interval: 5s
   path: "./k8s/apps/whoami/overlays/local"
@@ -17,6 +21,7 @@ spec:
     #  DOMAIN: "whoami.burginfra"
     substituteFrom:
       - kind: ConfigMap
+        namespace: whoami-local
         name: whoami-config-vars
         #namespace: whoami-local # make sure to have the same as in namespace.yaml and kustomization.yaml
         # optional: true
