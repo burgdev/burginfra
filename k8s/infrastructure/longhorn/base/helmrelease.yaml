@@ -15,6 +15,7 @@ metadata:
 spec:
   install:
     createNamespace: true
+  targetNamespace: ${NAMESPACE}
   chart:
     spec:
       chart: longhorn
@@ -23,7 +24,6 @@ spec:
         kind: HelmRepository
         name: longhorn
       version: "1.10.*"
-      targetNamespace: ${NAMESPACE}
   valuesFrom:
     - kind: ConfigMap
       name: longhorn-values
