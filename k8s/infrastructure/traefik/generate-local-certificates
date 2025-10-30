@@ -11,9 +11,16 @@ title "Generate local certificates"
 $ROOT_DIR/scripts/bin/bui-local-certs "*.burginfra" "burginfra" "localhost"
 
 
+#kubectl create secret tls traefik-local-tls \
+#  --cert=certs/fullchain.pem \
+#  --key=certs/privkey.pem \
+#  --namespace=kube-system
+# Create or update the TLS secret in kube-system
 kubectl create secret tls traefik-local-tls \
   --cert=certs/fullchain.pem \
   --key=certs/privkey.pem \
-  --namespace=kube-system
+  --namespace=kube-system \
+  --dry-run=client -o yaml | \
+  kubectl apply -f -
 
-kubectl get secret traefik-local-tls --namespace=kube-system -o yaml
+#kubectl get secret traefik-local-tls --namespace=kube-system -o yaml

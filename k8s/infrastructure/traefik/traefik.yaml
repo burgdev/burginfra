@@ -25,3 +25,7 @@ spec:
         default:
           defaultCertificate:
             secretName: traefik-local-tls
+      options:
+        default:
+          minVersion: VersionTLS12
+          sniStrict: true
