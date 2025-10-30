@@ -1,0 +1,17 @@
+# this is not managed by flux, apply this manuelly!
+#
+# kubectl apply -k configs/
+#
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: flux-system
+
+configMapGenerator:
+- name: podinfo-image-config-vars
+  envs:
+    - .env  # copy .env.template to .env
+
+generatorOptions:
+  disableNameSuffixHash: true

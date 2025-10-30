@@ -10,4 +10,5 @@ resources:
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   #- ../../apps/immich/overlays/local/
   - ../../apps/whoami/flux/local/kustomization.yaml
+  - ../../apps/podinfo-image/flux/local/kustomization.yaml
   #- ../../flux/local
