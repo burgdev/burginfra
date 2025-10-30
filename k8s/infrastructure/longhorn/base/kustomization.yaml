@@ -17,3 +17,7 @@ configMapGenerator:
 - name: longhorn-values
   files:
     - values.yaml=values.yaml
+  options:
+    disableNameSuffixHash: true
+    
+    
