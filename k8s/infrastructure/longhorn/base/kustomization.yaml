@@ -10,8 +10,8 @@ commonLabels:
   app.kubernetes.io/managed-by: flux
 
 resources:
+- namespace.yaml
 - helmrelease.yaml
-
 
 configMapGenerator:
 - name: longhorn-values

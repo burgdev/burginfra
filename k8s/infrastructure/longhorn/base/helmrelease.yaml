@@ -13,8 +13,6 @@ kind: HelmRelease
 metadata:
   name: longhorn
 spec:
-  install:
-    createNamespace: true
   targetNamespace: ${NAMESPACE}
   chart:
     spec:
