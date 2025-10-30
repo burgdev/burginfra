@@ -4,5 +4,5 @@ metadata:
   name: flux-sync-local
   namespace: flux-system
 spec:
-  interval: 10s
+  interval: 15s
   path: ./k8s/clusters/local

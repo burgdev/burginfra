@@ -19,7 +19,7 @@
 ```bash
 kubectl apply -f k8s/clusters/local/flux-system/gotk-components.yaml
 kubectl get pods -n flux-system # wait until ready
-kubectl apply -k k8s/clusters/local/flux-system
+kubectl apply -k k8s/clusters/flux-system/overlays/local
 # create deploy key
 flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
 # add deploy key to github

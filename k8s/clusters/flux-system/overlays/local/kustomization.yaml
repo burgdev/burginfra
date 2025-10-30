@@ -11,6 +11,8 @@ patches:
   target:
     kind: Kustomization
     name: flux-sync-base
+  options:
+    allowNameChange: true
 - path: source.patch.yaml
   target:
     kind: GitRepository

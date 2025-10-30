@@ -4,6 +4,6 @@ metadata:
   name: git-burginfra
   namespace: flux-system
 spec:
-  interval: 10s
+  interval: 15s
   ref:
     branch: flux
