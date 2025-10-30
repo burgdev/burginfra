@@ -45,3 +45,39 @@ error() {
 success() {
     echo "${b}${green}$1${rst}"
 }
+
+kubeconfig_check() {
+  if [ -z "${1-}" ]; then
+    error "Usage: kubeconfig_check <local|staging|prod>"
+    exit 1
+  else
+    env_name=$1
+  fi
+  
+  if [ -z "${KUBECONFIG-}" ]; then
+    error "KUBECONFIG is not set"
+    exit 1
+  fi
+
+  if [ "$env_name" == "local" ]; then
+      EXPECTED_KUBECONFIG="config-localhost"
+  elif [ "$env_name" == "staging" ]; then
+      EXPECTED_KUBECONFIG="config-burginfra.ch"
+  elif [ "$env_name" == "prod" ]; then
+      EXPECTED_KUBECONFIG="config-burginfra.ch"
+  else
+      error "Unknown environment: $env_name"
+      echo "$USAGE"
+      exit 1
+  fi
+
+  if [ "$(basename $KUBECONFIG)" != "$EXPECTED_KUBECONFIG" ]; then
+      warn "$(s yellow KUBECONFIG) is not set to '$(s blue $EXPECTED_KUBECONFIG)'"
+      read -p "Are you sure to coninue? [y/N] " -n 1 -r
+      #echo    # move to a new line
+      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+          error "Aborted."
+          exit 1
+      fi
+  fi
+}
