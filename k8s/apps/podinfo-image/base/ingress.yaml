@@ -16,7 +16,7 @@ spec:
           service:
             name: podinfo
             port:
-              number: 80
+              number: 9898
   tls:
     - hosts:
       - ${DOMAIN}
