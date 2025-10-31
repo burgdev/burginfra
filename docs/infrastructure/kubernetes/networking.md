@@ -27,17 +27,15 @@ A redirect from HTTP to HTTPS is enabled by default for the [traefik](https://tr
 This are the settings needed (`certmanager` and `letsencrypt-issuer` are used for production):
 
 ::: code-group
-<<< @/../k8s/traefik/traefik.yaml{yaml}
-<<< @/../k8s/traefik/certmanager.yaml{yaml}
-<<< @/../k8s/traefik/letsencrypt-issuer.yaml{yaml}
+<<< @/../k8s/infrastructure/traefik/base/traefik.yaml{yaml}
+<<< @/../k8s/infrastructure/traefik/overlays/prod/letsencrypt-issuer.yaml{yaml}
 :::
 
-Ingress example (`whoami`):
+Ingress example (`podinfo`):
 
 ::: code-group
-<<< @/../k8s/whoami/ingress.yaml{yaml}
-<<< @/../k8s/whoami/whoami.yaml{yaml}
-<<< @/../k8s/whoami/kustomization.yaml{yaml}
+<<< @/../k8s/apps/podinfo-image/base/ingress.yaml{yaml}
+<<< @/../k8s/apps/podinfo-image/overlays/local/ingress.patch.yaml{yaml}
 :::
 
 ### Certificates (local)

@@ -38,8 +38,8 @@ cp base/.env.secret.template overlay/local/.env.secret
 cp base/.env.secret.template overlay/prod/.env.secret
 vim overlay/*/.env* # edit files, remove not needed variables
 ```
-<<< @/../k8s/immich/base/.env.template{dotenv}
-<<< @/../k8s/immich/base/.env.secret.template{dotenv}
+<<< @/../k8s/apps/immich/base/.env.template{dotenv}
+<<< @/../k8s/apps/immich/base/.env.secret.template{dotenv}
 :::
 
 ## Commands
@@ -96,7 +96,7 @@ kubectl exec -it -n immich $POD -- psql --username=immich \
 # all
 kubectl exec -it -n immich $POD -- psql --username=immich -f $BACKUP_FILE
 ```
-<<< @/../k8s/immich/restore-db.sh{bash} [restore-db.sh script]
+<<< @/../k8s/apps/immich/restore-db.sh{bash} [restore-db.sh script]
 
 ```bash [backup command]
 BACKUP_FILE=path/to/immich_dump.dump
