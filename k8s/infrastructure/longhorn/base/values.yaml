@@ -4,6 +4,9 @@ defaultSettings:
   defaultDataPath: /mnt/kubernetes/longhorn
   defaultReplicaCount: "1"
   allowCollectingLonghornUsageMetrics: false
+  storageOverProvisioningPercentage: "200"  # Allows 2x overprovisioning
+  storageMinimalAvailablePercentage: "5"    # Only require 5% free space
+  storageReservedPercentageForDefaultDisk: "5"  # Only reserve 5% for system
 csi:
   attacherReplicaCount: 1
   provisionerReplicaCount: 1
