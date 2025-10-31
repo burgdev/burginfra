@@ -3,7 +3,7 @@ controllers:
     containers:
       main:
         image:
-          tag: v2.1.0
+          tag: v2.2.1
         env:
           # IMMICH_MEDIA_LOCATION: /usr/src/app/upload
           DB_HOSTNAME: $ENV-immich-database.immich.svc.cluster.local
