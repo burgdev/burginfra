@@ -15,3 +15,11 @@ configMapGenerator:
 
 generatorOptions:
   disableNameSuffixHash: true
+  
+   
+secretGenerator:
+- name: longhorn-encryption-secret
+  envs:
+    - .env.secret
+  options:
+    disableNameSuffixHash: true

@@ -13,6 +13,7 @@ resources:
 - namespace.yaml
 - helmrelease.yaml
 - ingress.yaml
+- storageclasses.yaml
 
 configMapGenerator:
 - name: longhorn-values
@@ -21,4 +22,4 @@ configMapGenerator:
     
 generatorOptions:
   disableNameSuffixHash: true
-    
+   
