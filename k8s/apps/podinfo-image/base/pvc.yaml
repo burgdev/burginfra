@@ -1,0 +1,12 @@
+# k8s/apps/podinfo-image/base/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: podinfo-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-local
+  resources:
+    requests:
+      storage: 10Mi

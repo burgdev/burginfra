@@ -80,5 +80,8 @@ spec:
           - name: data
             mountPath: /data
       volumes:
+        #- name: data
+        #  emptyDir: {}
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: podinfo-data
