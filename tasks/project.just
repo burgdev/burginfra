@@ -70,18 +70,19 @@ release add_tag="no" dry="no" unreleased="yes" length="-1":
 # 🔢 Print current or next project version
 version next="no":
     #! ./.shell-wrapper.sh
-    version="unknown"
-    pyproject_toml_file="{{justfile_dir()}}/pyproject.toml"
+    version_file="{{justfile_dir()}}/.version"
 
     # Read version from pyproject.toml
-    if [ -f "$pyproject_toml_file" ]; then
+    if [ -f "$version_file" ]; then
         # Try to get version from project.version first
-        version=$(grep -E '^version\s*=' "$pyproject_toml_file" | head -1 | cut -d'"' -f2 2>/dev/null)
-
-        # If not found, try to get from tool.poetry.version
+        version=$(cat "$version_file")
         if [ -z "$version" ]; then
-            version=$(grep -A 1 '\[tool\.poetry\]' "$pyproject_toml_file" | grep 'version = ' | head -1 | cut -d'"' -f2 2>/dev/null)
+            error "Version file is empty, add version (e.g. 0.0.1)."
+            version="unknown"
         fi
+    else
+        error "Version file does not exist, create '$version_file' with the version (e.g. 0.0.1)."
+        version="unknown"
     fi
 
     if is_true "{{next}}"; then
@@ -92,6 +93,9 @@ version next="no":
         echo "$new_version"
     else
         echo "$version"
+        if [ "$version" = "unknown" ]; then
+            exit 1
+        fi
     fi
 
 # ❓ Show help

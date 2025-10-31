@@ -23,10 +23,10 @@
 # Hard-coded ANSI codes (colors + bold)
 # =========================
 
-info()    { printf "\033[1;36minfo:\033[0m %s\n" "$1"; }       # Bold cyan
-success() { printf "\033[1;32mok:\033[0m %s\n" "$1"; }         # Bold green
-warn()    { printf "\033[1;33mwarn:\033[0m %s\n" "$1"; }       # Bold yellow
-error()   { printf "\033[1;31merror:\033[0m %s\n" "$1"; }      # Bold red
+info()    { printf "\033[1;36minfo:\033[0m %s\n" "$1" >&2; }       # Bold cyan
+success() { printf "\033[1;32mok:\033[0m %s\n" "$1" >&2; }         # Bold green
+warn()    { printf "\033[1;33mwarn:\033[0m %s\n" "$1" >&2; }       # Bold yellow
+error()   { printf "\033[1;31merror:\033[0m %s\n" "$1" >&2; }      # Bold red
 
 doc() { just help $1 $2 | grep -o " .*" | sed "s/^ \s//" | head -n +1; }
 
