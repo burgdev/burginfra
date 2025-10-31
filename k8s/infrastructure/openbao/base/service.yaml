@@ -6,7 +6,7 @@ spec:
   selector:
     app: openboa-ui
   ports:
-  - protocol: TCP
-    port: 8200
-    targetPort: 8200
+    - protocol: TCP
+      port: 8200
+      targetPort: 8200
   type: ClusterIP

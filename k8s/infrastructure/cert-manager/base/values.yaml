@@ -1,4 +1,4 @@
 crds:
   enabled: true
 prometheus:
-    enabled: false
+  enabled: false

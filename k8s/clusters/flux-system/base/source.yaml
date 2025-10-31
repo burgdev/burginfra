@@ -9,4 +9,4 @@ spec:
   ref:
     branch: flux
   secretRef:
-    name: flux-system  
+    name: flux-system

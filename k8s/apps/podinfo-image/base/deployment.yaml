@@ -22,63 +22,63 @@ spec:
         app: podinfo
     spec:
       containers:
-      - name: podinfod
-        image: ghcr.io/stefanprodan/podinfo:6.9.2
-        imagePullPolicy: IfNotPresent
-        ports:
-        - name: http
-          containerPort: 9898
-          protocol: TCP
-        - name: http-metrics
-          containerPort: 9797
-          protocol: TCP
-        - name: grpc
-          containerPort: 9999
-          protocol: TCP
-        command:
-        - ./podinfo
-        - --port=9898
-        - --port-metrics=9797
-        - --grpc-port=9999
-        - --grpc-service-name=podinfo
-        - --level=info
-        - --random-delay=false
-        - --random-error=false
-        env:
-        - name: PODINFO_UI_COLOR
-          value: "${PODINFO_UI_COLOR:-#34577c}"
-        - name: PODINFO_UI_MESSAGE
-          value: "Greetins from <ns:${NAMESPACE}, env:${ENVIRONMENT}>"
-        - name: PODINFO_UI_LOGO
-          value: "https://burgdev.ch/index_logo_tmp.png"
-        livenessProbe:
-          exec:
-            command:
-            - podcli
-            - check
-            - http
-            - localhost:9898/healthz
-          initialDelaySeconds: 5
-          timeoutSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - podcli
-            - check
-            - http
-            - localhost:9898/readyz
-          initialDelaySeconds: 5
-          timeoutSeconds: 5
-        resources:
-          limits:
-            cpu: 2000m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 64Mi
-        volumeMounts:
-          - name: data
-            mountPath: /data
+        - name: podinfod
+          image: ghcr.io/stefanprodan/podinfo:6.9.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9898
+              protocol: TCP
+            - name: http-metrics
+              containerPort: 9797
+              protocol: TCP
+            - name: grpc
+              containerPort: 9999
+              protocol: TCP
+          command:
+            - ./podinfo
+            - --port=9898
+            - --port-metrics=9797
+            - --grpc-port=9999
+            - --grpc-service-name=podinfo
+            - --level=info
+            - --random-delay=false
+            - --random-error=false
+          env:
+            - name: PODINFO_UI_COLOR
+              value: "${PODINFO_UI_COLOR:-#34577c}"
+            - name: PODINFO_UI_MESSAGE
+              value: "Greetins from <ns:${NAMESPACE}, env:${ENVIRONMENT}>"
+            - name: PODINFO_UI_LOGO
+              value: "https://burgdev.ch/index_logo_tmp.png"
+          livenessProbe:
+            exec:
+              command:
+                - podcli
+                - check
+                - http
+                - localhost:9898/healthz
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - podcli
+                - check
+                - http
+                - localhost:9898/readyz
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
       volumes:
         #- name: data
         #  emptyDir: {}

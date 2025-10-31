@@ -9,14 +9,14 @@ storageClass:
     vfsCachePollInterval: "1m"
     vfsReadAhead: "128M"
 rclone:
-  config: 
+  config:
     valueFrom:
       secretKeyRef:
         name: $ENV-rclone-secrets
         key: rclone-config
-    #[webdav]
-    #type = webdav
-    #url = $(WEBDAV_URL)
-    #vendor = other
-    #user = $(WEBDAV_USER)
-    #pass = $(WEBDAV_PASSWORD)
+        #[webdav]
+        #type = webdav
+        #url = $(WEBDAV_URL)
+        #vendor = other
+        #user = $(WEBDAV_USER)
+        #pass = $(WEBDAV_PASSWORD)

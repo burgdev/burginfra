@@ -4,15 +4,13 @@
 #      main:
 #        image:
 #          tag: v2.0.1
-
 # Application configuration
 immich:
   configuration:
     logging:
       enabled: true
       level: $IMMICH_LOG_LEVEL
-
     server:
-      externalDomain: $EXTERNAL_DOMAIN 
+      externalDomain: $EXTERNAL_DOMAIN
       loginPageMessage: <div>$WELCOME_TEXT_HTML</div>
       publicUsers: true

@@ -1,5 +1,4 @@
 # PERSISTENT VOLUME =========================================
----
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -27,7 +26,7 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  storageClassName: local-path   # or whatever StorageClass you use in k3s
+  storageClassName: local-path # or whatever StorageClass you use in k3s
   volumeName: immich-database-pv
 ---
 # IMMICH DATABASE ========================= immich-database ==

@@ -4,8 +4,7 @@ immich:
     logging:
       enabled: true
       level: $IMMICH_LOG_LEVEL
-
     server:
-      externalDomain: $EXTERNAL_DOMAIN 
+      externalDomain: $EXTERNAL_DOMAIN
       loginPageMessage: "<div><b style='color: red;'>DEVELOPMENT</b></br>$WELCOME_TEXT_HTML</div>"
       publicUsers: true

@@ -5,10 +5,8 @@ kind: Kustomization
 metadata:
   name: infra-longhorn-local
   namespace: flux-system # do not change!
-  
 #dependsOn:
-    #- name: base-configs  # optional, only if you have one
-
+#- name: base-configs  # optional, only if you have one
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/longhorn/overlays/local"
@@ -24,4 +22,3 @@ spec:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: longhorn-ui-config-vars
         optional: true
-

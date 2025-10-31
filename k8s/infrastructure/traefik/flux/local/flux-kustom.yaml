@@ -5,10 +5,8 @@ kind: Kustomization
 metadata:
   name: infra-traefik-local
   namespace: flux-system # do not change!
-  
 #dependsOn:
-    #- name: base-configs  # optional, only if you have one
-
+#- name: base-configs  # optional, only if you have one
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/traefik/overlays/local"

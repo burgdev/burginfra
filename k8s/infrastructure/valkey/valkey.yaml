@@ -32,7 +32,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: local-path   # or whatever StorageClass you use in k3s
+  storageClassName: local-path # or whatever StorageClass you use in k3s
   volumeName: valkey-data-pv
 ---
 # VALKEY HELM ====
@@ -46,5 +46,6 @@ spec:
   repo: https://valkey.io/valkey-helm
   version: 0.7.4
   targetNamespace: valkey
-  valuesContent: ""  # Will be replaced by kustomize, changes are made in `valkey-values.yaml`
+  valuesContent: "" # Will be replaced by kustomize, changes are made in `valkey-values.yaml`
 ---
+

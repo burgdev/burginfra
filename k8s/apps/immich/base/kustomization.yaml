@@ -1,10 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 resources:
-- immich.yaml
-- immich-db.yaml
-- immich-cache.yaml
+  - immich.yaml
+  - immich-db.yaml
+  - immich-cache.yaml
 
 # Add name prefix and suffix
 #namePrefix: immich-
@@ -21,5 +20,3 @@ resources:
 # app.kubernetes.io/instance=local-immich
 # env: 
 # ...
-
-

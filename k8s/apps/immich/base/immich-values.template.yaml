@@ -20,7 +20,6 @@ controllers:
           REDIS_HOSTNAME: $ENV-immich-cache.immich.svc.cluster.local
           REDIS_PORT: 6379
           REDIS_DBINDEX: 0
-  
 server:
   persistence:
     external:
@@ -29,7 +28,6 @@ server:
       mountPath: /mnt/external
       readOnly: true
       existingClaim: $ENV-immich-external-pvc
-
 immich:
   persistence:
     library:
@@ -52,7 +50,7 @@ immich:
         size: 250
     library:
       scan:
-                      #  m h d M d   # e.g. 0/10 * * * * every 10 minutes
+        #  m h d M d   # e.g. 0/10 * * * * every 10 minutes
         cronExpression: "* 0 * * *" # every day
         enabled: true
       watch: # experimental
@@ -60,7 +58,6 @@ immich:
     logging:
       enabled: true
       level: log
-
     machineLearning:
       enabled: true
       clip:
@@ -75,24 +72,19 @@ immich:
         minFaces: 5
         minScore: 0.7
         modelName: "buffalo_l"
-
     server:
-      externalDomain: $EXTERNAL_DOMAIN 
+      externalDomain: $EXTERNAL_DOMAIN
       loginPageMessage: <div>$WELCOME_TEXT_HTML</div>
       publicUsers: true
-
     map:
       enabled: true
       darkStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=$MAPTILER_KEY
       lightStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=$MAPTILER_KEY
-
     metadata:
       faces:
         import: true
-
     newVersionCheck:
       enabled: false
-
     nightlyTasks:
       clusterNewFaces: true
       databaseCleanup: true
@@ -100,7 +92,6 @@ immich:
       missingThumbnails: true
       startTime: "02:30"
       syncQuotaUsage: true
-    
     notifications:
       smtp:
         enabled: $EMAIL_ENABLED
@@ -112,32 +103,28 @@ immich:
           password: $EMAIL_HOST_PASSWORD
           port: $EMAIL_HOST_PORT
           username: $EMAIL_HOST_USER
-
     storageTemplate:
       enabled: true
       hashVerificationEnabled: true
       template: "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}{{MM}}_NoAlbum{{/if}}/{{yy}}{{MM}}{{dd}}{{hh}}{{mm}}_{{filetype}}_{{assetIdShort}}"
-
     templates:
       email:
         albumInviteTemplate: ""
         albumUpdateTemplate: ""
         welcomeTemplate: ""
-
-#    theme:
-#      customCss: |
-#        .dark {
-#          --immich-ui-light: 40 44 52
-#          --immich-ui-dark: 229 231 235
-#        }
-#        :root, .light {
-#          --immich-ui-dark: 20 22 26
-#          --immich-ui-light: 240 244 248
-#        }
-#
+        #    theme:
+        #      customCss: |
+        #        .dark {
+        #          --immich-ui-light: 40 44 52
+        #          --immich-ui-dark: 229 231 235
+        #        }
+        #        :root, .light {
+        #          --immich-ui-dark: 20 22 26
+        #          --immich-ui-light: 240 244 248
+        #        }
+        #
     trash:
       days: 30
       enabled: true
-
     user:
       deleteDelay: 7

@@ -1,18 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 resources:
-- ../../base
-
-
-
+  - ../../base
 patches:
-- path: flux-kustom.patch.yaml
-  target:
-    kind: Kustomization
-    name: flux-sync-base
-- path: source.patch.yaml
-  target:
-    kind: GitRepository
-    name: git-burginfra
-  
+  - path: flux-kustom.patch.yaml
+    target:
+      kind: Kustomization
+      name: flux-sync-base
+  - path: source.patch.yaml
+    target:
+      kind: GitRepository
+      name: git-burginfra

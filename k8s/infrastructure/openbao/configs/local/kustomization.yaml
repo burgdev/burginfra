@@ -2,16 +2,12 @@
 #
 # kubectl apply -k configs/
 #
-
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: flux-system
-
 configMapGenerator:
-- name: openbao-config-vars
-  envs:
-    - .env  # copy .env.template to .env
-
+  - name: openbao-config-vars
+    envs:
+      - .env # copy .env.template to .env
 generatorOptions:
   disableNameSuffixHash: true

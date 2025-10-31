@@ -2,24 +2,18 @@
 #
 # kubectl apply -k configs/
 #
-
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: flux-system
-
 configMapGenerator:
-- name: longhorn-ui-config-vars
-  envs:
-    - .env  # copy .env.template to .env
-
+  - name: longhorn-ui-config-vars
+    envs:
+      - .env # copy .env.template to .env
 generatorOptions:
   disableNameSuffixHash: true
-  
-   
 secretGenerator:
-- name: longhorn-encryption-secret
-  envs:
-    - .env.secret
-  options:
-    disableNameSuffixHash: true
+  - name: longhorn-encryption-secret
+    envs:
+      - .env.secret
+    options:
+      disableNameSuffixHash: true
