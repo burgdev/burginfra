@@ -1,6 +1,5 @@
 ---
 title: Zitadel
-order: 10
 ---
 <a target="_blank" href="https://zitadel.com"><img src="/logos/zitadel_with_name.svg" width="300"/></a>
 

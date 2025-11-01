@@ -5,7 +5,7 @@ order: 10
 
 # Local Volume Management (LVM)
 
-(LVM)[https://en.wikipedia.org/wiki/Logical_volume_management] is used to manage local volumes.
+[LVM](https://en.wikipedia.org/wiki/Logical_volume_management) is used to manage local volumes.
 
 # Resources
 

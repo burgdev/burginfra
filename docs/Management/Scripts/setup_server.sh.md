@@ -1,5 +1,5 @@
 ---
-title: setup_server.sh
+title: "setup_server.sh"
 order: 0
 aside: false
 ---

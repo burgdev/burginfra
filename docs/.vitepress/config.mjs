@@ -21,7 +21,7 @@ const vitePressOptions = {
   
   // Site metadata
   title: 'BurgInfra',
-  description: 'Infrastructure documentation for BurgDev',
+  description: 'Management documentation for BurgDev',
   
   // Vite configuration
   vite: {
@@ -44,7 +44,7 @@ const vitePressOptions = {
     langMenuLabel: 'Change language',
     editLink: {
       pattern: 'https://github.com/burgdev/burginfra/edit/main/docs/:path',
-      text: 'Edit this page'
+      text: 'Edit'
     },
     docFooter: {
       prev: 'Previous page',
@@ -63,20 +63,20 @@ const vitePressOptions = {
       { text: 'Documentation',
         items: [
           { text: 'Applications', link: '/Applications/' },
-          { text: 'Infrastructure', items: [
-            { text: 'Linux', link: '/Infrastructure/Linux/' },
-            { text: 'Docker', link: '/Infrastructure/Docker/' },
-            { text: 'Kubernetes', link: '/Infrastructure/Kubernetes/' },
-          ] },
-          { text: 'Scripts', link: '/Scripts/' }
+          { text: 'Scripts', link: '/Management/Scripts/' },
+          { items: [
+            { text: 'Linux', link: '/Management/Linux/' },
+            { text: 'Kubernetes', link: '/Management/Kubernetes/' },
+            { text: 'Docker', link: '/Management/Docker/' },
+          ]},
         ]
       },
-      {
-        text: 'Links',
-        items: [
-          { text: 'GitHub', link: 'https://github.com/burgdev/burginfra' },
-        ]
-      }
+      //{
+      //  text: 'Links',
+      //  items: [
+      //    { text: 'GitHub', link: 'https://github.com/burgdev/burginfra' },
+      //  ]
+      //}
     ],
     
     outline: [2,4],
@@ -128,12 +128,19 @@ const vitePressSidebarOptions = {
   capitalizeFirst: false,
   excludeByGlobPattern: ['README.md'],
   useTitleFromFrontmatter: true,
+  useTitleFromFileHeading: true,
   sortMenusByFrontmatterOrder: true,
   frontmatterOrderDefaultValue: 100,
   excludeFilesByFrontmatterFieldName: 'exclude',
   excludeByFolderDepth: 6,
-  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md"],
-  includeFolderIndexFile: true
+  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md", "Applications", "Management", "Scripts", "Linux", "Kubernetes", "Docker"],
+  includeFolderIndexFile: true,
+  useFolderTitleFromIndexFile: false,
+  //removePrefixAfterOrdering: true,
+  //prefixSeparator: /[0-9]{2}_/g,
+  //prefixSeparator: '_',
+  keepMarkdownSyntaxFromTitle: true,
+  //sortMenusOrderNumericallyFromLink: true
 };
 
 export default defineConfig(withSidebar(vitePressOptions, vitePressSidebarOptions))

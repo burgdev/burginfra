@@ -1,6 +1,5 @@
 ---
 title: Zitadel
-order: 10
 ---
 # [Zitadel](/apps/zitadel) <Badge type="info" text="zitadel" /> 
 

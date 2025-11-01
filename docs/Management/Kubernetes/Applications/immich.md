@@ -1,6 +1,5 @@
 ---
 title: Immich
-order: 10
 ---
 # Immich
 

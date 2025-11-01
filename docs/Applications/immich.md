@@ -1,6 +1,5 @@
 ---
 title: Immich
-order: 20
 ---
 <a target="_blank" href="https://immich.app"><img src="/logos/immich_with_name.png" width="300"/></a>
 
