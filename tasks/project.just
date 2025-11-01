@@ -53,6 +53,7 @@ release add_tag="no" dry="no" unreleased="yes" length="-1":
         # Update CHANGELOG.md and bump version
         git-cliff --bump -u --prepend CHANGELOG.md
         # TODO add a bump version tool which works in general
+        echo "${new_version}" > {{justfile_dir()}}/.version
 
         if [ -n "$new_tag" ]; then
             success "Bumped to version '$new_version' (tag '$new_tag')."
