@@ -1,8 +1,7 @@
-# k8s/apps/podinfo-image/base/pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: podinfo-image-data
+  name: podinfo-image-data-new
 spec:
   accessModes:
     - ReadWriteOnce
