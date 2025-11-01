@@ -1,6 +1,7 @@
 ---
 title: Storage
 order: 30
+outline: [2,4]
 ---
 # Storage
 

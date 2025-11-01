@@ -20,10 +20,10 @@ Download the data from google take out and run the post-processing script (if ne
 ../../scripts/immich/upate-takeout "$HOME/Downloads/takeouts/takeout-*.zip" takeouts
 ```
 
-After this run the `immich-go` script:
+After this run the `immich-go` and `immichporter` script:
 
 
-### `immich-go` installation
+### Add assets to Immich with `immich-go`
 
 [`immich-go`](https://github.com/simulot/immich-go) can be used to import all you photos.
 
@@ -52,7 +52,7 @@ immich-go upload from-google-photos -k $API_KEY -s http://localhost:2283/ --take
 ```
 
 
-### Delete all Albums
+### Delete all Albums (Optional)
 
 The [`immich-auto-album`](https://github.com/Salvoxia/immich-folder-album-creator) script can be used to delete all albums.
 
@@ -64,6 +64,16 @@ export API_KEY="my_key"
 . ../../scripts/bin/activate # source activate script
 bui-immich-auto-album -m DELETE_ALL --delete-confirm / http://localhost:2283/api $API_KEY
 ```
+
+### Migrate User and Shared Albums
+
+You can use [`immichporter`](https://github.com/burgdev/immichporter) to migrate user and shared albums.
+
+```bash
+IMMICH_API_KEY=$API_KEY 
+uvx immichporter
+```
+
 ## Resources
 
 - [Official Documentation](https://immich.app/docs)

@@ -15,7 +15,8 @@ const vitePressOptions = {
     ['link', { rel: 'icon', href: '/assets/logo_web.png' }],
     ['link', { rel: 'apple-touch-icon', href: '/assets/logo_web.png', sizes: '180x180' }],
     ['link', { rel: 'mask-icon', href: '/assets/logo_only.svg', color: '#ffffff' }],
-    ['meta', { name: 'theme-color', content: '#ffffff' }]
+    ['meta', { name: 'theme-color', content: '#ffffff' }],
+    ['link', { rel: 'stylesheet', href: '/theme/custom.css' }]
   ],
   
   // Site metadata
@@ -55,18 +56,19 @@ const vitePressOptions = {
       { text: 'Home', link: '/' },
       { text: 'Services',
         items: [
-          { text: 'pix.crux.li', link: '/services/pix.crux.li' },
-          { text: 'wodo.re', link: '/services/wodo.re' },
+          { text: 'pix.crux.li', link: '/Services/pix.crux.li' },
+          { text: 'wodo.re', link: '/Services/wodo.re' },
         ]
       },
       { text: 'Documentation',
         items: [
-          { text: 'Applications', link: '/apps/' },
+          { text: 'Applications', link: '/Applications/' },
           { text: 'Infrastructure', items: [
-            { text: 'Docker', link: '/infrastructure/docker/' },
-            { text: 'Kubernetes', link: '/infrastructure/kubernetes/' },
+            { text: 'Linux', link: '/Infrastructure/Linux/' },
+            { text: 'Docker', link: '/Infrastructure/Docker/' },
+            { text: 'Kubernetes', link: '/Infrastructure/Kubernetes/' },
           ] },
-          { text: 'Scripts', link: '/scripts/' }
+          { text: 'Scripts', link: '/Scripts/' }
         ]
       },
       {
@@ -76,6 +78,8 @@ const vitePressOptions = {
         ]
       }
     ],
+    
+    outline: [2,4],
 
     // Social links
     socialLinks: [
@@ -121,7 +125,7 @@ const vitePressSidebarOptions = {
   documentRootPath: '/docs',
   collapsed: true,
   collapseDepth: 2,
-  capitalizeFirst: true,
+  capitalizeFirst: false,
   excludeByGlobPattern: ['README.md'],
   useTitleFromFrontmatter: true,
   sortMenusByFrontmatterOrder: true,
