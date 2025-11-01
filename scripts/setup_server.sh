@@ -276,6 +276,25 @@ setup_longhorn_storage() {
   fi
 }
 
+setup_lvm_help="Configures LVM."
+setup_lvm() {
+  section "Installing LVM"
+  if ! command -v lvm >/dev/null 2>&1; then
+    sudo apt install lvm2 -y
+  fi
+
+  modules=(dm_mod dm_thin_pool dm_snapshot dm_mirror dm_crypt)
+  for mod in "${modules[@]}"; do
+    if lsmod | grep -q "^${mod}"; then
+      echo "$B${mod}$rst already loaded, skipping."
+    else
+      echo "Loading ${mod}..."
+      sudo modprobe "${mod}"
+      echo "${mod}" | sudo tee -a /etc/modules-load.d/openebs-lvm.conf > /dev/null
+    fi
+  done
+}
+
 configure_totp_help="Configures TOTP (Google Authenticator) for SSH authentication."
 configure_totp() {
     section "Configuring TOTP Authentication"
@@ -565,8 +584,9 @@ run_all() {
   install_utils
   install_lynis
   install_k3s
+  setup_lvm
   install_longhorn_deps
-  setup_longhorn_storage
+  #setup_longhorn_storage
   #install_rootkit_hunter
   #format_and_mount_disk
   #backup_config
@@ -618,12 +638,13 @@ $(s Y Commands:)
   $(s b install_lynis)           $(s d $install_lynis_help)
   $(s b install_k3s)             $(s d $install_k3s_help)
   $(s b install_longhorn_deps)   $(s d $install_longhorn_deps_help)
-  $(s b setup_longhorn_storage)  $(s d $setup_longhorn_storage_help)
+  $(s b setup_lvm)               $(s d $setup_lvm_help)
 
 $(s Y Optional Commands:)
   $(s b security_audit)          $(s d $security_audit_help)
   $(s b mount_webdav)            $(s d $mount_webdav_help)
   $(s b configure_totp)          $(s d $configure_totp_help)
+  $(s b setup_longhorn_storage)  $(s d $setup_longhorn_storage_help)
   $(s b format_and_mount_disk)   $(s d $format_and_mount_disk_help)
   $(s b backup_config)           $(s d $backup_config_help)
 "
