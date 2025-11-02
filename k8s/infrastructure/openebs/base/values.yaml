@@ -10,6 +10,8 @@ engines:
       enabled: false
 loki:
   enabled: false
+alloydb:
+  enabled: false
 lvm-localpv:
   crds:
     csi:
