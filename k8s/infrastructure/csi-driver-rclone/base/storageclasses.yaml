@@ -50,11 +50,11 @@ kind: StorageClass
 metadata:
   name: remote-data
 provisioner: rclone.csi.veloxpack.io
-csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
-csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 parameters:
   remote: "webdav" 
   remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
+  csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
+  csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 mountOptions:
   - vfs-cache-mode=full
   - dir-cache-time=12h
