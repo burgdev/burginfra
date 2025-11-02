@@ -1,10 +1,15 @@
+# https://github.com/openebs/openebs/blob/develop/charts/values.yaml
 engines:
   local:
     zfs:
       enabled: false
+    rawfile:
+      enabled: false
   replicated:
     mayastor:
       enabled: false
+loki:
+  enabled: false
 lvm-localpv:
   crds:
     csi:
