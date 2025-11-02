@@ -76,10 +76,10 @@ mountOptions:
   - vfs-cache-max-size=5G
   - default-permissions
   - allow-other
-  - file-perms=0777
-  - dir-perms=0777
-  - uid=101
-  - gid=100
+  - file-perms=777
+  - dir-perms=777
+  - uid=100
+  - gid=101
 #volumeAttributes:
 #  file_mode: "665"
 #  dir_mode: "775"
