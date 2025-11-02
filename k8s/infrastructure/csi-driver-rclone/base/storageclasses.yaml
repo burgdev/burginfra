@@ -5,13 +5,14 @@ metadata:
   namespace: ${NAMESPACE}
 type: Opaque
 stringData:
-  configData: |
-    [kdrive-webdav]
-    type = webdav
-    url = ${WEBDAV_URL}
-    vendor = other
-    user = ${WEBDAV_USERNAME}
-    pass = ${WEBDAV_PASSWORD}
+  parameters:
+    configData: |
+      [kdrive-webdav]
+      type = webdav
+      url = ${WEBDAV_URL}
+      vendor = other
+      user = ${WEBDAV_USERNAME}
+      pass = ${WEBDAV_PASSWORD}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
