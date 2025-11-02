@@ -13,7 +13,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: podinfo-image-remote-data-pvc2
+  name: podinfo-image-remote-data-pvc3
 spec:
   accessModes:
     - ReadWriteOnce

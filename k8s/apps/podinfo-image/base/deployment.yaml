@@ -86,7 +86,7 @@ spec:
         #  emptyDir: {}
         - name: data
           persistentVolumeClaim:
-            claimName: podinfo-image-remote-data-pvc2
+            claimName: podinfo-image-remote-data-pvc3
             #claimName: podinfo-image-remote-data-pvc
         ##- name: data-remote-media
         ##  persistentVolumeClaim:
