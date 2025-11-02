@@ -1,0 +1,32 @@
+# https://github.com/perfectra1n/volsync/pkgs/container/volsync
+manageCRDs: true
+metrics:
+  disableAuth: true
+image:
+  repository: ghcr.io/perfectra1n/volsync
+  tag: "0.16.13"
+  image: ""
+kopia:
+  repository: ghcr.io/perfectra1n/volsync
+  tag: "0.16.13"
+  image: ""
+rclone:
+  repository: ghcr.io/perfectra1n/volsync
+  tag: "0.16.13"
+  image: ""
+restic:
+  repository: ghcr.io/perfectra1n/volsync
+  tag: "0.16.13"
+  image: ""
+rsync:
+  repository: ghcr.io/perfectra1n/volsync
+  tag: "0.16.13"
+  image: ""
+rsync-tls:
+  repository: ghcr.io/perfectra1n/volsync
+  tag: "0.16.13"
+  image: ""
+syncthing:
+  repository: ghcr.io/perfectra1n/volsync
+  tag: "0.16.13"
+  image: ""

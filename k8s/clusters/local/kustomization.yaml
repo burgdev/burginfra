@@ -9,7 +9,8 @@ resources:
   #   kubectl delete validatingwebhookconfiguration longhorn-webhook-validator
   - ../../infrastructure/openebs/flux/local/flux-kustom.yaml
   - ../../infrastructure/csi-driver-rclone/flux/local/flux-kustom.yaml
-  - ../../infrastructure/k8up/flux/local/flux-kustom.yaml
+  - ../../infrastructure/volsync/flux/local/flux-kustom.yaml
+  #- ../../infrastructure/k8up/flux/local/flux-kustom.yaml
   - ../../infrastructure/cert-manager/flux/local/flux-kustom.yaml
   - ../../infrastructure/openbao/flux/local/flux-kustom.yaml
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

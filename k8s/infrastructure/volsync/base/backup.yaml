@@ -1,0 +1,47 @@
+---
+# docu from fork: https://perfectra1n.github.io/volsync/usage/kopia/index.html#
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+   name: podinfo-image              # 'username' for kopia
+   namespace: backup-${ENVIRONMENT} # 'hostname' for kopia 
+spec:
+   sourcePVC: podinfo-image-backup-kopia-pvc
+   trigger:
+      schedule: "*/30 * * * *"
+   kopia:
+     repository: volsync-kopia-webdav-secrets
+
+     # Repository Retention Policy
+     # Define how many snapshots to keep at different intervals
+     retain:
+       hourly: 72      # Keep 24 hourly snapshots (1 day)
+       daily: 7        # Keep 7 daily snapshots (1 week)
+       weekly: 4       # Keep 4 weekly snapshots (1 month)
+       monthly: 6      # Keep 6 monthly snapshots
+       yearly: 1       # Keep 1 yearly snapshot
+
+     # Compression Configuration
+     # Use zstd for optimal balance of speed and compression ratio
+     compression: zstd
+
+     # Performance Tuning
+     # Use multiple parallel streams for faster uploads
+     parallelism: 2
+
+     # Database Consistency Actions
+     # These hooks ensure database consistency during backup
+     #actions:
+     #  # Before snapshot: Create consistent database dump
+     #  beforeSnapshot: |
+     #    echo "Starting database backup at $(date)" >> /data/backup.log
+     #    mysqldump --single-transaction --routines --triggers --all-databases > /data/mysql-backup.sql
+     #    echo "Database dump completed" >> /data/backup.log
+
+     #  # After snapshot: Clean up temporary files
+     #  afterSnapshot: |
+     #    rm -f /data/mysql-backup.sql
+     #    echo "Cleanup completed at $(date)" >> /data/backup.log
+
+     # Use clone for point-in-time consistency
+     copyMethod: Snapshot
