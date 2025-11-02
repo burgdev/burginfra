@@ -22,14 +22,14 @@ spec:
     requests:
       storage: 50Mi
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: podinfo-image-remote-data-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: remote-data
-  resources:
-    requests:
-      storage: 50Mi
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: podinfo-image-remote-data-pvc
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  storageClassName: remote-data
+#  resources:
+#    requests:
+#      storage: 50Mi
