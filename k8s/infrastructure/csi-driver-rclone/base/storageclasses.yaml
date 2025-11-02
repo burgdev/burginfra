@@ -5,8 +5,6 @@ metadata:
   namespace: ${NAMESPACE}
 type: Opaque
 stringData:
-  remote: "webdav"
-  remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   configData: |
     [kdrive-webdav]
     type = webdav
@@ -24,6 +22,7 @@ csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 parameters:
   remote: "webdav" 
+  remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
 mountOptions:
   # Enable read/write cache in local disk
   - vfs-cache-mode=full
@@ -55,6 +54,7 @@ csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 parameters:
   remote: "webdav" 
+  remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
 mountOptions:
   - vfs-cache-mode=full
   - dir-cache-time=12h
