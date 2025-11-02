@@ -6,7 +6,7 @@ metadata:
 spec:
   type: oci
   interval: 1h0s
-  url: oci://ghcr.io/veloxpack/charts/csi-driver-rclone
+  url: oci://ghcr.io/veloxpack/charts
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease

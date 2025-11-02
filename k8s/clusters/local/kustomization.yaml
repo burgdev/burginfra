@@ -5,6 +5,8 @@ resources:
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   - ../../infrastructure/traefik/flux/local/flux-kustom.yaml
   # - ../../infrastructure/longhorn/flux/local/flux-kustom.yaml # -> use openebs lvm
+  # Run if longhorn was added and removed again:
+  #   kubectl delete validatingwebhookconfiguration longhorn-webhook-validator
   - ../../infrastructure/openebs/flux/local/flux-kustom.yaml
   - ../../infrastructure/csi-driver-rclone/flux/local/flux-kustom.yaml
   - ../../infrastructure/cert-manager/flux/local/flux-kustom.yaml
