@@ -6,7 +6,7 @@ metadata:
 type: Opaque
 stringData:
   remote: "webdav"
-  remotePath: "${pvc.metadata.namespace}/${pvc.metadata.name}"
+  remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   configData: |
     [kdrive-webdav]
     type = webdav
