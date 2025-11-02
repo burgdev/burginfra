@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: podinfo-image-media-pvc
+  name: podinfo-image-pvc
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: fast-media
+  storageClassName: media
   resources:
     requests:
       storage: 10Mi
