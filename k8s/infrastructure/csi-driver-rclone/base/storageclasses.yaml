@@ -63,12 +63,12 @@ parameters:
   remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
   csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
-  dirPerms: "777"
-  filePerms: "666"
+  dir-perms: "777"
+  file-perms: "666"
   uid: "100"
   gid: "101"
-  allowOther: "true"
-  #defaultPermissions: true
+  allow-other: "true"
+  # default-permissions: "true"
 #csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 #csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 mountOptions:
