@@ -79,8 +79,8 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
-            - name: data-remote-media
-              mountPath: /data-remote-media
+            #- name: data-remote-media
+              #mountPath: /data-remote-media
       volumes:
         #- name: data
         #  emptyDir: {}
