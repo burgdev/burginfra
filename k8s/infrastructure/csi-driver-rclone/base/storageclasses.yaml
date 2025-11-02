@@ -5,25 +5,24 @@ metadata:
   namespace: ${NAMESPACE}
 type: Opaque
 stringData:
-  parameters:
-    configData: |
-      [kdrive-webdav]
-      type = webdav
-      url = ${WEBDAV_URL}
-      vendor = other
-      user = ${WEBDAV_USERNAME}
-      pass = ${WEBDAV_PASSWORD}
+  configData: |
+    [kdrive-webdav]
+    type = webdav
+    url = ${WEBDAV_URL}
+    vendor = other
+    user = ${WEBDAV_USERNAME}
+    pass = ${WEBDAV_PASSWORD}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: remote-media
 provisioner: rclone.csi.veloxpack.io
-csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
-csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 parameters:
   remote: "webdav" 
   remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
+  csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
+  csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 mountOptions:
   # Enable read/write cache in local disk
   - vfs-cache-mode=full
