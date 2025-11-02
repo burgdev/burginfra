@@ -1,0 +1,13 @@
+# this is not managed by flux, apply this manuelly!
+#
+# kubectl apply -k configs/
+#
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: flux-system
+secretGenerator:
+  - name: restic-password-secret
+    envs:
+      - .env.secret
+    options:
+      disableNameSuffixHash: true

@@ -1,0 +1,4 @@
+# https://github.com/k8up-io/k8up/blob/master/charts/k8up/values.yaml
+k8up:
+  skipWithoutAnnotation: true
+  timezone: "Europe/Zurich"
