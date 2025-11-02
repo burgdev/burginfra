@@ -16,5 +16,5 @@ spec:
     name: git-burginfra
   postBuild:
     substitute:
-      NAMESPACE: "${NAMESPACE}"
+      NAMESPACE: "k8up-local"
       ENVIRONMENT: "local"
