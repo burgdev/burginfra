@@ -10,7 +10,7 @@ resources:
   - namespace.yaml
   - helmrelease.yaml
   - pvc.yaml
-  - backup.yaml
+  # - backup.yaml # run it manually, this triggers a single backup
 configMapGenerator:
   - name: k8up-values
     files:

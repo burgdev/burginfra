@@ -11,6 +11,7 @@ spec:
       key: RESTIC_PASSWORD
     local:
       mountPath: /backups
+      name: backup-storage
   volumeMounts:
     - name: backup-storage
       mountPath: /backups
