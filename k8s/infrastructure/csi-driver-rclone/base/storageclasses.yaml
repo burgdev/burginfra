@@ -8,7 +8,7 @@ stringData:
   remote: "webdav" 
   remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   configData: |
-    [kdrive-webdav]
+    [webdav]
     type = webdav
     url = ${WEBDAV_URL}
     vendor = other
