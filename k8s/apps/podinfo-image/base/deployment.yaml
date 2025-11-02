@@ -84,4 +84,4 @@ spec:
         #  emptyDir: {}
         - name: data
           persistentVolumeClaim:
-            claimName: podinfo-image-pvc
+            claimName: podinfo-image-media-pvc
