@@ -1,0 +1,12 @@
+# this is not managed by flux, apply this manuelly!
+#
+# kubectl apply -k configs/
+#
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+  - name: webdav-credentials
+    envs:
+      - .env.secret
+    options:
+      disableNameSuffixHash: true
