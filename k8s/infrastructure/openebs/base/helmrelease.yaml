@@ -1,0 +1,28 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: openebs
+  namespace: flux-system
+spec:
+  interval: 1h0s
+  url: https://openebs.github.io/openebs
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: openebs
+spec:
+  targetNamespace: ${NAMESPACE}
+  chart:
+    spec:
+      chart: openebs
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: openebs
+      version: "1.10.*"
+  valuesFrom:
+    - kind: ConfigMap
+      name: openebs-values
+      valuesKey: values.yaml
+  interval: 1h0s

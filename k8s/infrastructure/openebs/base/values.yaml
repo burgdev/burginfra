@@ -1,0 +1,12 @@
+engines:
+  local:
+    zfs:
+      enabled: false
+  replicated:
+    mayastor:
+      enabled: false
+lvm-localpv:
+  crds:
+    csi:
+      volumeSnapshots:
+        enabled: true
