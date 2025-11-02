@@ -22,6 +22,8 @@ metadata:
 provisioner: rclone.csi.veloxpack.io
 csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
+parameters:
+  remote: "webdav" 
 mountOptions:
   # Enable read/write cache in local disk
   - vfs-cache-mode=full
@@ -51,6 +53,8 @@ metadata:
 provisioner: rclone.csi.veloxpack.io
 csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
+parameters:
+  remote: "webdav" 
 mountOptions:
   - vfs-cache-mode=full
   - dir-cache-time=12h
