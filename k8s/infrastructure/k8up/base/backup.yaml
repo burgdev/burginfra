@@ -2,6 +2,7 @@ apiVersion: k8up.io/v1
 kind: Backup
 metadata:
   name: backup-local-test
+  namespace: podinfo-image-local
 spec:
   failedJobsHistoryLimit: 2
   successfulJobsHistoryLimit: 2
@@ -11,10 +12,10 @@ spec:
       key: RESTIC_PASSWORD
     local:
       mountPath: /backups
-      name: backup-storage
-  volumeMounts:
-    - name: backup-storage
-      mountPath: /backups
+      #name: backup-storage
+    volumeMounts:
+      - mountPath: /backups
+        name: backup-storage
   volumes:
     - name: backup-storage
       persistentVolumeClaim:
