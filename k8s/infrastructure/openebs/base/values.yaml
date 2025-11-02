@@ -9,4 +9,4 @@ lvm-localpv:
   crds:
     csi:
       volumeSnapshots:
-        enabled: true
+        enabled: false
