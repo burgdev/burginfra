@@ -76,11 +76,11 @@ mountOptions:
   - vfs-cache-max-size=5G
   - default-permissions
   - allow-other
-  - file-perms=0665
-  - dir-perms=0775
-volumeAttributes:
-  file_mode: "665"
-  dir_mode: "775"
+  - file-perms=0777
+  - dir-perms=0777
+#volumeAttributes:
+#  file_mode: "665"
+#  dir_mode: "775"
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
 allowVolumeExpansion: true
