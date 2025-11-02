@@ -9,7 +9,7 @@ order: 10
 
 The structure is as follows:
 
-```
+```tree:no-line-numbers{7-9,21-22,28-30}
 k8s
 ├── applications
 │   └── some-app
@@ -17,7 +17,7 @@ k8s
 │       │   ├── ...
 │       │   ├── kustomization.yaml
 │       ├── flux
-│       │   └── local
+│       │   └── local|prod|staging
 │       │       └── flux-kustom.yaml
 │       └── overlays
 │           └── ...
@@ -38,7 +38,7 @@ k8s
         │   ├── ...
         │   ├── kustomization.yaml
         ├── flux
-        │   └── local
+        │   └── local|prod|staging
         │       └── flux-kustom.yaml
         └── overlays
             └── ...
@@ -59,3 +59,8 @@ This can be forced with:
 just flux reconcile-git
 just flux reconcile-helm
 ```
+
+## Resources
+* [Flux Kustomization](https://fluxcd.io/docs/components/kustomize/kustomization/)
+  * [Substitute](https://fluxcd.io/flux/components/kustomize/kustomizations/#post-build-variable-substitution)
+* [Source Controllers](https://fluxcd.io/flux/components/source/)

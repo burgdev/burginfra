@@ -40,8 +40,11 @@ kubectl -n flux-system get gitrepositories
 Force update:
 
 ```bash
-flux reconcile source git git-burginfra --namespace flux-system
+just flux reconcile-git
+just flux reconcile-helm
 ```
+
+For more information about how to use flux see [Infrastructure/fluxcd](Infrastructure/fluxcd).
 
 
 ## Common Commands

@@ -79,9 +79,14 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: data-remote-media
+              mountPath: /data-remote-media
       volumes:
         #- name: data
         #  emptyDir: {}
         - name: data
+          persistentVolumeClaim:
+            claimName: podinfo-image-remote-data-pvc
+        - name: data-remote-media
           persistentVolumeClaim:
             claimName: podinfo-image-remote-media-pvc
