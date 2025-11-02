@@ -7,7 +7,35 @@ outline: [2,4]
 
 [Introduction](https://www.simplyblock.io/blog/kubernetes-storage-concepts/) | [Official Documentation](https://kubernetes.io/docs/concepts/storage/)
 
-## Local storage
+## Storage Classes
+
+* `fast-local-media`: Local storage for media files (`xfs`), managed by OpenEBS
+* `fast-local-data`: Local storage for data files (`ext4`), managed by OpenEBS
+* `remote-media`: Remote storage for media files (`webdav`), managed by CSI Driver Rclone
+* `remote-data`: Remote storage for data files (`webdav`), managed by CSI Driver Rclone
+* `local-path`: Local storage for testing/deployments, should no be used
+* `openebs-hostpath`: Local storage for testing/deployments, should no be used, managed by OpenEBS
+
+## Persistent Volumes Claims
+
+
+```yaml [pvc.yaml]
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database # PVC
+  namespace: db  # NS
+spec:
+  accessModes:
+    - ReadWriteOnce
+    # - ReadWriteMany # not supported by OpenEBS
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: fast-local-data  # default
+```
+
+## Local storage (development)
 
 For local testing/deployments `local-path` storage class is used.
 

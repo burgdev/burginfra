@@ -19,7 +19,7 @@ spec:
       NAMESPACE: "csi-driver-rclone-local"
       ENVIRONMENT: "local"
     substituteFrom:
-      - kind: ConfigSecret
+      - kind: Secret
         name: webdav-credentials
         optional: false
       
