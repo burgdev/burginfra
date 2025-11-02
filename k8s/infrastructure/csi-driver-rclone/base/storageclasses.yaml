@@ -67,7 +67,7 @@ parameters:
   filePerms: "666"
   uid: "100"
   gid: "101"
-  allowOther: true
+  allowOther: "true"
   #defaultPermissions: true
 #csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 #csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
