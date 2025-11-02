@@ -63,6 +63,8 @@ parameters:
   remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
   csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
+  dirPerms: "0777"
+  filePerms: "0666"
 csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 mountOptions:
@@ -76,8 +78,8 @@ mountOptions:
   - vfs-cache-max-size=5G
   - default-permissions
   - allow-other
-  - file-perms=777
-  - dir-perms=777
+  #- file-perms=0666
+  #- dir-perms=0777
   - uid=100
   - gid=101
 #volumeAttributes:
