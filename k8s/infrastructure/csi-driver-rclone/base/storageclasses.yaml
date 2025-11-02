@@ -65,10 +65,10 @@ parameters:
   csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
   dir-perms: "777"
   file-perms: "666"
-  uid: "100"
-  gid: "101"
+  #uid: "100"
+  #gid: "101"
   allow-other: "true"
-  # default-permissions: "true"
+  default-permissions: "true"
 #csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
 #csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
 mountOptions:
@@ -80,10 +80,13 @@ mountOptions:
   - vfs-write-back=5s
   - vfs-cache-poll-interval=5m
   - vfs-cache-max-size=5G
-  #- default-permissions
+  - debug-fuse
+  - v=5
+  - default-permissions
   #- allow-other
-  #- file-perms=0666
-  #- dir-perms=0777
+  - file-perms=0666
+  - dir-perms=0777
+
   #- uid=100
   #- gid=101
 #volumeAttributes:
