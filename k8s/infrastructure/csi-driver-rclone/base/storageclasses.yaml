@@ -78,6 +78,8 @@ mountOptions:
   - allow-other
   - file-perms=0777
   - dir-perms=0777
+  - uid=101
+  - gid=100
 #volumeAttributes:
 #  file_mode: "665"
 #  dir_mode: "775"
