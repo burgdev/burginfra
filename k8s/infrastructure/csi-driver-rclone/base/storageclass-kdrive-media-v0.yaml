@@ -25,7 +25,6 @@ parameters:
   # Avoid unnecessary retries
   low-level-retries: "3"
   no-check-certificate: "true"
-  default-permissions: "0775"
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
 allowVolumeExpansion: true
