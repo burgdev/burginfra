@@ -11,9 +11,3 @@ resources:
   - secrets.yaml
   - storageclass-kdrive-data-v0.yaml
   - storageclass-kdrive-media-v0.yaml
-configMapGenerator:
-  - name: csi-driver-rclone-values
-    files:
-      - values.yaml=values.yaml
-generatorOptions:
-  disableNameSuffixHash: true
