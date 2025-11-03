@@ -5,12 +5,13 @@ kind: Kustomization
 metadata:
   name: app-podinfo-image-local
   namespace: flux-system # do not change!
-#dependsOn:
-#- name: base-configs  # optional, only if you have one
+dependsOn:
+  - name: infra-csi-driver-rclone-local
 spec:
   interval: 5s
   path: "./k8s/apps/podinfo-image/overlays/local"
   prune: true
+  force: true # needed to remove old pvc
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: git-burginfra
