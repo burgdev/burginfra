@@ -22,12 +22,12 @@ kind: Kustomization
 metadata:
   name: infra-csi-driver-rclone-local
   namespace: flux-system # do not change!
-dependsOn:
-- name: install-csi-driver-rclone-local
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/csi-driver-rclone/overlays/local"
   prune: true
+  dependsOn:
+  - name: install-csi-driver-rclone-local
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: git-burginfra
