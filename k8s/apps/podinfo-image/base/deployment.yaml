@@ -77,18 +77,26 @@ spec:
               cpu: 100m
               memory: 64Mi
           volumeMounts:
-            - name: data
+            - name: fast-data
               mountPath: /data
-            #- name: data-remote-media
-              #mountPath: /data-remote-media
+            - name: fast-media
+              mountPath: /data2/media
+            - name: remote-data
+              mountPath: /data2/remote-data
+            - name: remote-media
+              mountPath: /data2/remote-media
       volumes:
         #- name: data
         #  emptyDir: {}
-        - name: data
+        - name: fast-data
           persistentVolumeClaim:
-            #claimName: podinfo-image-remote-data-pvc3
-            claimName: podinfo-image-remote-data-pvc1
-            #podinfo-image-fast-local-data-pvc
-        ##- name: data-remote-media
-        ##  persistentVolumeClaim:
-        ##    claimName: podinfo-image-remote-media-pvc
+            claimName: fast-data-pvc-v0
+        - name: fast-media
+          persistentVolumeClaim:
+            claimName: fast-media-pvc-v0
+        - name: remote-data
+          persistentVolumeClaim:
+            claimName: remote-data-pvc-v0
+        - name: remote-media
+          persistentVolumeClaim:
+            claimName: remote-media-pvc-v0
