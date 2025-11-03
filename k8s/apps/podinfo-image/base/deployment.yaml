@@ -87,7 +87,8 @@ spec:
         - name: data
           persistentVolumeClaim:
             #claimName: podinfo-image-remote-data-pvc3
-            claimName: podinfo-image-fast-local-data-pvc
+            claimName: podinfo-image-remote-data-pvc1
+            #podinfo-image-fast-local-data-pvc
         ##- name: data-remote-media
         ##  persistentVolumeClaim:
         ##    claimName: podinfo-image-remote-media-pvc

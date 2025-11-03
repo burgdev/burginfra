@@ -1,4 +1,5 @@
-# https://github.com/perfectra1n/volsync/pkgs/container/volsync
+# Images: https://github.com/perfectra1n/volsync/pkgs/container/volsync
+# Values: https://github.com/perfectra1n/volsync/tree/main/helm/volsync
 manageCRDs: true
 metrics:
   disableAuth: true
