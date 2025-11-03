@@ -11,6 +11,7 @@ spec:
   interval: 1h0s
   path: "./k8s/infrastructure/csi-driver-rclone/overlays/local"
   prune: true
+  force: true # needed to remove old storage classes
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: git-burginfra
