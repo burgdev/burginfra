@@ -1,4 +1,4 @@
-# this is used by flux, do not inclue in any app kustomization.yaml file!
+# this is used by flux, do not include in any app kustomization.yaml file!
 # TODO: add to k8s/flux/*/kustomization.yaml 
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization

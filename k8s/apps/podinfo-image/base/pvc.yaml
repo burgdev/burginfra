@@ -20,7 +20,7 @@ spec:
   storageClassName: fast-local-media
   resources:
     requests:
-      storage: 50Mi
+      storage: 350Mi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

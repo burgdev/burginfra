@@ -1,19 +1,20 @@
-# this is used by flux, do not inclue in any app kustomization.yaml file!
+# this is used by flux, do not include in any app kustomization.yaml file!
 # TODO: add to k8s/flux/*/kustomization.yaml 
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: install-csi-driver-rclone-local
+  name: helm-csi-driver-rclone-local
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
-  path: "./k8s/infrastructure/csi-driver-rclone/overlays/local/install"
+  path: "./k8s/infrastructure/csi-driver-rclone/overlays/local/helm"
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: git-burginfra
   postBuild:
     substitute: # use the same values for all kustomizations
+      NAME: "csi-driver-rclone"
       NAMESPACE: "csi-driver-rclone-local"
       ENVIRONMENT: "local"
 ---
@@ -33,6 +34,7 @@ spec:
     name: git-burginfra
   postBuild:
     substitute:
+      NAME: "csi-driver-rclone"
       NAMESPACE: "csi-driver-rclone-local"
       ENVIRONMENT: "local"
     substituteFrom:
