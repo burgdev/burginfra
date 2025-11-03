@@ -15,23 +15,11 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: podinfo-image-remote-data-pvc1
+  name: podinfo-image-remote-data-pvc
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: remote-data
+  storageClassName: kdrive-data-v0
   resources:
     requests:
       storage: 50Mi
----
-#apiVersion: v1
-#kind: PersistentVolumeClaim
-#metadata:
-#  name: podinfo-image-remote-media-pvc
-#spec:
-#  accessModes:
-#    - ReadWriteOnce
-#  storageClassName: remote-media
-#  resources:
-#    requests:
-#      storage: 50Mi

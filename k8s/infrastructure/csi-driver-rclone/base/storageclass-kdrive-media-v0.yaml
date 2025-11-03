@@ -1,0 +1,31 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: kdrive-media-v0
+provisioner: rclone.csi.veloxpack.io
+parameters:
+  remote: "webdav" 
+  remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
+  csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
+  csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
+  default-permissions: "true"
+  allow-other: "true"
+  umask: "0000" # this is needed!
+  vfs-cache-mode: "full"
+  dir-cache-time: "12h"
+  vfs-read-chunk-size: "32M"
+  vfs-read-chunk-size-limit: "2G"
+  # Cache writes locally until closed (good for large images)
+  vfs-write-back: "5s"
+  # Aggressive read-ahead (for streaming)
+  vfs-read-ahead: "128M"
+  # Use async reads for multiple files
+  vfs-cache-poll-interval: "5m"
+  vfs-cache-max-size: "10G"
+  # Avoid unnecessary retries
+  low-level-retries: "3"
+  no-check-certificate: "true"
+  default-permissions: "0775"
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true

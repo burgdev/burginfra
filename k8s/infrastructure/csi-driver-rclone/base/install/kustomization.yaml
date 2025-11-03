@@ -7,11 +7,8 @@ commonLabels:
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
 resources:
-  - namespace.yaml
+  - ../namespace.yaml
   - helmrelease.yaml
-  - secrets.yaml
-  - storageclass-kdrive-data-v0.yaml
-  - storageclass-kdrive-media-v0.yaml
 configMapGenerator:
   - name: csi-driver-rclone-values
     files:
