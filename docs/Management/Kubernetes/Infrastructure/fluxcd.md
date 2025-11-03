@@ -40,6 +40,14 @@ k8s
         ├── flux
         │   └── local|prod|staging
         │       └── flux-kustom.yaml
+        ├── helm                       # optional
+        │   ├── base
+        │   │   ├── kustomization.yaml
+        │   │   ├── values.yaml
+        │   │   └── namespace.yaml
+        │   └── overlays
+        │       └── local|prod|staging
+        │           └── flux-kustom.yaml
         └── overlays
             └── ...
 ```
