@@ -5,8 +5,6 @@ metadata:
   namespace: ${NAMESPACE}
 type: Opaque
 stringData:
-  remote: "webdav" 
-  remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   configData: |
     [webdav]
     type = webdav
@@ -61,8 +59,8 @@ provisioner: rclone.csi.veloxpack.io
 parameters:
   csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
   csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
-  #remote: "webdav" 
-  #remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
+  remote: "webdav" 
+  remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
   default-permissions: "true"
   allow-other: "true"
   umask: "0000" # this is needed!
