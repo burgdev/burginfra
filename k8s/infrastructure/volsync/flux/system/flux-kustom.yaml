@@ -17,7 +17,7 @@ spec:
   postBuild:
     substitute:
       NAME: "volsync"
-      NAMESPACE: "volsync-system"
+      NAMESPACE: "burginfra-system"
       ENVIRONMENT: "system"
       REPO_INTERVAL: "1h0s"
       SOURCE_INTERVAL: "1h0s"
@@ -40,7 +40,7 @@ spec:
   postBuild:
     substitute:
       NAME: "volsync"
-      NAMESPACE: "volsync-system"
+      NAMESPACE: "burginfra-system"
       COMPONENT: "backup"
       ENVIRONMENT: "system"
       CHART_VERSION: "0.16.*"
