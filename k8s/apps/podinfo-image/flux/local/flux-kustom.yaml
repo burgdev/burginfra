@@ -22,5 +22,5 @@ spec:
       ENVIRONMENT: "local"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
-        name: ${NAME}-config-vars
+        name: podinfo-config-vars
         optional: true
