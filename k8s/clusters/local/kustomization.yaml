@@ -12,6 +12,7 @@ resources:
   - ../../infrastructure/volsync/flux/local/flux-kustom.yaml
   #- ../../infrastructure/k8up/flux/local/flux-kustom.yaml
   - ../../infrastructure/cert-manager/flux/local/flux-kustom.yaml
+  - ../../infrastructure/kube-prometheus-stack/flux/local/flux-kustom.yaml
   - ../../infrastructure/openbao/flux/local/flux-kustom.yaml
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   - ../../apps/podinfo-image/flux/local/flux-kustom.yaml
