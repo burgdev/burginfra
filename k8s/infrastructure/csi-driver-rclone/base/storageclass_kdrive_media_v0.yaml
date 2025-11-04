@@ -4,9 +4,9 @@ metadata:
   name: kdrive-media-v0
 provisioner: rclone.csi.veloxpack.io
 parameters:
-  remote: "webdav" 
+  remote: "kdrive" 
   remotePath: "$${pvc.metadata.namespace}/$${pvc.metadata.name}"
-  csi.storage.k8s.io/node-publish-secret-name: "rclone-webdav-secrets"
+  csi.storage.k8s.io/node-publish-secret-name: "rclone-kdrive-secrets"
   csi.storage.k8s.io/node-publish-secret-namespace: "${NAMESPACE}"
   default-permissions: "true"
   allow-other: "true"

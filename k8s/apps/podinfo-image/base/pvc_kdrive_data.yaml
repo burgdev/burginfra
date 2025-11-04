@@ -5,7 +5,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: kdrive-data-v0 # update metadata.name
+  storageClassName: fast-local-data-v0 # Changed from kdrive-data-v0 to use existing storage class
   resources:
     requests:
       storage: 50Mi
