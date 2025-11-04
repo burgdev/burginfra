@@ -3,10 +3,31 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: helm-openebs-local
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  path: "./k8s/infrastructure/openebs/helm/overlays/local"
+  prune: true
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: git-burginfra
+  postBuild:
+    substitute: # use the same values for all kustomizations
+      NAME: "openebs"
+      NAMESPACE: "openebs-local"
+      ENVIRONMENT: "local"
+      REPO_INTERVAL: "1h0s"
+      SOURCE_INTERVAL: "1h0s"
+      CHART_VERSION: "4.3.*"
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: infra-openebs-local
   namespace: flux-system # do not change!
-#dependsOn:
-#- name: base-configs  # optional, only if you have one
+dependsOn:
+- name: helm-openebs-local
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/openebs/overlays/local"
@@ -15,7 +36,8 @@ spec:
     kind: GitRepository
     name: git-burginfra
   postBuild:
-    substitute:
+    substitute: # use the same values for all kustomizations
+      NAME: "openebs"
       NAMESPACE: "openebs-local"
       ENVIRONMENT: "local"
     substituteFrom:

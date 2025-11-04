@@ -1,21 +1,7 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: fast-local-media
-provisioner: local.csi.openebs.io
-parameters:
-  storageType: lvm
-  volgroup: ${VG_NAME:-openebs-vg}
-  fsType: xfs
-reclaimPolicy: Delete
-allowVolumeExpansion: true
-mountOptions:
-  - noatime
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: fast-local-data
+  name: fast-local-data-v0
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
 provisioner: local.csi.openebs.io

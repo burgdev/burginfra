@@ -1,6 +1,5 @@
 ---
-title: Storage
-order: 30
+title: Overview
 outline: [2,4]
 ---
 # Storage
@@ -9,10 +8,12 @@ outline: [2,4]
 
 ## Storage Classes
 
-* `fast-local-media`: Local storage for media files (`xfs`), managed by OpenEBS
-* `fast-local-data`: Local storage for data files (`ext4`), managed by OpenEBS
-* `remote-media`: Remote storage for media files (`webdav`), managed by CSI Driver Rclone
-* `remote-data`: Remote storage for data files (`webdav`), managed by CSI Driver Rclone
+* `fast-local-media-v0`: Local storage for media files (`xfs`), managed by OpenEBS
+* `fast-local-data-v0`: Local storage for data files (`ext4`), managed by OpenEBS
+* `kdrive-media-v0`: Remote storage for media files (`webdav`), managed by CSI Driver Rclone
+* `kdrive-data-v0`: Remote storage for data files (`webdav`), managed by CSI Driver Rclone
+* `distributed-data-v0`: Distributed storage for data files (`ext4`), managed by Longhorn **not deployed**
+* `distributed-data-encrypted-v0`: Distributed storage for data files (`ext4`), encrypted, managed by Longhorn **not deployed**
 * `local-path`: Local storage for testing/deployments, should no be used
 * `openebs-hostpath`: Local storage for testing/deployments, should no be used, managed by OpenEBS
 

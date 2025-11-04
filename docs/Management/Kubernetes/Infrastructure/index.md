@@ -1,11 +1,10 @@
 ---
-title: Flux CD
-order: 10
+title: Overview
 ---
 
-# Flux CD for GitOps
+# Infrastructure
 
-[Flux CD](https://fluxcd.io/) is used for GitOps.
+The infrastructure is managed by [Flux CD](https://fluxcd.io/).
 
 The structure is as follows:
 

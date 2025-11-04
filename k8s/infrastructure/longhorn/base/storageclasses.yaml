@@ -2,7 +2,7 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: fast-${ENVIRONMENT}
+  name: distributed-data-v0
   annotations:
     storageclass.kubernetes.io/is-default-class: "false"
 provisioner: driver.longhorn.io
@@ -17,7 +17,7 @@ parameters:
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: fast-${ENVIRONMENT}-encrypted
+  name: distributed-data-encrypted-v0
   annotations:
     storageclass.kubernetes.io/is-default-class: "false"
 provisioner: driver.longhorn.io

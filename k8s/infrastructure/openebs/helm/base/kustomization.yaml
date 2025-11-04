@@ -7,5 +7,11 @@ commonLabels:
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
 resources:
-  - storageclass_fast_local_data_v0.yaml
-  - storageclass_fast_local_media_v0.yaml
+  - namespace.yaml
+  - helmrelease.yaml
+configMapGenerator:
+  - name: ${NAME}-values
+    files:
+      - values.yaml=values.yaml
+    options:
+      disableNameSuffixHash: true
