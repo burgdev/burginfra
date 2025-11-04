@@ -3,6 +3,10 @@ import 'core.just'
 # ♻️  Reconcile everything
 reconcile-all: reconcile-git reconcile-helm
 
+# ♻️  reconcile-all
+[group("aliases")]
+ra: reconcile-all
+
 # ♻️  Reconcile all GitRepositories
 reconcile-git:
     @header "$(doc flux reconcile-git)"
