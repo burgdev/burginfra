@@ -6,8 +6,8 @@ spec:
   minReadySeconds: 3
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 60
-  strategy:
-    type: Recreate
+  #strategy:
+  #  type: Recreate
   selector:
     matchLabels:
       app: ${NAME}
@@ -98,10 +98,10 @@ spec:
         #  emptyDir: {}
         - name: fast-data
           persistentVolumeClaim:
-            claimName: fast-data-pvc-v0
+            claimName: fast-data-pvc-v1
         - name: fast-media
           persistentVolumeClaim:
-            claimName: fast-media-pvc-v0
+            claimName: fast-media-pvc-v1
         - name: kdrive-data
           persistentVolumeClaim:
             claimName: kdrive-data-pvc-v0

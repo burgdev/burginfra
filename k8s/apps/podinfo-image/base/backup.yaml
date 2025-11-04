@@ -6,9 +6,9 @@ metadata:
    name: podinfo-data-direct              # 'username' for kopia
    namespace: ${NAMESPACE}
 spec:
-   sourcePVC: fast-data-pvc-v0
+   sourcePVC: fast-data-pvc-v1
    trigger:
-      schedule: "*/1 * * * *"
+      schedule: "*/2 * * * *"
    kopia:
      repository: volsync-kopia-webdav-secrets
      policyConfig:

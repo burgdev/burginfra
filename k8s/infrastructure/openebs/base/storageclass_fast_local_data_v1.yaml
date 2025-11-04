@@ -1,0 +1,17 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-local-data-v1
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: local.csi.openebs.io
+parameters:
+  storageType: lvm
+  volgroup: ${VG_NAME:-openebs-vg}
+  fsType: ext4
+  shared: "true"
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+mountOptions:
+  - noatime
