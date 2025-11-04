@@ -15,4 +15,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+  - kopia_config.yaml
   - backup.yaml
