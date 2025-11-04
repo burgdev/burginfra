@@ -4,8 +4,9 @@ metadata:
   name: ${NAME}
   namespace: flux-system
 spec:
+  type: oci
   interval: ${REPO_INTERVAL}
-  url: https://openebs.github.io/openebs
+  url: ghcr.io/perfectra1n/volsync
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
