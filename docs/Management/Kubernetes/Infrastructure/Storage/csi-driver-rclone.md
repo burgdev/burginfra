@@ -19,20 +19,7 @@ They both use [`kdrive`](https://www.infomaniak.com/en/ksuite/kdrive) as the sto
 
 ## `pvc` Templates
 
-
-```yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: remote-data-pvc-v0
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: kdrive-data-v0
-  resources:
-    requests:
-      storage: 50M
-```
+<<< @/../k8s/apps/podinfo-image/base/pvc_kdrive_data.yaml{yaml:no-line-numbers}
 
 ## Setup
 

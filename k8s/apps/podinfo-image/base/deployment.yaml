@@ -89,10 +89,10 @@ spec:
               mountPath: /data
             - name: fast-media
               mountPath: /data2/media
-            - name: remote-data
-              mountPath: /data2/remote-data
-            - name: remote-media
-              mountPath: /data2/remote-media
+            - name: kdrive-data
+              mountPath: /data2/kdrive-data
+            - name: kdrive-media
+              mountPath: /data2/kdrive-media
       volumes:
         #- name: data
         #  emptyDir: {}
@@ -102,9 +102,9 @@ spec:
         - name: fast-media
           persistentVolumeClaim:
             claimName: fast-media-pvc-v0
-        - name: remote-data
+        - name: kdrive-data
           persistentVolumeClaim:
-            claimName: remote-data-pvc-v0
-        - name: remote-media
+            claimName: kdrive-data-pvc-v0
+        - name: kdrive-media
           persistentVolumeClaim:
-            claimName: remote-media-pvc-v0
+            claimName: kdrive-media-pvc-v0

@@ -29,19 +29,7 @@ Two storage classes are defined:
 ## `pvc` Templates
 
 
-```yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: data-pvc-v0
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: fast-local-data-v0
-  resources:
-    requests:
-      storage: 50M
-```
+<<< @/../k8s/apps/podinfo-image/base/pvc_local_data.yaml{yaml:no-line-numbers}
 
 ## Setup
 

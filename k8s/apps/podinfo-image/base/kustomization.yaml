@@ -11,6 +11,9 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - pvc.yaml
+  - pvc_local_data.yaml
+  - pvc_local_media.yaml
+  - pvc_kdrive_data.yaml
+  - pvc_kdrive_media.yaml
   # - kustomize-flux.yaml # DO NOT INCLUDE, it is referenced in k8s/kustomize/*/kustomization.yaml
   # - configs/kustomization.yaml # DO NOT INCLUDE, it is used to manually create config/secrets map
