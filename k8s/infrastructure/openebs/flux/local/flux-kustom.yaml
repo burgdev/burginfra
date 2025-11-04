@@ -8,7 +8,7 @@ metadata:
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/openebs/helm/overlays/local"
-  prune: false
+  prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: git-burginfra
@@ -31,7 +31,7 @@ spec:
   path: "./k8s/infrastructure/openebs/overlays/local"
   dependsOn:
   - name: helm-openebs-local
-  prune: false
+  prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: git-burginfra
