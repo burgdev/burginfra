@@ -37,5 +37,5 @@ spec:
      #    echo "Cleanup completed at $(date)" >> /data/backup.log
 
      # Use clone for point-in-time consistency
-     # copyMethod: Snapshot
-     copyMethod: Direct
+     copyMethod: Snapshot
+     # copyMethod: Direct
