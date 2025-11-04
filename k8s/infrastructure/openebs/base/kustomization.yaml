@@ -7,5 +7,6 @@ commonLabels:
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
 resources:
+  - volumesnapshotclass.yaml
   - storageclass_fast_local_data_v0.yaml
   - storageclass_fast_local_media_v0.yaml
