@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: helm-volsync-local
+  name: helm-volsync-system
   namespace: flux-system # do not change!
 #dependsOn:
 #- name: base-configs  # optional, only if you have one
@@ -17,8 +17,8 @@ spec:
   postBuild:
     substitute:
       NAME: "volsync"
-      NAMESPACE: "volsync-local"
-      ENVIRONMENT: "local"
+      NAMESPACE: "volsync-system"
+      ENVIRONMENT: "system"
       REPO_INTERVAL: "1h0s"
       SOURCE_INTERVAL: "1h0s"
       CHART_VERSION: "0.16.*"
@@ -26,13 +26,13 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: infra-volsync-local
+  name: infra-volsync-system
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/volsync/overlays/local"
   dependsOn:
-  - name: helm-volsync-local
+  - name: helm-volsync-system
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
@@ -40,5 +40,7 @@ spec:
   postBuild:
     substitute:
       NAME: "volsync"
-      NAMESPACE: "volsync-local"
-      ENVIRONMENT: "local"
+      NAMESPACE: "volsync-system"
+      COMPONENT: "backup"
+      ENVIRONMENT: "system"
+      CHART_VERSION: "0.16.*"
