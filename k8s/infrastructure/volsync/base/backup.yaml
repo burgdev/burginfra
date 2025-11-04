@@ -8,26 +8,19 @@ metadata:
 spec:
    sourcePVC: fast-data-pvc-v0
    trigger:
-      schedule: "*/30 * * * *"
+      schedule: "*/1 * * * *"
    kopia:
      repository: volsync-kopia-webdav-secrets
+     policyConfig:
+       configMapName: kopia-policies
 
-     # Repository Retention Policy
-     # Define how many snapshots to keep at different intervals
+     # Overwrite Retention Policy
      retain:
-       hourly: 72      # Keep 24 hourly snapshots (1 day)
-       daily: 7        # Keep 7 daily snapshots (1 week)
-       weekly: 4       # Keep 4 weekly snapshots (1 month)
-       monthly: 6      # Keep 6 monthly snapshots
-       yearly: 1       # Keep 1 yearly snapshot
-
-     # Compression Configuration
-     # Use zstd for optimal balance of speed and compression ratio
-     compression: zstd
-
-     # Performance Tuning
-     # Use multiple parallel streams for faster uploads
-     parallelism: 2
+       hourly: 72
+       daily: 7 
+       weekly: 4
+       monthly: 6
+       yearly: 1
 
      # Database Consistency Actions
      # These hooks ensure database consistency during backup
