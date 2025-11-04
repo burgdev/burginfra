@@ -28,11 +28,11 @@ kind: Kustomization
 metadata:
   name: infra-volsync-local
   namespace: flux-system # do not change!
-  dependsOn:
-  - name: helm-volsync-local
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/volsync/overlays/local"
+  dependsOn:
+  - name: helm-volsync-local
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
