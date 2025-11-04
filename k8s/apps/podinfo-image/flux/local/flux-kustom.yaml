@@ -10,7 +10,8 @@ spec:
   path: "./k8s/apps/podinfo-image/overlays/local"
   prune: true
   dependsOn:
-    - name: helm-csi-driver-rclone-local
+    - name: infra-csi-driver-rclone-local
+    - name: infra-openebs-local
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: git-burginfra
