@@ -4,9 +4,8 @@ metadata:
   name: ${NAME}
   namespace: flux-system
 spec:
-  type: oci
   interval: ${REPO_INTERVAL}
-  url: ghcr.io/perfectra1n/volsync
+  url: https://perfectra1n.github.io/volsync/charts
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
