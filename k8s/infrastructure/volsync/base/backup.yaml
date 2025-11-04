@@ -3,10 +3,10 @@
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
-   name: podinfo-image              # 'username' for kopia
-   namespace: backup-${ENVIRONMENT} # 'hostname' for kopia 
+   name: data              # 'username' for kopia
+   namespace: pod-image-${ENVIRONMENT} # 'hostname' for kopia 
 spec:
-   sourcePVC: podinfo-image-backup-kopia-pvc
+   sourcePVC: fast-data-pvc-v0
    trigger:
       schedule: "*/30 * * * *"
    kopia:
