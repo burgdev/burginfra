@@ -37,4 +37,8 @@ spec:
       NAME: "kube-prometheus-stack"
       NAMESPACE: "monitoring"
       ENVIRONMENT: "local"
+    substituteFrom:
+      - kind: ConfigMap
+        name: kube-prometheus-stack-config-vars
+        optional: false
       
