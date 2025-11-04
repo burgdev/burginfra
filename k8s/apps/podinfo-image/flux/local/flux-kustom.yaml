@@ -17,9 +17,10 @@ spec:
     name: git-burginfra
   postBuild:
     substitute:
+      NAME: "podinfo"
       NAMESPACE: "podinfo-image-local"
       ENVIRONMENT: "local"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
-        name: podinfo-image-config-vars
+        name: ${NAME}-config-vars
         optional: true

@@ -6,7 +6,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: flux-system
 configMapGenerator:
-  - name: podinfo-image-config-vars
+   # do not use variables here, it is used to manually create config/secrets map
+  - name: podinfo-config-vars
     envs:
       - .env # copy .env.template to .env
 generatorOptions:

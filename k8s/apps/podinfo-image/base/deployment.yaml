@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: podinfo
+  name: ${NAME}
 spec:
   minReadySeconds: 3
   revisionHistoryLimit: 5
@@ -10,14 +10,14 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: podinfo
+      app: ${NAME}
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9797"
       labels:
-        app: podinfo
+        app: ${NAME}
     spec:
       securityContext:
         runAsUser: 100
@@ -25,7 +25,7 @@ spec:
         fsGroup: 101
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
-        - name: podinfod
+        - name: ${NAME}
           image: ghcr.io/stefanprodan/podinfo:6.9.2
           imagePullPolicy: IfNotPresent
           securityContext:
@@ -48,7 +48,7 @@ spec:
             - --port=9898
             - --port-metrics=9797
             - --grpc-port=9999
-            - --grpc-service-name=podinfo
+            - --grpc-service-name=${NAME}
             - --level=info
             - --random-delay=false
             - --random-error=false
