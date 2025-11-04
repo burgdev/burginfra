@@ -21,7 +21,7 @@ spec:
       ENVIRONMENT: "system"
       REPO_INTERVAL: "1h0s"
       SOURCE_INTERVAL: "1h0s"
-      CHART_VERSION: "0.17.*"
+      CHART_VERSION: "0.17.x"
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -44,4 +44,4 @@ spec:
       NAMESPACE: "burginfra-system"
       COMPONENT: "backup"
       ENVIRONMENT: "system"
-      CHART_VERSION: "0.17.*"
+      CHART_VERSION: "0.17.x"
