@@ -133,7 +133,7 @@ const vitePressSidebarOptions = {
   frontmatterOrderDefaultValue: 100,
   excludeFilesByFrontmatterFieldName: 'exclude',
   excludeByFolderDepth: 6,
-  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md", "Applications", "Management", "Scripts", "Linux", "Kubernetes", "Docker"],
+  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md", "Overview", "Installation", "Applications", "Management", "Infrastructure", "Scripts", "Linux", "Kubernetes", "Docker"],
   includeFolderIndexFile: true,
   useFolderTitleFromIndexFile: false,
   //removePrefixAfterOrdering: true,

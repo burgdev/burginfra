@@ -15,9 +15,9 @@ Documentation for the [Kubernetes](https://kubernetes.io) setup.
 
 ## Prerequisites
 
-Install `k3s` as described in the [k3s setup](/infrastructure/kubernetes/k3s-setup.md).
+Install `k3s` as described in the [k3s setup](/Management/Kubernetes/Installation/k3s_Setup).
 
-Very helpful is the `k9s` tool ([setup](/infrastructure/kubernetes/k9s-setup.md)) as a terminal UI for `kubectl`.
+Very helpful is the `k9s` tool ([setup](/Management/Kubernetes/Installation/k9s_Setup)) as a terminal UI for `kubectl`.
 
 ## Initial Flux Setup
 

@@ -7,6 +7,10 @@ aside: false
 
 [OpenEBS Local PV LVM](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/lvm-overview) is used to mount local storage.
 
+::: tip Node Setup
+See [LVM setup](/Management/Linux/lvm) on how to setup the LVM in order to use it with OpenEBS.
+:::
+
 ## Deployment
 
 Since it is `ReadWriteOnce` it can only be used by one pod at a time.
@@ -18,6 +22,7 @@ spec:
     type: Recreate # NEEDED
 ```
 to the deployment.
+
 
 ## Storage Classes
 
