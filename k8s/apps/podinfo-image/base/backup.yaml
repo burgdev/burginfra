@@ -4,7 +4,7 @@ apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
    name: data              # 'username' for kopia
-   namespace: podinfo-image-local # 'hostname' for kopia 
+   namespace: ${NAMESPACE}
 spec:
    sourcePVC: fast-data-pvc-v0
    trigger:
