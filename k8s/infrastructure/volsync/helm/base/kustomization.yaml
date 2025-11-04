@@ -7,7 +7,6 @@ commonLabels:
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
 resources:
-  - namespace.yaml
   - helmrelease.yaml
 configMapGenerator:
   - name: ${NAME}-values
