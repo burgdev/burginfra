@@ -27,3 +27,4 @@ spec:
       name: ${NAME}-values
       valuesKey: values.yaml
   interval: 1h0s
+  timeout: 10m
