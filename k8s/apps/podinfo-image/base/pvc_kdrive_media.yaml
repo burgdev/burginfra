@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kdrive-media-pvc-v0 # update deployment.yaml
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: kdrive-media-v0 # update metadata.name
+  resources:
+    requests:
+      storage: 50Mi

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fast-data-pvc-v0 # update deployment.yaml
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-local-data-v0 # update metadata.name
+  resources:
+    requests:
+      storage: 50Mi
