@@ -3,40 +3,42 @@
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
-   name: podinfo-data-direct              # 'username' for kopia
-   namespace: ${NAMESPACE}
+  name: podinfo-data-direct # 'username' for kopia
+  #namespace: ${NAMESPACE}
+  namespace: podinfo-image-local
 spec:
-   sourcePVC: fast-data-pvc-v1
-   trigger:
-      #schedule: "*/2 * * * *"
-      manual: backup-01
-   kopia:
-     repository: volsync-kopia-webdav-secrets
-     policyConfig:
-       configMapName: kopia-policies
+  sourcePVC: fast-data-pvc-v1
+  trigger:
+    #schedule: "*/2 * * * *"
+    manual: backup-03
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    policyConfig:
+      configMapName: kopia-policies
 
-     # Overwrite Retention Policy
-     retain:
-       hourly: 72
-       daily: 7 
-       weekly: 4
-       monthly: 6
-       yearly: 1
+    # Overwrite Retention Policy
+    retain:
+      hourly: 72
+      daily: 7
+      weekly: 4
+      monthly: 6
+      yearly: 1
 
-     # Database Consistency Actions
-     # These hooks ensure database consistency during backup
-     #actions:
-     #  # Before snapshot: Create consistent database dump
-     #  beforeSnapshot: |
-     #    echo "Starting database backup at $(date)" >> /data/backup.log
-     #    mysqldump --single-transaction --routines --triggers --all-databases > /data/mysql-backup.sql
-     #    echo "Database dump completed" >> /data/backup.log
+    # Database Consistency Actions
+    # These hooks ensure database consistency during backup
+    #actions:
+    #  # Before snapshot: Create consistent database dump
+    #  beforeSnapshot: |
+    #    echo "Starting database backup at $(date)" >> /data/backup.log
+    #    mysqldump --single-transaction --routines --triggers --all-databases > /data/mysql-backup.sql
+    #    echo "Database dump completed" >> /data/backup.log
 
-     #  # After snapshot: Clean up temporary files
-     #  afterSnapshot: |
-     #    rm -f /data/mysql-backup.sql
-     #    echo "Cleanup completed at $(date)" >> /data/backup.log
+    #  # After snapshot: Clean up temporary files
+    #  afterSnapshot: |
+    #    rm -f /data/mysql-backup.sql
+    #    echo "Cleanup completed at $(date)" >> /data/backup.log
 
-     # Use clone for point-in-time consistency
-     # copyMethod: Snapshot
-     copyMethod: Direct
+    # Use clone for point-in-time consistency
+    # copyMethod: Snapshot
+    copyMethod: Direct
+
