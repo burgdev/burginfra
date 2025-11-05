@@ -4,12 +4,16 @@ manageCRDs: true
 metrics:
   disableAuth: true
 image:
-  repository: ghcr.io/perfectra1n/volsync
-  tag: "0.16.13"
+  #repository: ghcr.io/perfectra1n/volsync
+  #tag: "0.16.13"
+  repository: ghcr.io/burgdev/volsync
+  tag: "latest"
   image: ""
 kopia:
-  repository: ghcr.io/perfectra1n/volsync
-  tag: "0.16.13"
+  #repository: ghcr.io/perfectra1n/volsync
+  #tag: "0.16.13"
+  repository: ghcr.io/burgdev/volsync
+  tag: "latest"
   image: ""
 rclone:
   repository: ghcr.io/perfectra1n/volsync
