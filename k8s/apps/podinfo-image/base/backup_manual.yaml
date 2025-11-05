@@ -3,14 +3,14 @@
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
-  name: podinfo-data-direct # 'username' for kopia
+  name: podinfo-data-manual # 'username' for kopia
   #namespace: ${NAMESPACE}
   namespace: podinfo-image-local
 spec:
   sourcePVC: fast-data-pvc-v1
   trigger:
-    schedule: "*/5 * * * *"
-    #manual: backup-03
+    #schedule: "*/2 * * * *"
+    manual: backup-05
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
@@ -18,26 +18,25 @@ spec:
 
     # Overwrite Retention Policy
     retain:
-      hourly: 24
-      daily: 2
-      weekly: 2
-      monthly: 1
-      yearly: 0
+      hourly: 72
+      daily: 7
+      weekly: 4
+      monthly: 6
+      yearly: 1
 
     # Database Consistency Actions
     # These hooks ensure database consistency during backup
     actions:
       # Before snapshot: Create consistent database dump
       beforeSnapshot: |
-        echo "[Auto] $(date)" >> /data/backup.log
-        sleep 4
-        echo "[Auto] Backup from $(uname -r)" >> /data/backup.log
+        echo "[Manual] $(date)" >> /data/backup.log
+        echo "[Manual] Backup from $(uname -r)" >> /data/backup.log
 
       # After snapshot: Clean up temporary files
       afterSnapshot: |
-        echo "[Auto] Cleanup completed at $(date)" >> /data/backup.log
+        echo "[Manual] Cleanup completed at $(date)" >> /data/backup.log
 
     # Use clone for point-in-time consistency
-    # copyMethod: Snapshot
-    copyMethod: Direct
+    copyMethod: Snapshot
+    # copyMethod: Direct
 
