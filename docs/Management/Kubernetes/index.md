@@ -29,7 +29,7 @@ kubectl get pods -n flux-system # wait until ready
 # create deploy key
 flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
 # add deploy key to github
-kubectl apply -k k8s/clusters/flux-system/deploy/overlays/dev # or 'staging' or 'prod'
+kubectl apply -k k8s/clusters/flux-system/overlays/dev # or 'staging' or 'prod'
 ```
 Check connection:
 

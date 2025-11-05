@@ -6,4 +6,4 @@ resources:
   # - ../../infrastructure/longhorn/flux/local/flux-kustom.yaml # -> use openebs lvm
   # Run if longhorn was added and removed again:
   #   kubectl delete validatingwebhookconfiguration longhorn-webhook-validator
-  - ../../..infrastructure/volsync/flux/system/flux-kustom.yaml
+  - ../../../infrastructure/volsync/flux/system/flux-kustom.yaml
