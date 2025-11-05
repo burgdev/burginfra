@@ -8,7 +8,8 @@ metadata:
 spec:
    sourcePVC: fast-data-pvc-v1
    trigger:
-      schedule: "*/2 * * * *"
+      #schedule: "*/2 * * * *"
+      manual: backup-01
    kopia:
      repository: volsync-kopia-webdav-secrets
      policyConfig:

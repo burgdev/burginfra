@@ -11,25 +11,17 @@ aside: false
 See [LVM setup](/Management/Linux/lvm) on how to setup the LVM in order to use it with OpenEBS.
 :::
 
-## Deployment
-
-Since it is `ReadWriteOnce` it can only be used by one pod at a time.
-Make sure to add
-
-```yaml:no-line-numbers
-spec:
-  strategy:
-    type: Recreate # NEEDED
-```
-to the deployment.
-
-
 ## Storage Classes
 
 Two storage classes are defined:
 
 * `fast-local-data-v0`: Local storage for data files (`ext4`)
 * `fast-local-media-v0`: Local storage for media files (`xfs`), only for min 1Gi.
+
+::: info [Shared Volumes](https://openebs.io/docs/main/user-guides/local-storage-user-guide/local-pv-lvm/configuration/lvm-storageclass-options#shared-optional)
+If `paramters.share` is not set to `yes` in the storage class the volume can only be used by one pod at a time.
+Use `Recreate` as `strategy` in the deployment to ensure data consistency.
+:::
 
 ## `pvc` Templates
 
@@ -44,10 +36,13 @@ Two storage classes are defined:
 <<< @/../k8s/infrastructure/openebs/configs/.env.template{dotenv:no-line-numbers} [configs/.env.template]
 :::
 
+
+
+
 ::: details :package: Storage Classes
 ::: code-group
-<<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_data_v0.yaml{yaml} [base/storageclass_fast_local_data_v0.yaml]
-<<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_media_v0.yaml{yaml} [base/storageclass_fast_local_media_v0.yaml]
+<<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_data_v1.yaml{yaml} [base/storageclass_fast_local_data_v1.yaml]
+<<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_media_v1.yaml{yaml} [base/storageclass_fast_local_media_v1.yaml]
 :::
 
 ::: details :package: Helm Installation
