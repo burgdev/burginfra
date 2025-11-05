@@ -6,8 +6,9 @@ spec:
   minReadySeconds: 3
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 60
-  #strategy:
-  #  type: Recreate
+  strategy:
+    type: RollingUpdate
+    #type: Recreate
   selector:
     matchLabels:
       app: ${NAME}
