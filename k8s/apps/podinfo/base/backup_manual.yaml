@@ -1,0 +1,39 @@
+---
+# docu from fork: https://perfectra1n.github.io/volsync/usage/kopia/index.html#
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: podinfo-data-manual # 'username' for kopia
+  namespace: development
+spec:
+  sourcePVC: fast-data-pvc-v1
+  trigger:
+    #schedule: "*/2 * * * *"
+    manual: backup-0
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    policyConfig:
+      configMapName: kopia-policies
+
+    # Overwrite Retention Policy
+    retain:
+      hourly: 72
+      daily: 7
+      weekly: 4
+      monthly: 6
+      yearly: 1
+
+    actions:
+      beforeSnapshot: |
+        echo "[Manual] $(date)" >> /data/backup.log
+        cat /etc/os-release > /data/os-release
+        echo "[Manual] Backup from cloned" >> /data/backup.log
+
+      afterSnapshot: |
+        echo "[Manual] Cleanup completed at $(date)" >> /data/backup.log
+
+    # Use snapshot for point-in-time consistency
+    # Snapshot is not supported yet https://github.com/openebs/openebs/issues/4071
+    # copyMethod: Snapshot
+    copyMethod: Direct
+

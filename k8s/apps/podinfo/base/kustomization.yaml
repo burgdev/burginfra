@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ${NAMESPACE}
+commonLabels:
+  app.kubernetes.io/name: ${NAME}
+  app.kubernetes.io/component: testing
+  app.kubernetes.io/environment: ${ENVIRONMENT}
+  app.kubernetes.io/cluster: ${CLUSTER}
+  app.kubernetes.io/part-of: apps
+  app.kubernetes.io/managed-by: flux
+resources:
+  - pvc_local_data.yaml
+  - pvc_local_media.yaml
+  - pvc_kdrive_data.yaml
+  - pvc_kdrive_media.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - backup.yaml

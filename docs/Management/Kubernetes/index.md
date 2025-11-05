@@ -26,10 +26,10 @@ Very helpful is the `k9s` tool ([setup](/Management/Kubernetes/Installation/k9s_
 ```bash
 kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
 kubectl get pods -n flux-system # wait until ready
-kubectl apply -k k8s/clusters/flux-system/overlays/local
 # create deploy key
 flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
 # add deploy key to github
+kubectl apply -k k8s/clusters/flux-system/deploy/overlays/dev # or 'staging' or 'prod'
 ```
 Check connection:
 

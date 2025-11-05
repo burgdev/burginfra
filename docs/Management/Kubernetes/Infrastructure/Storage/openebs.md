@@ -28,6 +28,18 @@ Use `Recreate` as `strategy` in the deployment to ensure data consistency.
 
 <<< @/../k8s/apps/podinfo-image/base/pvc_local_data.yaml{yaml:no-line-numbers}
 
+## Snapshots
+
+
+A `VolumeSnapshotClass` is required in order to create [snapshots](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-snapshot) of the volume.
+
+::: warning Restore not supported
+Restore is not supported yet but [is planned vor OpenEbs 4.4](https://github.com/openebs/openebs/issues/4071).
+
+You could also use [OpenEBS Local PV ZFS](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-zfs/zfs-overview) instead
+which has more features.
+:::
+
 ## Setup
 
 :memo: [Source Code](https://github.com/burgdev/burginfra/tree/main/k8s/infrastructure/openebs)
@@ -39,10 +51,11 @@ Use `Recreate` as `strategy` in the deployment to ensure data consistency.
 
 
 
-::: details :package: Storage Classes
+::: details :package: Storage Classes & Volume Snapshot Class
 ::: code-group
 <<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_data_v1.yaml{yaml} [base/storageclass_fast_local_data_v1.yaml]
 <<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_media_v1.yaml{yaml} [base/storageclass_fast_local_media_v1.yaml]
+<<< @/../k8s/infrastructure/openebs/base/volumesnapshotclass.yaml{yaml} [base/volumesnapshotclass.yaml]
 :::
 
 ::: details :package: Helm Installation

@@ -1,12 +1,13 @@
+# for the backup a kopia configmap is needed in each namespace (development, staging, production)
+# therefore we have flux/system for the volsync helm installation and flux/staging, flux/dev, flux/prod for the backup configs
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: ${NAMESPACE}
 commonLabels:
   app.kubernetes.io/name: ${NAME}
-  app.kubernetes.io/version: ${CHART_VERSION}
   app.kubernetes.io/component: backup
   app.kubernetes.io/part-of: infrastructure
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
 resources:
-  - configmap.yaml
+  - kopia_config.yaml
