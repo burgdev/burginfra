@@ -3,42 +3,45 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: helm-csi-driver-rclone-local
+  name: helm-openebs-system
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
-  path: "./k8s/infrastructure/csi-driver-rclone/helm/overlays/local"
+  path: "./k8s/infrastructure/openebs/helm/system"
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra
+    name: git-burginfra-dev
   postBuild:
     substitute: # use the same values for all kustomizations
-      NAME: "csi-driver-rclone"
-      NAMESPACE: "csi-driver-rclone-local"
-      ENVIRONMENT: "local"
+      NAME: "openebs"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+      REPO_INTERVAL: "1h0s"
+      SOURCE_INTERVAL: "1h0s"
+      CHART_VERSION: "4.3.*"
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: infra-csi-driver-rclone-local
+  name: infra-openebs-system
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
-  path: "./k8s/infrastructure/csi-driver-rclone/overlays/local"
-  prune: true
+  path: "./k8s/infrastructure/openebs/system"
   dependsOn:
-  - name: helm-csi-driver-rclone-local
+  - name: helm-openebs-system
+  prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra
+    name: git-burginfra-dev
   postBuild:
-    substitute:
-      NAME: "csi-driver-rclone"
-      NAMESPACE: "csi-driver-rclone-local"
-      ENVIRONMENT: "local"
+    substitute: # use the same values for all kustomizations
+      NAME: "openebs"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
     substituteFrom:
-      - kind: Secret
-        name: webdav-credentials
-        optional: false
+      - kind: ConfigMap 
+        name: openebs-config-vars
+        optional: true
       

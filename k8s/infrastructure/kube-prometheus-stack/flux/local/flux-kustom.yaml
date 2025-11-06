@@ -11,7 +11,7 @@ spec:
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra
+    name: git-burginfra-dev
   postBuild:
     substitute: # use the same values for all kustomizations
       NAME: "kube-prometheus-stack"
@@ -31,7 +31,7 @@ spec:
   - name: helm-kube-prometheus-stack-local
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra
+    name: git-burginfra-dev
   postBuild:
     substitute:
       NAME: "kube-prometheus-stack"

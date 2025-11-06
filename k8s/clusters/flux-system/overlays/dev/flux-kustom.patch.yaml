@@ -4,5 +4,10 @@ metadata:
   name: flux-sync-dev
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: flux-sync-system
   interval: 15s
-  path: ./k8s/clusters/deploy/overlays/dev
+  path: ./k8s/clusters/deploy/dev
+  sourceRef:
+    kind: GitRepository
+    name: git-burginfra-dev

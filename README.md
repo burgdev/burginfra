@@ -34,7 +34,7 @@ kubectl -n flux-system get gitrepositories
 Force uodate:
 
 ```bash
-flux reconcile source git git-burginfra --namespace flux-system
+flux reconcile source git git-burginfra-dev --namespace flux-system
 ```
 
 <!-- # --8<-- [end:readme_index] <!-- -->

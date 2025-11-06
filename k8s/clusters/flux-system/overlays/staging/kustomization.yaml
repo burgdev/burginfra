@@ -10,4 +10,4 @@ patches:
   - path: source.patch.yaml
     target:
       kind: GitRepository
-      name: git-burginfra
+      name: git-burginfra-dev

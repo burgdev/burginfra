@@ -5,8 +5,5 @@ metadata:
   namespace: flux-system
 spec:
   interval: 15s
-  url: ssh://git@github.com/burgdev/burginfra.git
   ref:
     branch: flux
-  secretRef:
-    name: flux-system

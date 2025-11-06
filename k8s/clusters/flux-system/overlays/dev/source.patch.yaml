@@ -1,7 +1,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: git-burginfra
+  name: git-burginfra-dev
   namespace: flux-system
 spec:
   interval: 15s

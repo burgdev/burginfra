@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${NAME}
+  name: podinfo
 spec:
   minReadySeconds: 3
   revisionHistoryLimit: 5
@@ -10,14 +10,14 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: ${NAME}
+      app: podinfo
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9797"
       labels:
-        app: ${NAME}
+        app: podinfo
     spec:
       securityContext:
         runAsUser: 100
@@ -25,7 +25,7 @@ spec:
         fsGroup: 101
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
-        - name: ${NAME}
+        - name: podinfo
           image: ghcr.io/stefanprodan/podinfo:6.9.2
           imagePullPolicy: IfNotPresent
           securityContext:
@@ -48,7 +48,7 @@ spec:
             - --port=9898
             - --port-metrics=9797
             - --grpc-port=9999
-            - --grpc-service-name=${NAME}
+            - --grpc-service-name=podinfo
             - --level=info
             - --random-delay=false
             - --random-error=false
@@ -56,7 +56,7 @@ spec:
             - name: PODINFO_UI_COLOR
               value: "${PODINFO_UI_COLOR:-#34577c}"
             - name: PODINFO_UI_MESSAGE
-              value: "Greetins from <ns:${NAMESPACE}, env:${ENVIRONMENT}, cluster:${CLUSTER}>"
+              value: "Greetins from <ns:${NAMESPACE}, env:${ENVIRONMENT}>"
             - name: PODINFO_UI_LOGO
               value: "https://burgdev.ch/index_logo_tmp.png"
           livenessProbe:

@@ -1,12 +1,7 @@
 # this is not managed by flux, apply this manuelly!
-#
-# kubectl apply -k configs/
-#
 namespace: flux-system
-generatorOptions:
-  disableNameSuffixHash: true
 secretGenerator:
-  - name: webdav-credentials
+  - name: rclone-webdav-credentials
     envs:
       - .env.secret
     options:

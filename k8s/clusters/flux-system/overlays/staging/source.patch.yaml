@@ -1,9 +1,9 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: git-burginfra
+  name: git-burginfra-dev-staging
   namespace: flux-system
 spec:
   interval: 10min
   ref:
-    branch: dev
+    branch: main
