@@ -3,12 +3,6 @@ kind: Kustomization
 resources:
   - ../../flux-system/overlays/dev/
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
-  - ../../../infrastructure/traefik/flux/dev/
-  #- ../../../infrastructure/k8up/flux/local/flux-kustom.yaml
-  #- ../../../infrastructure/cert-manager/flux/local/flux-kustom.yaml
-  #- ../../../infrastructure/kube-prometheus-stack/flux/local/flux-kustom.yaml
-  #- ../../../infrastructure/openbao/flux/local/flux-kustom.yaml
-  #- ../../../infrastructure/volsync/flux/dev/flux-kustom.yaml
+  - ../../../infrastructure/_deploy/dev/
   # APPS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  - flux_kustom_apps.yaml
-  #- ../../../apps/podinfo-image/flux/local/flux-kustom.yaml
+  - ../../../apps/_deploy/flux/dev
