@@ -7,7 +7,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 5s
-  path: "./k8s/apps/deploy/overlays/dev"
+  path: "./k8s/apps/deploy/dev"
   prune: true
   dependsOn:
     - name: infra-csi-driver-rclone-system
