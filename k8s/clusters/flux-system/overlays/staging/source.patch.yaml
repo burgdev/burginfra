@@ -4,6 +4,6 @@ metadata:
   name: git-burginfra-dev-staging
   namespace: flux-system
 spec:
-  interval: 10min
+  interval: 10m
   ref:
     branch: main

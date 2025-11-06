@@ -4,5 +4,5 @@ metadata:
   name: flux-sync-staging
   namespace: flux-system
 spec:
-  interval: 10min
+  interval: 10m
   path: ./k8s/clusters/deploy/staging

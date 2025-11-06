@@ -4,7 +4,7 @@ metadata:
   name: git-burginfra-base
   namespace: flux-system
 spec:
-  interval: 10min
+  interval: 10m
   url: ssh://git@github.com/burgdev/burginfra.git
   ref:
     branch: flux

@@ -4,7 +4,7 @@ metadata:
   name: flux-sync-base
   namespace: flux-system
 spec:
-  interval: 10min
+  interval: 10m
   path: ./k8s/clusters/deploy/overlays/dev
   prune: true
   sourceRef:

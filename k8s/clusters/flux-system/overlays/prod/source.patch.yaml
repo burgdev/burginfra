@@ -4,6 +4,6 @@ metadata:
   name: git-burginfra-dev-prod
   namespace: flux-system
 spec:
-  interval: 10min
+  interval: 10m
   ref:
     branch: prod
