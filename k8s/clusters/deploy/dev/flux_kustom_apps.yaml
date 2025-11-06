@@ -19,7 +19,7 @@ spec:
     substitute:
       NAMESPACE: "development"
       ENVIRONMENT: "dev"
-      HOST: burginfra
+      HOST: local.gd
 #    substituteFrom:
 #      - kind: ConfigMap # takes configmap from namespace flux-system
 #        name: apps-config-vars
