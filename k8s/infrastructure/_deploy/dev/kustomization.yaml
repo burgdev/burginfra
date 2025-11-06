@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   - ../../traefik/flux/dev/
+  - ../../volsync/flux/dev/
   #- ../../k8up/flux/local/flux-kustom.yaml
   #- ../../cert-manager/flux/local/flux-kustom.yaml
   #- ../../kube-prometheus-stack/flux/local/flux-kustom.yaml

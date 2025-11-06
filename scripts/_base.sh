@@ -59,7 +59,7 @@ kubeconfig_check() {
     exit 1
   fi
 
-  if [ "$env_name" == "local" ]; then
+  if [ "$env_name" == "dev" ]; then
       EXPECTED_KUBECONFIG="config-localhost"
   elif [ "$env_name" == "staging" ]; then
       EXPECTED_KUBECONFIG="config-burginfra.ch"
