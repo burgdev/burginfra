@@ -32,8 +32,7 @@ deploy cluster="local" dry="dry":
             exit 1
         fi
     fi
-    header "$(doc flux deploy)"
-    info "Deploy ..."
+    header "🚀 Deploying to {{cluster}}" 
     cluster_path="k8s/clusters/flux-system/overlays/{{cluster}}"
     if [ "{{dry}}" == "no-dry" ]; then
         if ! git diff --quiet || ! git diff --cached --quiet; then
@@ -44,13 +43,11 @@ deploy cluster="local" dry="dry":
             error "Your branch is not up to date with the remote. Please push to sync."
             exit 1
         fi
-        info "Deploying ... (not dry)"
         #kubectl apply -k $cluster_path
-        success "Deploy successful."
-        info "Run 'just flux gitrepos' to check if it works."
+        success "Deploy to {{cluster}} successful."
     else
         kubectl apply -k $cluster_path --dry-run=client
-        success "Dry run successful."
+        success "Dry run to {{cluster}} successful."
         info "Run 'just flux deploy {{cluster}} no-dry' to deploy."
     fi
  
