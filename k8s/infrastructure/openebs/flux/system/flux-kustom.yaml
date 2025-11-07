@@ -11,7 +11,7 @@ spec:
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra-dev
+    name: burgdev-burginfra
   postBuild:
     substitute: # use the same values for all kustomizations
       NAME: "openebs"
@@ -34,7 +34,7 @@ spec:
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra-dev
+    name: burgdev-burginfra
   postBuild:
     substitute: # use the same values for all kustomizations
       NAME: "openebs"

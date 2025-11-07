@@ -14,7 +14,7 @@ spec:
     - name: infra-openebs-system
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra-dev
+    name: burgdev-burginfra
   postBuild:
     substitute:
       NAMESPACE: "development"

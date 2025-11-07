@@ -2,24 +2,58 @@ import 'core.just'
 
 
 # 🚀 Initialize cluster with flux (env: dev|staging|prod)
-init env="dev":
-    @header "$(doc flux init)"
+bootstrap:
+    @header "$(doc flux bootstrap)"
     kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
     @info "Wait until flux-system pods are ready, this can take a while ..."
     @info "Run 'just flux create-deploy-key' to create the deploy key."
 
+# 🔑 create deploy key for flux-system git repository
 create-deploy-key:
     @header "$(doc flux create-deploy-key)"
     flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
     @info "Add deploy key to github https://github.com/burgdev/burginfra/settings/keys/new"
-    @info "Run 'just flux gitrepos' to check if it works."
     @info "Run 'just flux deploy' to deploy."
    
-# 🚀 Deploy everything
-deploy env="dev":   
-    @header "$(doc flux deploy)"
-    @info "Deploy ..."
-    kubectl apply -k k8s/clusters/flux-system/overlays/{{env}}
+# 🚀 Deploy everything to a cluster (cluster: local|burginfra, dry: dry|no-dry)
+deploy cluster="local" dry="dry":   
+    #! ./.shell-wrapper.sh
+    if [ -z $KUBECONFIG ]; then
+        @error "KUBECONFIG is not set. Please set it first."
+        exit 1
+    fi
+    current_cluster=$(kubectl config current-context)
+    if [ "$current_cluster" != "{{cluster}}" ]; then
+        warn "Current cluster is not set to '{{cluster}}'"
+        read -p $'\e[1;31mAre you sure to continue? [y/N]\e[0m ' -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            error "Aborted."
+            exit 1
+        fi
+    fi
+    header "$(doc flux deploy)"
+    info "Deploy ..."
+    cluster_path="k8s/clusters/flux-system/overlays/{{cluster}}"
+    if [ "{{dry}}" == "no-dry" ]; then
+        if ! git diff --quiet || ! git diff --cached --quiet; then
+            error "Git working directory is not clean. Please commit or stash your changes first."
+            exit 1
+        fi
+        # Check if branch is tracking a remote branch
+        if ! git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+            error "Current branch is not tracking a remote branch."
+            exit 1
+        fi
+        info "Deploying ... (not dry)"
+        #kubectl apply -k $cluster_path
+        success "Deploy successful."
+        info "Run 'just flux gitrepos' to check if it works."
+    else
+        kubectl apply -k $cluster_path --dry-run=client
+        success "Dry run successful."
+        info "Run 'just flux deploy {{cluster}} no-dry' to deploy."
+    fi
  
 gitrepos:
     @header "$(doc flux gitrepos)"

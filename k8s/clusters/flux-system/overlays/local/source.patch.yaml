@@ -1,7 +1,9 @@
+# any changes need to be reapplied to the cluster:
+# just flux deploy local
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: git-burginfra-dev
+  name: burgdev-burginfra
   namespace: flux-system
 spec:
   interval: 15s

@@ -1,9 +1,0 @@
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: GitRepository
-metadata:
-  name: git-burginfra-dev-prod
-  namespace: flux-system
-spec:
-  interval: 10m
-  ref:
-    branch: prod

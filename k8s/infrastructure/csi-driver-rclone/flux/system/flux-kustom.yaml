@@ -11,7 +11,7 @@ spec:
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra-dev
+    name: burgdev-burginfra
   postBuild:
     substitute: # use the same values for all kustomizations
       NAME: "csi-driver-rclone"
@@ -31,7 +31,7 @@ spec:
   - name: helm-csi-driver-rclone-system
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
-    name: git-burginfra-dev
+    name: burgdev-burginfra
   postBuild:
     substitute:
       NAME: "csi-driver-rclone"

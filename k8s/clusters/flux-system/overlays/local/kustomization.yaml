@@ -3,11 +3,7 @@ kind: Kustomization
 resources:
   - ../../base
 patches:
-  - path: flux-kustom.patch.yaml
-    target:
-      kind: Kustomization
-      name: flux-sync-base
   - path: source.patch.yaml
     target:
       kind: GitRepository
-      name: git-burginfra-dev
+      name: burgdev-burginfra

@@ -1,12 +1,12 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: flux-sync-base
+  name: flux-sync-bruginfra
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./k8s/clusters/deploy/overlays/dev
+  path: ./k8s/clusters/_deploy
   prune: true
   sourceRef:
     kind: GitRepository
-    name: git-burginfra-dev
+    name: burgdev-burginfra

@@ -1,8 +1,0 @@
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: flux-sync-prod
-  namespace: flux-system
-spec:
-  interval: 10m
-  path: ./k8s/clusters/deploy/prod

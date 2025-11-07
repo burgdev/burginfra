@@ -1,12 +1,12 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: git-burginfra-base
+  name: burgdev-burginfra
   namespace: flux-system
 spec:
-  interval: 10m
+  interval: 10s
   url: ssh://git@github.com/burgdev/burginfra.git
   ref:
-    branch: flux
+    branch: main
   secretRef:
     name: flux-system

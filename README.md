@@ -17,24 +17,23 @@
 ### Local
 
 ```bash
-kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
+just flux bootstrap
 kubectl get pods -n flux-system # wait until ready
-kubectl apply -k k8s/clusters/flux-system/overlays/local
-# create deploy key
-flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
+just flux create-deploy-key local
 # add deploy key to github
+just flux deploy local
 ```
 
 Check connection:
 
 ```bash
-kubectl -n flux-system get gitrepositories
+just flux gitrepos
 ```
 
 Force uodate:
 
 ```bash
-flux reconcile source git git-burginfra-dev --namespace flux-system
+just flux reconcile
 ```
 
 <!-- # --8<-- [end:readme_index] <!-- -->
