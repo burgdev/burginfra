@@ -43,7 +43,7 @@ deploy cluster="local" dry="dry":
             error "Your branch is not up to date with the remote. Please push to sync."
             exit 1
         fi
-        #kubectl apply -k $cluster_path
+        kubectl apply -k $cluster_path
         success "Deploy to {{cluster}} successful."
     else
         kubectl apply -k $cluster_path --dry-run=client
