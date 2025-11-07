@@ -20,7 +20,7 @@ data:
       },
       "compression": {
         "compressor": "zstd",
-        "neverCompress": [".SomeNew",".What"]
+        "neverCompress": [".SomeNotHere",".What"]
       }
     }
   # Repository config file
