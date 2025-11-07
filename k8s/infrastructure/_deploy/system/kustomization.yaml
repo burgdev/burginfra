@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
+  - ../../cert-manager/flux/system/
   - ../../openebs/flux/system/
   - ../../volsync/flux/system/
   - ../../csi-driver-rclone/flux/system/

@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-    annotations:
-        # prune namespace can lead to issue if volumes are still used
-        kustomize.toolkit.fluxcd.io/prune: "disabled"
-    name: ${NAMESPACE}
