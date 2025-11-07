@@ -1,0 +1,16 @@
+{
+  "retention": {
+    "keepLatest": 5,
+    "keepHourly": 2,
+    "keepDaily": 3,
+    "keepWeekly": 4,
+    "ignoreIdenticalSnapshots": "inherit"
+  },
+  "compression": {
+    "compressor": "zstd",
+    "neverCompress": [".SomeNotHere",".What"]
+  },
+  "files: {
+    "ignoreCacheDirs": true
+  }
+}
