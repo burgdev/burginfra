@@ -8,7 +8,7 @@ spec:
   sourcePVC: fast-data-pvc-v1
   trigger:
     schedule: "*/5 * * * *" # every 5 minutes
-    manual: backup-01
+    #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
