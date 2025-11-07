@@ -10,7 +10,6 @@ commonLabels:
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
 resources:
-  - kopia_config.yaml
 configMapGenerator:
   - name: kopia-policies
     files:
