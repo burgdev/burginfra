@@ -40,6 +40,7 @@ deploy cluster="local" dry="dry":
             error "Git working directory is not clean. Please commit or stash your changes first."
             exit 1
         fi
+
         # Check if branch is tracking a remote branch
         if ! git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
             error "Current branch is not tracking a remote branch."
