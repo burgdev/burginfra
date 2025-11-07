@@ -7,11 +7,9 @@ order: 0
 
 [Official Documentation](https://kubernetes.io/docs/home/) | [Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/)
 
-
 # Kubernetes Setup
 
 Documentation for the [Kubernetes](https://kubernetes.io) setup.
-
 
 ## Prerequisites
 
@@ -24,17 +22,20 @@ Very helpful is the `k9s` tool ([setup](/Management/Kubernetes/Installation/k9s_
 [Flux](https://fluxcd.io) is used for continuous delivery of Kubernetes resources.
 
 ```bash
-kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
+cluster=local
+just flux bootstrap
 kubectl get pods -n flux-system # wait until ready
-# create deploy key
-flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
+just flux create-deploy-key $cluster
 # add deploy key to github
-kubectl apply -k k8s/clusters/flux-system/overlays/dev # or 'staging' or 'prod'
+just flux deploy $cluster
+# make sure all needed secrets are created
+./k8s/Infrastructure/volsync/apply-config $cluster
 ```
+
 Check connection:
 
 ```bash
-kubectl -n flux-system get gitrepositories
+just flux gitrepos
 ```
 
 Force update:
@@ -45,7 +46,6 @@ just flux reconcile-helm
 ```
 
 For more information about how to use flux see [Infrastructure/fluxcd](Infrastructure/fluxcd).
-
 
 ## Common Commands
 

@@ -1,25 +1,28 @@
 #!/bin/bash
 set -euo pipefail
 
-USAGE="Usage: $0 <dev|staging|prod>"
+USAGE="Usage: $0 <cluster>"
 
 if [ -z "${1-}" ]; then
-    echo "$USAGE"
-    exit 1
+  echo "$USAGE"
+  exit 1
 fi
 
-ENVIRONMENT=$1
+CLUSTER=$1
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-ROOT_DIR="$(realpath $SCRIPT_DIR/../../../)"
-. $ROOT_DIR/scripts/_base.sh
-cd $SCRIPT_DIR
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
 
-kubeconfig_check $ENVIRONMENT
+cluster_check "$CLUSTER"
 
-config_path=$(realpath --relative-to="." configs/$ENVIRONMENT)
-title "Generate configuration${rst} $(s d "from $(s u $config_path)")"
-echo "$(s d kubectl apply -k $config_path)"
-kubectl apply -k $config_path
+for env in staging prod; do
+  config_path=$(realpath --relative-to="." configs/$env)
+  title "Generate configuration${rst} $(s d "from $(s u $config_path)")"
+  echo $(s d kubectl apply -k "$config_path")
+  kubectl apply -k "$config_path"
+done
 cd -
 success "DONE"
+

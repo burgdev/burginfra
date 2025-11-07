@@ -19,7 +19,7 @@ create-deploy-key:
 deploy cluster="local" dry="dry":   
     #! ./.shell-wrapper.sh
     if [ -z $KUBECONFIG ]; then
-        @error "KUBECONFIG is not set. Please set it first."
+        error "KUBECONFIG is not set. Please set it first."
         exit 1
     fi
     current_cluster=$(kubectl config current-context)

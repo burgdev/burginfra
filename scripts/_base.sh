@@ -4,13 +4,33 @@
 # Color definitions (using tput for better compatibility)
 if [ -t 1 ]; then
   # Only define colors if output is a terminal
-  b=$(tput bold); d=$(tput dim); i=$(tput sitm); rst=$(tput sgr0); u=$(tput smul); nu=$(tput rmul)
-  red=$(tput setaf 1); green=$(tput setaf 2); yellow=$(tput setaf 3); blue=$(tput setaf 4); 
-  cyan=$(tput setaf 6); magenta=$(tput setaf 5); white=$(tput setaf 7)
+  b=$(tput bold)
+  d=$(tput dim)
+  i=$(tput sitm)
+  rst=$(tput sgr0)
+  u=$(tput smul)
+  nu=$(tput rmul)
+  red=$(tput setaf 1)
+  green=$(tput setaf 2)
+  yellow=$(tput setaf 3)
+  blue=$(tput setaf 4)
+  cyan=$(tput setaf 6)
+  magenta=$(tput setaf 5)
+  white=$(tput setaf 7)
 else
   # No colors if not a terminal
-  b=""; rst=""; d=""; u=""; nu=""
-  red=""; green=""; yellow=""; blue=""; cyan=""; magenta=""; white=""
+  b=""
+  rst=""
+  d=""
+  u=""
+  nu=""
+  red=""
+  green=""
+  yellow=""
+  blue=""
+  cyan=""
+  magenta=""
+  white=""
 fi
 
 # Helper function for easier color usage
@@ -25,25 +45,48 @@ style() {
   echo -n "${!color}$*${rst}"
 }
 debug() {
-    echo "${d}$1${rst}"
+  echo "${d}$1${rst}"
 }
 title() {
-    echo "${b}${blue}==>${rst} ${b}${green}$1${rst}"
+  echo "${b}${blue}==>${rst} ${b}${green}$1${rst}"
 }
 section() {
-    echo " ${blue}=>${rst} ${green}$1${rst}"
+  echo " ${blue}=>${rst} ${green}$1${rst}"
 }
 info() {
-    echo "$1"
+  echo "$1"
 }
 warn() {
-    echo "${yellow}$1${rst}"
+  echo "${yellow}$1${rst}"
 }
 error() {
-    echo "${red}$1${rst}"
+  echo "${red}$1${rst}"
 }
 success() {
-    echo "${b}${green}$1${rst}"
+  echo "${b}${green}$1${rst}"
+}
+
+cluster_check() {
+  if [ -z "${1-}" ]; then
+    error "Usage: kubeconfig_check <local|staging|prod>"
+    exit 1
+  else
+    cluster_name="$1"
+  fi
+  if [ -z $KUBECONFIG ]; then
+    error "KUBECONFIG is not set. Please set it first."
+    exit 1
+  fi
+  current_cluster=$(kubectl config current-context)
+  if [ "$current_cluster" != "$cluster_name" ]; then
+    warn "Current cluster is not set to '$cluster_name'"
+    read -p $'\e[1;31mAre you sure to continue? [y/N]\e[0m ' -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      error "Aborted."
+      exit 1
+    fi
+  fi
 }
 
 kubeconfig_check() {
@@ -53,31 +96,31 @@ kubeconfig_check() {
   else
     env_name=$1
   fi
-  
+
   if [ -z "${KUBECONFIG-}" ]; then
     error "KUBECONFIG is not set"
     exit 1
   fi
 
   if [ "$env_name" == "dev" ]; then
-      EXPECTED_KUBECONFIG="config-localhost"
+    EXPECTED_KUBECONFIG="config-localhost"
   elif [ "$env_name" == "staging" ]; then
-      EXPECTED_KUBECONFIG="config-burginfra.ch"
+    EXPECTED_KUBECONFIG="config-burginfra.ch"
   elif [ "$env_name" == "prod" ]; then
-      EXPECTED_KUBECONFIG="config-burginfra.ch"
+    EXPECTED_KUBECONFIG="config-burginfra.ch"
   else
-      error "Unknown environment: $env_name"
-      echo "$USAGE"
-      exit 1
+    error "Unknown environment: $env_name"
+    echo "$USAGE"
+    exit 1
   fi
 
   if [ "$(basename $KUBECONFIG)" != "$EXPECTED_KUBECONFIG" ]; then
-      warn "$(s yellow KUBECONFIG) is not set to '$(s blue $EXPECTED_KUBECONFIG)'"
-      read -p "Are you sure to coninue? [y/N] " -n 1 -r
-      #echo    # move to a new line
-      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-          error "Aborted."
-          exit 1
-      fi
+    warn "$(s yellow KUBECONFIG) is not set to '$(s blue $EXPECTED_KUBECONFIG)'"
+    read -p "Are you sure to coninue? [y/N] " -n 1 -r
+    #echo    # move to a new line
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      error "Aborted."
+      exit 1
+    fi
   fi
 }
