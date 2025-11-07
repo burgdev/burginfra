@@ -11,9 +11,10 @@ resources:
   - helmrelease.yaml
   - ingress.yaml
   #- service.yaml
-configMapGenerator:
-  - name: openbao-values
-    files:
-      - values.yaml=values.yaml
-    options:
-      disableNameSuffixHash: true
+# not needed at the moments:
+#configMapGenerator:
+#  - name: openbao-values
+#    files:
+#      - values.yaml=values.yaml
+#    options:
+#      disableNameSuffixHash: true
