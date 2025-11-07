@@ -16,7 +16,7 @@ data:
         "keepWeekly": 4,
         "keepMonthly": 10,
         "keepAnnual": 0,
-        "ignoreIdenticalSnapshots": inherit
+        "ignoreIdenticalSnapshots": "inherit"
       },
       "compression": {
         "compressor": "zstd",
