@@ -9,12 +9,14 @@ image:
   repository: ghcr.io/burgdev/volsync
   tag: "latest"
   image: ""
+  pullPolicy: Always
 kopia:
   #repository: ghcr.io/perfectra1n/volsync
   #tag: "0.16.13"
   repository: ghcr.io/burgdev/volsync
   tag: "latest"
   image: ""
+  pullPolicy: Always
 rclone:
   repository: ghcr.io/perfectra1n/volsync
   tag: "0.16.13"
