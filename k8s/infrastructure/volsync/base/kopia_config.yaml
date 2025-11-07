@@ -8,11 +8,11 @@ data:
     {
       "retention": {
         "keepLatest": 10,
-        "keepHourly": 48,
-        "keepDaily": 7,
+        "keepHourly": 8,
+        "keepDaily": 3,
         "keepWeekly": 4,
-        "keepMonthly": 24,
-        "keepAnnual": 3
+        "keepMonthly": 10,
+        "keepAnnual": 0
         "ignoreIdenticalSnapshots": true
       },
       "compression": {
@@ -31,3 +31,4 @@ data:
       "ecc": "REED-SOLOMON",
       "eccOverheadPercent": 2
     }
+
