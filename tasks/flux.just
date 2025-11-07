@@ -6,14 +6,14 @@ bootstrap:
     @header "$(doc flux bootstrap)"
     kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
     @info "Wait until flux-system pods are ready, this can take a while ..."
-    @info "Run 'just flux create-deploy-key' to create the deploy key."
+    @info $'Run \'\e[34mjust flux create-deploy-key\e[0m\' to create the deploy key.'
 
 # 🔑 create deploy key for flux-system git repository
 create-deploy-key:
     @header "$(doc flux create-deploy-key)"
     flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
     @info "Add deploy key to github https://github.com/burgdev/burginfra/settings/keys/new"
-    @info "Run 'just flux deploy' to deploy."
+    @info $'Run \'\e[34mjust flux deploy\e[0m\' to deploy.'
    
 # 🚀 Deploy everything to a cluster (cluster: local|burginfra, dry: dry|no-dry)
 deploy cluster="local" dry="dry":   
@@ -47,8 +47,8 @@ deploy cluster="local" dry="dry":
         success "Deploy to {{cluster}} successful."
     else
         kubectl apply -k $cluster_path --dry-run=client
-        success "Dry run to {{cluster}} successful."
-        info "Run 'just flux deploy {{cluster}} no-dry' to deploy."
+        success $'\e[1;33mDRY RUN\e[0m to {{cluster}} successful.'
+        info $'Run \'\e[34mjust flux deploy {{cluster}} no-dry\e[0m\' to deploy.'
     fi
  
 gitrepos:
