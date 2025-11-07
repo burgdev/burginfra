@@ -16,11 +16,11 @@ data:
         "keepWeekly": 4,
         "keepMonthly": 10,
         "keepAnnual": 0,
-        "ignoreIdenticalSnapshots": true
+        "ignoreIdenticalSnapshots": inherit
       },
       "compression": {
         "compressor": "zstd",
-        "neverCompress": [".7z",".7Z"]
+        "neverCompress": [".SomeNew",".What"]
       }
     }
   # Repository config file
