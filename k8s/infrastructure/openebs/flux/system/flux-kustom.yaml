@@ -13,7 +13,7 @@ spec:
   postBuild:
     substitute: # use the same values for all kustomizations
       NAME: "openebs"
-      NAMESPAfE: "burginfra-system"
+      NAMESPASE: "burginfra-system"
       ENVIRONMENT: "system"
       REPO_INTERVAL: "1h0s"
       SOURCE_INTERVAL: "1h0s"
