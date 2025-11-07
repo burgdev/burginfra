@@ -20,6 +20,9 @@ spec:
       REPO_INTERVAL: "1h0s"
       SOURCE_INTERVAL: "1h0s"
       CHART_VERSION: "4.3.*"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization

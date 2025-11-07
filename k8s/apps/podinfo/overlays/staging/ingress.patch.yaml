@@ -5,5 +5,5 @@ metadata:
 spec:
   tls:
     - hosts:
-        - podinfo.${HOST:-burginfra}
+        - podinfo.${BURGDEV_HOST}
       secretName: traefik-local-tls

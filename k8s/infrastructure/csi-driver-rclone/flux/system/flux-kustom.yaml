@@ -17,6 +17,9 @@ spec:
       NAME: "csi-driver-rclone"
       NAMESPACE: "burginfra-system"
       ENVIRONMENT: "system"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -41,4 +44,7 @@ spec:
       - kind: Secret
         name: rclone-webdav-credentials
         optional: false
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
       

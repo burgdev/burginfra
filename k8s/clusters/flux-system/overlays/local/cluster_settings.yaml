@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-settings
+  namespace: flux-system
+data:
+  # property-like keys; each key maps to a simple value
+  CRUXLI_HOST: "crux.local.gd"
+  CRUXLI_EMAIL: "tobias@burgdev.ch"
+  BURGDEV_HOST: "burgdev.local.gd"
+  BURGDEV_EMAIL: "tobias@burgdev.ch"
+  BURGINFRA_HOST: "infra.local.gd"
+  CLUSTER: "local"
