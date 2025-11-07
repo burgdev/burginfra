@@ -10,7 +10,7 @@
     "compressor": "zstd",
     "neverCompress": [".SomeNotHere",".What"]
   },
-  "files: {
+  "files": {
     "ignoreCacheDirs": true
   }
 }
