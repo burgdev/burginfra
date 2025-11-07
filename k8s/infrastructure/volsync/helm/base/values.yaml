@@ -13,8 +13,7 @@ kopia:
   #repository: ghcr.io/perfectra1n/volsync
   #tag: "0.16.13"
   repository: ghcr.io/burgdev/volsync
-  #tag: "latest"
-  tag: "sha256:4e379ab24cb5a25d4d5998a175e762dedd38cd8e1701799b5a366a27a62cba6e"
+  tag: "latest"
   image: ""
 rclone:
   repository: ghcr.io/perfectra1n/volsync
