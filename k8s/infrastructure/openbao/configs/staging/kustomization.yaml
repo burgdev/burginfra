@@ -9,5 +9,5 @@ configMapGenerator:
   - name: openbao-config-vars
     envs:
       - .env # copy .env.template to .env
-generatorOptions:
-  disableNameSuffixHash: true
+    options:
+      disableNameSuffixHash: true

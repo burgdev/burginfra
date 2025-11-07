@@ -2,7 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: ${NAMESPACE}
 commonLabels:
-  app.kubernetes.io/component: ${NAME}
+  app.kubernetes.io/name: ${NAME}
+  app.kubernetes.io/component: storage
   app.kubernetes.io/part-of: infrastructure
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
@@ -12,3 +13,4 @@ resources:
   - storageclass_fast_local_media_v0.yaml
   - storageclass_fast_local_data_v1.yaml
   - storageclass_fast_local_media_v1.yaml
+

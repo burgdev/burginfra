@@ -7,7 +7,7 @@ metadata:
   #  traefik.ingress.kubernetes.io/router.tls.certresolver: default
 spec:
   rules:
-    - host: ${DOMAIN}
+    - host: kms.${BURGINFRA_HOST}
       http:
         paths:
           - path: /
