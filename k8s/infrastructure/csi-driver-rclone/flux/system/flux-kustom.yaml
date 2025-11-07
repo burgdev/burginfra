@@ -1,5 +1,5 @@
 # this is used by flux, do not include in any app kustomization.yaml file!
-# TODO: add to k8s/flux/*/kustomization.yaml 
+# TODO: add to k8s/flux/*/kustomization.yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -31,7 +31,7 @@ spec:
   path: "./k8s/infrastructure/csi-driver-rclone/system"
   prune: true
   dependsOn:
-  - name: helm-csi-driver-rclone-system
+    - name: helm-csi-driver-rclone-system
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
@@ -44,7 +44,5 @@ spec:
       - kind: Secret
         name: rclone-webdav-credentials
         optional: false
-    substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
-      
