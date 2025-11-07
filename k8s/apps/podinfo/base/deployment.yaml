@@ -56,7 +56,7 @@ spec:
             - name: PODINFO_UI_COLOR
               value: "${PODINFO_UI_COLOR:-#34577c}"
             - name: PODINFO_UI_MESSAGE
-              value: "Greetins from <ns:${NAMESPACE}, env:${ENVIRONMENT}>"
+              value: "Greetins from ${CLUSTER} in ${ENVIRONMENT}"
             - name: PODINFO_UI_LOGO
               value: "https://burgdev.ch/index_logo_tmp.png"
           livenessProbe:
