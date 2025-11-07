@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: kopia-policies
 data:
+  # check if therer are any issues:
+  # kubectl get configmap kopia-policies -o jsonpath='{.data.global-policy\.json}' | jq .
   # Global policy file - Applied via 'kopia policy set --global'
   global-policy.json: |
     {

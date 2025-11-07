@@ -4,6 +4,8 @@ import 'core.just'
 mod check
 # 🌊 Run flux commands
 mod flux
+# 🗃️ Run volsync commands (backup, restore, ...)
+mod volsync
 # 📚 Documentation tasks (build, serve, ...)
 mod docs
 # 📦 Project tasks (install, release, ...)
