@@ -1,10 +1,7 @@
-# this is not managed by flux, apply this manuelly!
-#
-# kubectl apply -k configs/
-#
+# UNSEAL SECRET for openbao
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: flux-system
+namespace: burginfra-system
 
 secretGenerator:
   - name: openbao-unseal-umbrella-1-key

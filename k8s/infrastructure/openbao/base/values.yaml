@@ -29,7 +29,7 @@ server:
       }
 
   volumes:
-    - name: openbao-unseal-key
+    - name: openbao-unseal-volume
       secret:
         secretName: openbao-unseal-umbrella-1-key
     # - name: certs
@@ -37,7 +37,7 @@ server:
     #     secretName: internal-wildcard-cert-secret
   volumeMounts:
     - mountPath: /keys
-      name: openbao-unseal-key
+      name: openbao-unseal-volume
       readOnly: true
     # - mountPath: /certs
     #   name: certs
