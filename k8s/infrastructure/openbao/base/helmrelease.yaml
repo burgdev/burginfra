@@ -4,6 +4,7 @@ metadata:
   name: openbao
   namespace: flux-system
 spec:
+  #type: "oci"
   interval: 1h0s
   url: oci://ghcr.io/openbao/charts/openbao
 ---

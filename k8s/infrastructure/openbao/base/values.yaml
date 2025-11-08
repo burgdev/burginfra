@@ -50,7 +50,9 @@ server:
     enabled: true
     size: 1Gi
     storageClass: fast-local-data-v1
+
 csi:
   enabled: true
+
 ui:
   enabled: true

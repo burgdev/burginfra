@@ -16,6 +16,7 @@ EOF
 
 > [!TIP]
 > It might be needed to restart `k3s`:
+>
 > ```bash
 > sudo systemctl restart k3s
 > ```
@@ -34,8 +35,8 @@ This are the settings needed (`certmanager` and `letsencrypt-issuer` are used fo
 Ingress example (`podinfo`):
 
 ::: code-group
-<<< @/../k8s/apps/podinfo-image/base/ingress.yaml{yaml}
-<<< @/../k8s/apps/podinfo-image/overlays/local/ingress.patch.yaml{yaml}
+<<< @/../k8s/apps/podinfo/base/ingress.yaml{yaml}
+<<< @/../k8s/apps/podinfo/overlays/staging/ingress.patch.yaml{yaml}
 :::
 
 ### Certificates (local)
@@ -45,6 +46,7 @@ For local testing you can use the self-signed certificates.
 [`mkcert`](https://mkcert.dev/) can be used for this.
 
 #### Setup
+
 ```bash
 # install mkcert
 sudo apt install libnss3-tools
@@ -52,6 +54,7 @@ brew install mkcert
 # Install the local CA
 mkcert -install
 ```
+
 #### Create Certificates
 
 ```bash
@@ -59,7 +62,6 @@ mkcert "*.local.gd" "*.burginfra" "*.traefik.me"
 mv _wildcard.*-key.pem privkey.pem
 mv _wildcard.*.pem fullchain.pem
 ```
-
 
 #### Other Devices
 

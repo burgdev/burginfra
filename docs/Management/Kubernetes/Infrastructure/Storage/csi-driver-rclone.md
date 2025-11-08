@@ -19,7 +19,7 @@ They both use [`kdrive`](https://www.infomaniak.com/en/ksuite/kdrive) as the sto
 
 ## `pvc` Templates
 
-<<< @/../k8s/apps/podinfo-image/base/pvc_kdrive_data.yaml{yaml:no-line-numbers}
+<<< @/../k8s/apps/podinfo/base/pvc_kdrive_data.yaml{yaml:no-line-numbers}
 
 ## Setup
 
@@ -37,6 +37,6 @@ They both use [`kdrive`](https://www.infomaniak.com/en/ksuite/kdrive) as the sto
 
 ::: details :package: Storage Classes
 ::: code-group
-<<< @/../k8s/infrastructure/csi-driver-rclone/base/storageclass_kdrive_data_v0.yaml{yaml} [base/storageclass_kdrive_data_v0.yaml]
-<<< @/../k8s/infrastructure/csi-driver-rclone/base/storageclass_kdrive_media_v0.yaml{yaml} [base/storageclass_kdrive_media_v0.yaml]
+<<< @/../k8s/infrastructure/csi-driver-rclone/system/storageclass_kdrive_data_v0.yaml{yaml} [system/storageclass_kdrive_data_v0.yaml]
+<<< @/../k8s/infrastructure/csi-driver-rclone/system/storageclass_kdrive_media_v0.yaml{yaml} [system/storageclass_kdrive_media_v0.yaml]
 :::

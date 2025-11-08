@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: ${NAMESPACE}
 commonLabels:
   app.kubernetes.io/name: openbao
-  app.kubernetes.io/component: secrets
+  app.kubernetes.io/component: security
   app.kubernetes.io/part-of: infrastructure
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux

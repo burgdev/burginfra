@@ -25,11 +25,9 @@ Use `Recreate` as `strategy` in the deployment to ensure data consistency.
 
 ## `pvc` Templates
 
-
-<<< @/../k8s/apps/podinfo-image/base/pvc_local_data.yaml{yaml:no-line-numbers}
+<<< @/../k8s/apps/podinfo/base/pvc_local_data.yaml{yaml:no-line-numbers}
 
 ## Snapshots
-
 
 A `VolumeSnapshotClass` is required in order to create [snapshots](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/advanced-operations/lvm-snapshot) of the volume.
 
@@ -48,22 +46,19 @@ which has more features.
 <<< @/../k8s/infrastructure/openebs/configs/.env.template{dotenv:no-line-numbers} [configs/.env.template]
 :::
 
-
-
-
 ::: details :package: Storage Classes & Volume Snapshot Class
 ::: code-group
-<<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_data_v1.yaml{yaml} [base/storageclass_fast_local_data_v1.yaml]
-<<< @/../k8s/infrastructure/openebs/base/storageclass_fast_local_media_v1.yaml{yaml} [base/storageclass_fast_local_media_v1.yaml]
-<<< @/../k8s/infrastructure/openebs/base/volumesnapshotclass.yaml{yaml} [base/volumesnapshotclass.yaml]
+<<< @/../k8s/infrastructure/openebs/system/storageclass_fast_local_data_v1.yaml{yaml} [system/storageclass_fast_local_data_v1.yaml]
+<<< @/../k8s/infrastructure/openebs/system/storageclass_fast_local_media_v1.yaml{yaml} [system/storageclass_fast_local_media_v1.yaml]
+<<< @/../k8s/infrastructure/openebs/system/volumesnapshotclass.yaml{yaml} [system/volumesnapshotclass.yaml]
 :::
 
 ::: details :package: Helm Installation
 ::: code-group
-<<< @/../k8s/infrastructure/openebs/helm/base/values.yaml{yaml} [base/values.yaml]
-<<< @/../k8s/infrastructure/openebs/helm/base/helmrelease.yaml{yaml} [base/helmrelease.yaml]
+<<< @/../k8s/infrastructure/openebs/helm/system/values.yaml{yaml} [system/values.yaml]
+<<< @/../k8s/infrastructure/openebs/helm/system/helmrelease.yaml{yaml} [system/helmrelease.yaml]
 :::
 ::: details :rocket: Flux Kustomization
 ::: code-group
-<<< @/../k8s/infrastructure/openebs/flux/local/flux-kustom.yaml{yaml} [flux/flux-kustom.yaml]
+<<< @/../k8s/infrastructure/openebs/flux/system/flux-kustom.yaml{yaml} [flux/system/flux-kustom.yaml]
 :::
