@@ -11,3 +11,10 @@ configMapGenerator:
       - .env # copy .env.template to .env
     options:
       disableNameSuffixHash: true
+
+secretGenerator:
+  - name: openbao-unseal-umbrella-1-key
+    files:
+      - unseal-umbrella-1.key=unseal-umbrella-1.key # run: 'openssl rand -out unseal.key 32' to get key
+    options:
+      disableNameSuffixHash: true
