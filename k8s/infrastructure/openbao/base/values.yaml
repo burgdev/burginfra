@@ -1,5 +1,19 @@
 server:
   dev:
-    enabled: true
+    enabled: false
+  volumes:
+    - name: openbao-unseal-key
+      secret:
+        secretName: unseal-key
+    # - name: certs
+    #   secret:
+    #     secretName: internal-wildcard-cert-secret
+  volumeMounts:
+    - mountPath: /keys
+      name: openbao-unseal-key
+      readOnly: true
+    # - mountPath: /certs
+    #   name: certs
+    #   readOnly: true
 ui:
   enabled: true
