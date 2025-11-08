@@ -18,7 +18,6 @@ spec:
     substitute:
       NAMESPACE: "burginfra-system"
       ENVIRONMENT: "staging"
-    # substituteFrom:
-    #   - kind: ConfigMap
-    #     name: openbao-config-vars
-    #     optional: false
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
