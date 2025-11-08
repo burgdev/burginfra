@@ -12,9 +12,9 @@ resources:
   - ingress.yaml
   #- service.yaml
 # not needed at the moments:
-#configMapGenerator:
-#  - name: openbao-values
-#    files:
-#      - values.yaml=values.yaml
-#    options:
-#      disableNameSuffixHash: true
+configMapGenerator:
+  - name: openbao-values
+    files:
+      - values.yaml=values.yaml
+    options:
+      disableNameSuffixHash: true
