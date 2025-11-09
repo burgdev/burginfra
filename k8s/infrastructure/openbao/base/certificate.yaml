@@ -26,5 +26,5 @@ spec:
   ipAddresses:
     - "127.0.0.1"
   issuerRef:
-    name: pki-production-selfsigned-issuer
+    name: pki-system-selfsigned-issuer
     kind: ClusterIssuer
