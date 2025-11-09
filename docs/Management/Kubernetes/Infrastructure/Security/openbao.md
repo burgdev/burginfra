@@ -5,7 +5,8 @@ aside: false
 
 # Openbao (Vault)
 
-[Openbao](https://openbao.org/) is a secure, distributed, and open source key-value store, forked from [Hashicorp Vault](https://vaultproject.io/).
+[Openbao](https://openbao.org/) is a secure, distributed, and open source key-value store,
+forked from [Hashicorp Vault](https://vaultproject.io/).
 
 ## Initialization
 
