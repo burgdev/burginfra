@@ -7,7 +7,8 @@ global:
   #   - https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/
 server:
   extraEnvironmentVars:
-    BAO_CACERT: "/certs/ca.crt"
+    BAO_CACERT: "/certs/ca.crt" # probably wrong
+    OPENBAO_CACERT: "/certs/ca.crt"
   dev:
     enabled: false
   standalone:
@@ -23,6 +24,7 @@ server:
         cluster_address = "[::]:8201"
         tls_cert_file = "/certs/tls.crt"
         tls_key_file = "/certs/tls.key"
+        tls_client_ca_file = "/certs/ca.crt"
       }
 
       storage "file" {
