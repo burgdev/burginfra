@@ -32,17 +32,17 @@ server:
     - name: openbao-unseal-volume
       secret:
         secretName: openbao-unseal-umbrella-1-key
-    # - name: certs
-    #   secret:
-    #     secretName: internal-wildcard-cert-secret
+    - name: certs
+      secret:
+        secretName: openbao-internal-wildcard-cert-secret
   volumeMounts:
     - mountPath: /keys
       name: openbao-unseal-volume
       readOnly: true
-    # - mountPath: /certs
-    #   name: certs
-    #   readOnly: true
-    #
+    - mountPath: /certs
+      name: certs
+      readOnly: true
+
   dataStorage:
     enabled: true
     storageClass: fast-local-data-v1

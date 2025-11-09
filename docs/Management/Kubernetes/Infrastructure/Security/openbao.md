@@ -30,3 +30,14 @@ bao operator init -key-shares=1 -key-threshold=1 -recovery-shares=1 -recovery-th
 <<< @/../k8s/infrastructure/openbao/base/values.yaml{yaml} [base/values.yaml]
 <<< @/../k8s/infrastructure/openbao/base/helmrelease.yaml{yaml} [ase/helmrelease.yaml]
 :::
+
+## Resources
+
+### Initialization
+
+* <https://openbao.org/docs/configuration/self-init/>
+
+### Installation
+
+* <https://nanibot.net/posts/vault/>
+* <https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/>
