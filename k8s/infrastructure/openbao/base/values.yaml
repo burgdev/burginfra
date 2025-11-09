@@ -6,17 +6,23 @@ global:
   #   - https://nanibot.net/posts/vault/
   #   - https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/
 server:
+  extraEnvironmentVars:
+    BAO_CACERT: "/certs/ca.crt"
   dev:
     enabled: false
   standalone:
     enabled: true
     # unseal docu: https://openbao.org/docs/configuration/seal/static/
+    # Needed?
+    #  tls_client_ca_file = "/certs/tls.ca"
     config: |
       ui = true
 
       listener "tcp" {
         address = "[::]:8200"
         cluster_address = "[::]:8201"
+        tls_cert_file = "/certs/tls.crt"
+        tls_key_file = "/certs/tls.key"
       }
 
       storage "file" {
@@ -29,15 +35,16 @@ server:
       }
 
   volumes:
-    - name: openbao-unseal-volume
+    - name: unseal-volume
       secret:
         secretName: openbao-unseal-umbrella-1-key
     - name: certs
       secret:
         secretName: openbao-internal-wildcard-cert-secret
+        defaultMode: 420
   volumeMounts:
     - mountPath: /keys
-      name: openbao-unseal-volume
+      name: unseal-volume
       readOnly: true
     - mountPath: /certs
       name: certs

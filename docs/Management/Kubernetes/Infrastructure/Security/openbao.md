@@ -33,11 +33,10 @@ bao operator init -key-shares=1 -key-threshold=1 -recovery-shares=1 -recovery-th
 
 ## Resources
 
-### Initialization
-
-* <https://openbao.org/docs/configuration/self-init/>
+* Unseal: <https://openbao.org/docs/configuration/seal/static/>
+* Self-init: <https://openbao.org/docs/configuration/self-init/>
 
 ### Installation
 
-* <https://nanibot.net/posts/vault/>
-* <https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/>
+* Installation HA with file unseal: <https://nanibot.net/posts/vault/>
+* Installation standalone with tls: <https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/>
