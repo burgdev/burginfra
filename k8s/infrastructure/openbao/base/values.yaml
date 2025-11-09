@@ -1,7 +1,7 @@
 # https://github.com/openbao/openbao-helm/tree/main/charts/openbao
 global:
   enabled: true
-  tlsDisable: true
+  tlsDisable: false
   # if enabled:
   #   - https://nanibot.net/posts/vault/
   #   - https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/
