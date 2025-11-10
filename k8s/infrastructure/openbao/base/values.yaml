@@ -16,7 +16,7 @@ server:
     # unseal docu: https://openbao.org/docs/configuration/seal/static/
     # Needed?
     #  tls_client_ca_file = "/certs/tls.ca"
-        i# tls_client_ca_file = "/certs/ca.crt"
+    # tls_client_ca_file = "/certs/ca.crt"
     config: |
       ui = true
 
