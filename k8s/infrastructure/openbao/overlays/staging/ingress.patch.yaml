@@ -5,6 +5,15 @@ metadata:
 spec:
   rules:
     - host: kms.staging.${BURGINFRA_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openbao-ui
+                port:
+                  number: 8200
   tls:
     - hosts:
         - kms.staging.${BURGINFRA_HOST}
