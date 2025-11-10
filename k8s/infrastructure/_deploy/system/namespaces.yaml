@@ -23,6 +23,13 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: burginfra-staging
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: burginfra-system
   annotations:
     kustomize.toolkit.fluxcd.io/prune: disabled
