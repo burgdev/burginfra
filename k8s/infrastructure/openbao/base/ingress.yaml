@@ -5,7 +5,7 @@ metadata:
   annotations:
     #  cert-manager.io/cluster-issuer: letsencrypt-prod
     #  traefik.ingress.kubernetes.io/router.tls.certresolver: default
-    # traefik.ingress.kubernetes.io/service.serversscheme: http
+    traefik.ingress.kubernetes.io/service.serversscheme: http
     # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     # nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
     # nginx.ingress.kubernetes.io/proxy-ssl-name: "openbao"
