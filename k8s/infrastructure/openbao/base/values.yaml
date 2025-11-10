@@ -1,7 +1,7 @@
 # https://github.com/openbao/openbao-helm/tree/main/charts/openbao
 global:
   enabled: true
-  #tlsDisable: false
+  tlsDisable: false
   # if enabled:
   #   - https://nanibot.net/posts/vault/
   #   - https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/
@@ -17,15 +17,14 @@ server:
     # Needed?
     #  tls_client_ca_file = "/certs/tls.ca"
     # tls_client_ca_file = "/certs/ca.crt"
-    #tls_cert_file = "/certs/tls.crt"
-    #tls_key_file = "/certs/tls.key"
     config: |
       ui = true
 
       listener "tcp" {
-        tls_disable = 1
         address = "[::]:8200"
         cluster_address = "[::]:8201"
+        tls_cert_file = "/certs/tls.crt"
+        tls_key_file = "/certs/tls.key"
       }
 
       storage "file" {
@@ -41,17 +40,17 @@ server:
     - name: unseal-volume
       secret:
         secretName: openbao-unseal-umbrella-1-key
-    #- name: certs
-    #  secret:
-    #    secretName: openbao-internal-wildcard-cert-secret
-    #    defaultMode: 420
+    - name: certs
+      secret:
+        secretName: openbao-internal-wildcard-cert-secret
+        defaultMode: 420
   volumeMounts:
     - mountPath: /keys
       name: unseal-volume
       readOnly: true
-    #- mountPath: /certs
-    #  name: certs
-    #  readOnly: true
+    - mountPath: /certs
+      name: certs
+      readOnly: true
 
   dataStorage:
     enabled: true
@@ -66,3 +65,14 @@ csi:
 
 ui:
   enabled: true
+  extraEnvironmentVars:
+    BAO_CACERT: "/certs/ca.crt" # probably wrong
+    OPENBAO_CACERT: "/certs/ca.crt"
+  volumes:
+    - name: certs
+      secret:
+        secretName: openbao-internal-wildcard-cert-secret
+        defaultMode: 420
+    - mountPath: /certs
+      name: certs
+      readOnly: true
