@@ -6,9 +6,9 @@ global:
   #   - https://nanibot.net/posts/vault/
   #   - https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/
 server:
-  #extraEnvironmentVars:
-  #  BAO_CACERT: "/certs/ca.crt" # probably wrong
-  #  OPENBAO_CACERT: "/certs/ca.crt"
+  extraEnvironmentVars:
+    BAO_CACERT: "/certs/ca.crt" # probably wrong
+    OPENBAO_CACERT: "/certs/ca.crt"
   dev:
     enabled: false
   standalone:
@@ -65,3 +65,14 @@ csi:
 
 ui:
   enabled: true
+  extraEnvironmentVars:
+    BAO_CACERT: "/certs/ca.crt" # probably wrong
+    OPENBAO_CACERT: "/certs/ca.crt"
+  volumes:
+    - name: certs
+      secret:
+        secretName: openbao-internal-wildcard-cert-secret
+        defaultMode: 420
+    - mountPath: /certs
+      name: certs
+      readOnly: true
