@@ -10,9 +10,8 @@ commonLabels:
 resources:
   - helmrelease.yaml
   - ingress.yaml
-  - certificate.yaml
-  #- service.yaml
-# not needed at the moments:
+  # - backup.yaml
+  # - certificate.yaml
 configMapGenerator:
   - name: openbao-values
     files:

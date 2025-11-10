@@ -15,7 +15,8 @@ After the first start the "vault" needs to be [initialized](https://openbao.org/
 ```bash
 # open a shell to openbao-0
 kubectl exec -n burginfra-system -it openbao-0 -- sh
-bao operator init -key-shares=1 -key-threshold=1 -recovery-shares=1 -recovery-threshold=1
+bao operator init -recovery-shares=1 -recovery-threshold=1
+# without auto file based unseal: -key-shares=1 -key-threshold=1
 ```
 
 ## Setup
