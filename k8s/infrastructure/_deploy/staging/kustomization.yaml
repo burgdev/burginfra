@@ -4,7 +4,7 @@ resources:
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   - ../../traefik/flux/staging/
   - ../../volsync/flux/staging/
-  #- ../../openbao/flux/staging/
+  - ../../openbao/flux/staging/
   #- ../../k8up/flux/local/flux-kustom.yaml
   #- ../../cert-manager/flux/local/flux-kustom.yaml
   #- ../../kube-prometheus-stack/flux/local/flux-kustom.yaml

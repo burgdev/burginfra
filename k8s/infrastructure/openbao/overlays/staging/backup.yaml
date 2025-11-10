@@ -4,7 +4,7 @@ metadata:
   name: ${CLUSTER}-openbao-data # 'username' for kopia
   namespace: ${NAMESPACE}
 spec:
-  sourcePVC: openbao-data-pvc # get name from actual PVC
+  sourcePVC: data-openbao-0
   trigger:
     schedule: "*/30 * * * *" # every 30 minutes
     #manual: backup-01
