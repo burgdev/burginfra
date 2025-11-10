@@ -1,14 +1,14 @@
 # https://github.com/openbao/openbao-helm/tree/main/charts/openbao
 global:
   enabled: true
-  tlsDisable: false
+  #tlsDisable: false
   # if enabled:
   #   - https://nanibot.net/posts/vault/
   #   - https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/
 server:
-  extraEnvironmentVars:
-    BAO_CACERT: "/certs/ca.crt" # probably wrong
-    OPENBAO_CACERT: "/certs/ca.crt"
+  # extraEnvironmentVars:
+  #   BAO_CACERT: "/certs/ca.crt" # which one?
+  #   OPENBAO_CACERT: "/certs/ca.crt"
   dev:
     enabled: false
   standalone:
@@ -21,10 +21,11 @@ server:
       ui = true
 
       listener "tcp" {
+        tls_disable = 1
         address = "[::]:8200"
         cluster_address = "[::]:8201"
-        tls_cert_file = "/certs/tls.crt"
-        tls_key_file = "/certs/tls.key"
+        // tls_cert_file = "/certs/tls.crt"
+        // tls_key_file = "/certs/tls.key"
       }
 
       storage "file" {
@@ -65,15 +66,3 @@ csi:
 
 ui:
   enabled: true
-  extraEnvironmentVars:
-    BAO_CACERT: "/certs/ca.crt" # probably wrong
-    OPENBAO_CACERT: "/certs/ca.crt"
-  volumes:
-    - name: certs
-      secret:
-        secretName: openbao-internal-wildcard-cert-secret
-        defaultMode: 420
-  volumeMounts:
-    - mountPath: /certs
-      name: certs
-      readOnly: true
