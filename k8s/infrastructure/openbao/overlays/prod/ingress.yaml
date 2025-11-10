@@ -2,9 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: openbao-ui
-  annotations:
-    #  cert-manager.io/cluster-issuer: letsencrypt-prod
-    #  traefik.ingress.kubernetes.io/router.tls.certresolver: default
 spec:
   rules:
     - host: kms.${BURGINFRA_HOST}

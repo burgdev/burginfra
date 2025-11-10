@@ -33,6 +33,12 @@ bao operator init -recovery-shares=1 -recovery-threshold=1
 <<< @/../k8s/infrastructure/openbao/base/helmrelease.yaml{yaml} [ase/helmrelease.yaml]
 :::
 
+::: details :globe_with_meridians: Ingress
+::: code-group
+<<< @/../k8s/infrastructure/openbao/overlays/prod/ingress.yaml{yaml} [overlays/prod/ingress.yaml (PORD)]
+<<< @/../k8s/infrastructure/openbao/overlays/staging/ingress.yaml{yaml} [overlays/staging/ingress.yaml (STAGING)]
+:::
+
 ## Resources
 
 * Unseal: <https://openbao.org/docs/configuration/seal/static/>

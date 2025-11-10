@@ -9,7 +9,6 @@ commonLabels:
   app.kubernetes.io/managed-by: flux
 resources:
   - helmrelease.yaml
-  - ingress.yaml
   # - backup.yaml
   # - certificate.yaml
 configMapGenerator:
