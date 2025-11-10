@@ -73,6 +73,7 @@ ui:
       secret:
         secretName: openbao-internal-wildcard-cert-secret
         defaultMode: 420
+  volumeMounts:
     - mountPath: /certs
       name: certs
       readOnly: true
