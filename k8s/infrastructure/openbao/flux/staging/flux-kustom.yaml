@@ -16,7 +16,7 @@ spec:
     name: burgdev-burginfra
   postBuild:
     substitute:
-      NAMESPACE: "staging"
+      NAMESPACE: "burginfra-staging"
       ENVIRONMENT: "staging"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
