@@ -19,6 +19,7 @@ spec:
       - burgdev.ch
   dnsNames:
     - "openbao"
+    - "vault.${BURGINFRA_HOST}"
     - "*.openbao-internal"
     - "*.openbao-internal.burginfra-system"
     - "*.openbao-internal.burginfra-system.svc"
