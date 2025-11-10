@@ -23,4 +23,4 @@ spec:
                   number: 8200
   tls:
     - hosts:
-        - ${DOMAIN}
+        - vault.${BURGINFRA_HOST}
