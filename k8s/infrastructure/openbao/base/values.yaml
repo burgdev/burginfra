@@ -67,7 +67,7 @@ ui:
   enabled: true
   extraEnvironmentVars:
     BAO_CACERT: "/certs/ca.crt" # probably wrong
-    # OPENBAO_CACERT: "/certs/ca.crt"
+    OPENBAO_CACERT: "/certs/ca.crt"
   volumes:
     - name: certs
       secret:
