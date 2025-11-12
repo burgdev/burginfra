@@ -4,8 +4,8 @@ set -euo pipefail
 USAGE="Usage: $0 <cluster>"
 
 if [ -z "${1-}" ]; then
-  echo "$USAGE"
-  exit 1
+	echo "$USAGE"
+	exit 1
 fi
 
 CLUSTER=$1
@@ -13,16 +13,15 @@ CLUSTER=$1
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
 . "$ROOT_DIR/scripts/_base.sh"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR" &>/dev/zero
 
 cluster_check "$CLUSTER"
 
-for env in staging prod; do
-  config_path=$(realpath --relative-to="." configs/$env)
-  title "Generate configuration${rst} $(s d "from $(s u $config_path)")"
-  echo $(s d kubectl apply -k "$config_path")
-  kubectl apply -k "$config_path"
+for env in burginfra-staging burginfra-system staging prod; do
+	config_path=$(realpath --relative-to="." configs/overlays/$env)
+	title "Generate configuration${rst} $(s d "from $(s u $config_path)")"
+	echo $(s d kubectl apply -k "$config_path")
+	kubectl apply -k "$config_path"
 done
-cd -
+cd - &>/dev/zero
 success "DONE"
-
