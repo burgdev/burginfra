@@ -6,7 +6,7 @@ metadata:
 spec:
   sourcePVC: data-openbao-0
   trigger:
-    schedule: "*/30 * * * *" # every 30 minutes
+    schedule: "*/2 * * * *" # every 30 minutes
     #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
@@ -32,3 +32,8 @@ spec:
     # Snapshot is not supported yet https://github.com/openebs/openebs/issues/4071
     # copyMethod: Snapshot
     copyMethod: Direct
+
+    moverSecurityContext:
+      runAsUser: 100
+      runAsGroup: 1000
+      fsGroup: 1000
