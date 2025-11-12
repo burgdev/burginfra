@@ -6,7 +6,7 @@ metadata:
 spec:
   sourcePVC: data-openbao-0
   trigger:
-    schedule: "*/2 * * * *" # every 30 minutes
+    schedule: "*/60 * * * *" # every 30 minutes
     #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
