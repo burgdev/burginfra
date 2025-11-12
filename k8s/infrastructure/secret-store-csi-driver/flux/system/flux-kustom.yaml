@@ -1,0 +1,22 @@
+# this is used by flux, do not include in any app kustomization.yaml file!
+# TODO: add to k8s/flux/*/kustomization.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: helm-secret-store-csi-driver-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  path: "./k8s/infrastructure/secret-store-csi-driver/helm/overlays/system"
+  prune: true
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute: # use the same values for all kustomizations
+      NAME: "secret-store-csi-driver"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
