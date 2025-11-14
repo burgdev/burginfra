@@ -11,7 +11,7 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: openbao-secrets-operator
+  name: vault-secrets-operator
 spec:
   chart:
     spec:
@@ -25,6 +25,6 @@ spec:
     createNamespace: false
   valuesFrom:
     - kind: ConfigMap
-      name: openbao-secrets-operator-values
+      name: vault-secrets-operator-values
       valuesKey: values.yaml
   interval: 1h0s
