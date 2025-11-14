@@ -8,3 +8,4 @@ resources:
   - ../../openebs/flux/system/
   - ../../volsync/flux/system/
   - ../../csi-driver-rclone/flux/system/
+  - ../../vault-secrets-operator/flux/system/

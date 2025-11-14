@@ -1,0 +1,12 @@
+# https://developer.hashicorp.com/vault/docs/platform/k8s/vso/helm#vault-secrets-operator-helm-chart-configuration
+defaultVaultConnection:
+  enabled: true
+  address: http://openbao.burginfra-staging.svc.cluster.local:8200
+  skipTLSVerify: true # OpenBao standalone usually runs without TLS
+
+defaultAuthMethod:
+  enabled: true
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: default
