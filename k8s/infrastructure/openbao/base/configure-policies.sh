@@ -125,10 +125,8 @@ echo "==> Kubernetes Auth Method"
 echo ""
 
 MANAGED_ROLES=""
-NAMESPACE_POLICIES_FILE="/tmp/namespace_policies.txt"
-> "$NAMESPACE_POLICIES_FILE"
 
-# Build namespace to policies mapping from policy metadata
+# Create roles for each policy (not custom roles or wildcards)
 while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account k8s_role; do
 	# Skip if kubernetes is not in access methods
 	if [ -z "$access_methods" ] || ! printf '%s' "$access_methods" | grep -q "kubernetes"; then
@@ -140,42 +138,23 @@ while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_acco
 		continue
 	fi
 	
-	# Skip policies with wildcard namespaces (handled as special roles)
-	if [ "$k8s_namespaces" = "*" ]; then
+	# Skip policies with wildcard or custom role (handled separately)
+	if [ "$k8s_namespaces" = "*" ] || [ -n "$k8s_role" ]; then
 		continue
 	fi
 
-	# Split namespaces by comma and process each
-	printf '%s\n' "$k8s_namespaces" | tr ',' '\n' | while read -r namespace; do
-		# Trim whitespace
-		namespace=$(printf '%s' "$namespace" | xargs)
-		
-		if [ -n "$namespace" ] && [ "$namespace" != "*" ]; then
-			# Append to namespace policies mapping
-			printf '%s|%s\n' "$namespace" "$policy_name" >> "$NAMESPACE_POLICIES_FILE"
-		fi
-	done
-done < "$METADATA_FILE"
-
-# Create roles for each namespace
-for namespace in $(cut -d'|' -f1 "$NAMESPACE_POLICIES_FILE" | sort -u); do
-	# Collect all policies for this namespace
-	policies=$(grep "^$namespace|" "$NAMESPACE_POLICIES_FILE" | cut -d'|' -f2 | tr '\n' ',' | sed 's/,$//')
-	
-	role_name="$namespace"
-
-	# Use default service account (from first policy for this namespace)
-	service_account="$DEFAULT_SERVICE_ACCOUNT"
+	# Use policy name as role name
+	role_name="$policy_name"
 
 	echo "Creating/updating role: $role_name"
-	echo "  Namespace: $namespace"
-	echo "  Policies: $policies"
-	echo "  Service Account: $service_account"
+	echo "  Policy: $policy_name"
+	echo "  Namespaces: $k8s_namespaces"
+	echo "  Service Account: $k8s_service_account"
 
 	if bao write auth/kubernetes/role/"$role_name" \
-		bound_service_account_names="$service_account" \
-		bound_service_account_namespaces="$namespace" \
-		policies="$policies" \
+		bound_service_account_names="$k8s_service_account" \
+		bound_service_account_namespaces="$k8s_namespaces" \
+		policies="$policy_name" \
 		ttl=24h >/dev/null; then
 
 		if [ -z "$MANAGED_ROLES" ]; then
@@ -187,7 +166,7 @@ for namespace in $(cut -d'|' -f1 "$NAMESPACE_POLICIES_FILE" | sort -u); do
 	else
 		echo "  ✗ Failed to create role '$role_name'"
 	fi
-done
+done < "$METADATA_FILE"
 
 # Handle wildcard namespace policies and custom roles
 while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account k8s_role; do
@@ -337,31 +316,32 @@ for policy in $MANAGED_POLICIES; do
 done
 
 echo ""
-echo "Kubernetes Namespace Mappings:"
-if [ -s "$NAMESPACE_POLICIES_FILE" ]; then
-	for namespace in $(cut -d'|' -f1 "$NAMESPACE_POLICIES_FILE" | sort -u); do
-		policies=$(grep "^$namespace|" "$NAMESPACE_POLICIES_FILE" | cut -d'|' -f2 | tr '\n' ',' | sed 's/,$//')
-		echo "  ✓ $namespace → $policies"
-	done
-else
-	echo "  (none)"
-fi
-
-# Show custom Kubernetes roles
-CUSTOM_ROLES=""
+echo "Kubernetes Roles ($ROLE_COUNT):"
 while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account k8s_role; do
-	if [ -n "$k8s_role" ] && printf '%s' "$access_methods" | grep -q "kubernetes"; then
-		if [ -z "$CUSTOM_ROLES" ]; then
-			CUSTOM_ROLES="yes"
-			echo ""
-			echo "Custom Kubernetes Roles:"
-		fi
-		echo "  ✓ $k8s_role (policy: $policy_name, namespaces: $k8s_namespaces)"
+	# Skip if kubernetes is not in access methods
+	if [ -z "$access_methods" ] || ! printf '%s' "$access_methods" | grep -q "kubernetes"; then
+		continue
 	fi
+	
+	# Skip if no namespaces
+	if [ -z "$k8s_namespaces" ]; then
+		continue
+	fi
+	
+	# Determine role name
+	if [ -n "$k8s_role" ]; then
+		role_display="$k8s_role"
+	elif [ "$k8s_namespaces" = "*" ]; then
+		role_display="$policy_name"
+	else
+		role_display="$policy_name"
+	fi
+	
+	echo "  ✓ $role_display → policy: $policy_name, namespaces: $k8s_namespaces"
 done < "$METADATA_FILE"
 
 echo ""
 echo "✓ OpenBao configuration complete!"
 
 # Cleanup temp files
-rm -f "$METADATA_FILE" "$NAMESPACE_POLICIES_FILE"
+rm -f "$METADATA_FILE"

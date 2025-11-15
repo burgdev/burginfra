@@ -29,33 +29,36 @@ Add these comment lines at the top of your `.hcl` policy file:
 
 ### How It Works
 
-**Regular namespaces:**
+**Regular policy (multiple namespaces):**
 
 ```hcl
+# Policy file: apps-kv-staging.hcl
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: staging,production
 ```
 
-Creates two Kubernetes roles: `staging` and `production`
+Creates one Kubernetes role: `apps-kv-staging` bound to namespaces `staging` and `production`
 
 **Wildcard namespace:**
 
 ```hcl
+# Policy file: infra-kv-all.hcl
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: *
 ```
 
-Creates one Kubernetes role named after the policy file (e.g., `infra-kv-all`)
+Creates one Kubernetes role: `infra-kv-all` bound to all namespaces (`*`)
 
 **Custom role name:**
 
 ```hcl
+# Policy file: openbao-admin.hcl
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: *
 # KUBERNETES_ROLE: admin
 ```
 
-Creates one Kubernetes role named `admin`
+Creates one Kubernetes role: `admin` (overrides the default `openbao-admin`)
 
 **No access configuration:**
 
