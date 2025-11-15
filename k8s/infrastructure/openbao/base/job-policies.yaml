@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openbao-configure-policies
+  labels:
+    app.kubernetes.io/version: "1.0"
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: openbao-config-manager
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: quay.io/openbao/openbao:latest
+          command: ["/bin/bash", "/scripts/configure-policies.sh"]
+          env:
+            - name: OPENBAO_ADDR
+              value: "http://openbao.${NAMEPACE}.svc.cluster.local:8200"
+          volumeMounts:
+            - name: config-script
+              mountPath: /scripts
+            - name: policies
+              mountPath: /policies
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+      volumes:
+        - name: config-script
+          configMap:
+            name: openbao-config-script
+            defaultMode: 0755
+        - name: policies
+          configMap:
+            name: openbao-policies
