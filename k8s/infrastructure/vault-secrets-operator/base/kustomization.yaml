@@ -8,5 +8,6 @@ commonLabels:
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
 resources:
+  - serviceaccount.yaml
   - vaultconnection.yaml
   - vaultauth.yaml
