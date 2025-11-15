@@ -14,9 +14,9 @@ create-deploy-key:
     flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
     @info "Add deploy key to github https://github.com/burgdev/burginfra/settings/keys/new"
     @info $'Run \'\e[34mjust flux deploy\e[0m\' to deploy.'
-   
+
 # 🚀 Deploy everything to a cluster (cluster: local|burginfra, dry: dry|no-dry)
-deploy cluster="local" dry="dry":   
+deploy cluster="local" dry="dry":
     #! ./.shell-wrapper.sh
     if [ -z $KUBECONFIG ]; then
         error "KUBECONFIG is not set. Please set it first."
@@ -32,7 +32,7 @@ deploy cluster="local" dry="dry":
             exit 1
         fi
     fi
-    header "🚀 Deploying to {{cluster}}" 
+    header "🚀 Deploying to {{cluster}}"
     cluster_path="k8s/clusters/flux-system/overlays/{{cluster}}"
     if [ "{{dry}}" == "no-dry" ]; then
         if ! git diff --quiet || ! git diff --cached --quiet; then
@@ -50,7 +50,7 @@ deploy cluster="local" dry="dry":
         success $'\e[1;33mDRY RUN\e[0m to {{cluster}} successful.'
         info $'Run \'\e[34mjust flux deploy {{cluster}} no-dry\e[0m\' to deploy.'
     fi
- 
+
 gitrepos:
     @header "$(doc flux gitrepos)"
     kubectl -n flux-system get gitrepositories
@@ -65,10 +65,10 @@ ra: reconcile-all
 # ♻️  Reconcile all GitRepositories
 reconcile-git:
     @header "$(doc flux reconcile-git)"
-    @kubectl get gitrepository -A -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}' | \
+    @kubectl get kustomization -A -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}' | \
     while read ns name; do \
-        echo "Reconciling GitRepository $name in namespace $ns"; \
-        flux reconcile source git "$name" -n "$ns"; \
+        echo "Reconciling kustomization $name in namespace $ns"; \
+        flux reconcile kustomization "$name" -n "$ns"; \
     done
 
 # ♻️  reconcile-git
