@@ -10,10 +10,27 @@ commonLabels:
 resources:
   - helmrelease.yaml
   - serviceaccount.yaml
+  - job-policies.yaml
   # - certificate.yaml # not used
 configMapGenerator:
   - name: openbao-values
     files:
       - values.yaml=values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: openbao-config-script
+    files:
+      - configure-policies.sh
+    options:
+      disableNameSuffixHash: true
+  - name: openbao-policies
+    files:
+      - policies/openbao-admin.hcl
+      - policies/apps-kv-staging.hcl
+      - policies/apps-kv-production.hcl
+      - policies/apps-kv-all.hcl
+      - policies/infra-kv-staging.hcl
+      - policies/infra-kv-system.hcl
+      - policies/infra-kv-all.hcl
     options:
       disableNameSuffixHash: true

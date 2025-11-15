@@ -107,11 +107,11 @@ success "ServiceAccount '$SERVICE_ACCOUNT' exists"
 
 # Find OpenBao pod
 info "Looking for OpenBao pod in namespace '$NAMESPACE'..."
-OPENBAO_POD=$(kubectl get pod -n "$NAMESPACE" -l app=openbao -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+OPENBAO_POD=$(kubectl get pod -n "$NAMESPACE" -l app.kubernetes.io/name=openbao -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
 
 if [ -z "$OPENBAO_POD" ]; then
 	error "Could not find OpenBao pod in namespace '$NAMESPACE'"
-	info "Make sure OpenBao is deployed with label 'app=openbao'"
+	info "Make sure OpenBao is deployed with label 'app.kubernetes.io/name=openbao'"
 	exit 1
 fi
 success "Found OpenBao pod: $OPENBAO_POD"
@@ -226,32 +226,20 @@ echo "✓ Kubernetes auth configured"
 
 echo ""
 echo "==> Creating openbao-admin policy..."
-bao policy write openbao-admin - <<'EOF'
-# Allow managing policies
-path "sys/policies/acl/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
 
-# Allow managing auth methods
-path "sys/auth/*" {
-  capabilities = ["create", "read", "update", "delete", "sudo"]
-}
+# Read the policy from the policies directory
+POLICY_FILE="$SCRIPT_DIR/base/policies/openbao-admin.hcl"
 
-# Allow managing kubernetes auth roles
-path "auth/kubernetes/role/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
+if [ ! -f "$POLICY_FILE" ]; then
+    echo "ERROR: Policy file not found: $POLICY_FILE"
+    exit 1
+fi
 
-# Allow reading/updating kubernetes auth config
-path "auth/kubernetes/config" {
-  capabilities = ["read", "update"]
-}
+# Copy policy file to pod and apply it
+kubectl cp "$POLICY_FILE" "$NAMESPACE/$OPENBAO_POD:/tmp/openbao-admin.hcl" >/dev/null 2>&1
+bao policy write openbao-admin /tmp/openbao-admin.hcl
+kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/openbao-admin.hcl >/dev/null 2>&1 || true
 
-# Allow reading auth methods
-path "sys/auth" {
-  capabilities = ["read"]
-}
-EOF
 echo "✓ openbao-admin policy created"
 
 echo ""
@@ -297,7 +285,7 @@ if echo "$CHECK_INIT" | grep -q "Vault is not initialized"; then
 	info "OpenBao is not initialized - will initialize now"
 	PROVIDE_TOKEN=false
 elif echo "$CHECK_INIT" | grep -q "Sealed.*false"; then
-	warning "OpenBao is already initialized"
+	warn "OpenBao is already initialized"
 	info "You need to provide the root token to continue"
 	echo ""
 
@@ -321,7 +309,7 @@ elif echo "$CHECK_INIT" | grep -q "Sealed.*false"; then
 
 			if [ ${#ROOT_TOKEN} -lt 20 ]; then
 				attempts=$((attempts + 1))
-				warning "Token seems too short. Attempt $attempts of $max_attempts"
+				warn "Token seems too short. Attempt $attempts of $max_attempts"
 				continue
 			fi
 
@@ -355,51 +343,53 @@ if kubectl cp "$TEMP_SCRIPT" "$NAMESPACE/$OPENBAO_POD:/tmp/bootstrap.sh" >/dev/n
 	EXIT_CODE=$?
 
 	# If newly initialized, capture the credentials
-	if kubectl cp "$NAMESPACE/$OPENBAO_POD:/tmp/bao-init-output.txt" "$TEMP_OUTPUT" 2>/dev/null; then
-		if grep -q "NEWLY_INITIALIZED=true" "$TEMP_OUTPUT"; then
-			echo ""
-			echo "============================================"
-			echo "⚠️  CREDENTIALS - SAVE THESE SECURELY!"
-			echo "============================================"
-			echo ""
+	if kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- test -f /tmp/bao-init-output.txt 2>/dev/null; then
+		if kubectl cp "$NAMESPACE/$OPENBAO_POD:/tmp/bao-init-output.txt" "$TEMP_OUTPUT" 2>/dev/null; then
+			if grep -q "NEWLY_INITIALIZED=true" "$TEMP_OUTPUT"; then
+				echo ""
+				echo "============================================"
+				echo "⚠️  CREDENTIALS - SAVE THESE SECURELY!"
+				echo "============================================"
+				echo ""
 
-			# Parse and display credentials
-			ROOT_TOKEN=$(grep "^ROOT_TOKEN=" "$TEMP_OUTPUT" | cut -d'=' -f2)
-			SHARES=$(grep "^RECOVERY_SHARES=" "$TEMP_OUTPUT" | cut -d'=' -f2)
-			THRESHOLD=$(grep "^RECOVERY_THRESHOLD=" "$TEMP_OUTPUT" | cut -d'=' -f2)
+				# Parse and display credentials
+				ROOT_TOKEN=$(grep "^ROOT_TOKEN=" "$TEMP_OUTPUT" | cut -d'=' -f2)
+				SHARES=$(grep "^RECOVERY_SHARES=" "$TEMP_OUTPUT" | cut -d'=' -f2)
+				THRESHOLD=$(grep "^RECOVERY_THRESHOLD=" "$TEMP_OUTPUT" | cut -d'=' -f2)
 
-			echo "Root Token:"
-			echo "  $ROOT_TOKEN"
-			echo ""
-			echo "Recovery Keys Configuration:"
-			echo "  Shares: $SHARES"
-			echo "  Threshold: $THRESHOLD"
-			echo ""
-			echo "Recovery Keys:"
+				echo "Root Token:"
+				echo "  $ROOT_TOKEN"
+				echo ""
+				echo "Recovery Keys Configuration:"
+				echo "  Shares: $SHARES"
+				echo "  Threshold: $THRESHOLD"
+				echo ""
+				echo "Recovery Keys:"
 
-			# Display all recovery keys
-			grep "^RECOVERY_KEY_" "$TEMP_OUTPUT" | while IFS= read -r line; do
-				KEY_NUM=$(echo "$line" | sed 's/RECOVERY_KEY_\([0-9]*\)=.*/\1/')
-				KEY_VALUE=$(echo "$line" | cut -d'=' -f2)
-				echo "  Key $KEY_NUM: $KEY_VALUE"
-			done
+				# Display all recovery keys
+				grep "^RECOVERY_KEY_" "$TEMP_OUTPUT" | while IFS= read -r line; do
+					KEY_NUM=$(echo "$line" | sed 's/RECOVERY_KEY_\([0-9]*\)=.*/\1/')
+					KEY_VALUE=$(echo "$line" | cut -d'=' -f2)
+					echo "  Key $KEY_NUM: $KEY_VALUE"
+				done
 
-			echo ""
-			echo "============================================"
-			echo ""
-			warning "These credentials are shown only once!"
-			warning "Store them in a secure location:"
-			echo "  • Password manager (1Password, Bitwarden, etc.)"
-			echo "  • Hardware security key"
-			echo "  • Encrypted vault"
-			echo "  • Kubernetes sealed secret (for automation)"
-			echo ""
-			info "Distribution strategy for multiple keys:"
-			echo "  • Give each key to a different administrator"
-			echo "  • Require $THRESHOLD key(s) to unseal/recover"
-			echo "  • Store keys in different physical locations"
+				echo ""
+				echo "============================================"
+				echo ""
+				warn "These credentials are shown only once!"
+				warn "Store them in a secure location:"
+				echo "  • Password manager (1Password, Bitwarden, etc.)"
+				echo "  • Hardware security key"
+				echo "  • Encrypted vault"
+				echo "  • Kubernetes sealed secret (for automation)"
+				echo ""
+				info "Distribution strategy for multiple keys:"
+				echo "  • Give each key to a different administrator"
+				echo "  • Require $THRESHOLD key(s) to unseal/recover"
+				echo "  • Store keys in different physical locations"
+			fi
+			kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/bao-init-output.txt >/dev/null 2>&1 || true
 		fi
-		kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/bao-init-output.txt >/dev/null 2>&1 || true
 	fi
 
 	# Clean up script from pod
@@ -415,7 +405,7 @@ if kubectl cp "$TEMP_SCRIPT" "$NAMESPACE/$OPENBAO_POD:/tmp/bootstrap.sh" >/dev/n
 		echo "  3. You can now use GitOps to manage OpenBao configuration"
 		echo "  4. Configuration jobs will use Kubernetes auth automatically"
 		echo ""
-		warning "Security recommendations:"
+		warn "Security recommendations:"
 		echo "  • Never commit credentials to Git"
 		echo "  • Use sealed secrets for automation credentials"
 		echo "  • Consider rotating the root token after setup"
