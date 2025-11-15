@@ -12,15 +12,16 @@ resources:
   - serviceaccount.yaml
   - job-policies.yaml
   # - certificate.yaml # not used
+secretGenerator: # use secret, this way variables are not replaced
+  - name: openbao-config-script
+    files:
+      - configure-policies.sh
+    options:
+      disableNameSuffixHash: true
 configMapGenerator:
   - name: openbao-values
     files:
       - values.yaml=values.yaml
-    options:
-      disableNameSuffixHash: true
-  - name: openbao-config-script
-    files:
-      - configure-policies.sh
     options:
       disableNameSuffixHash: true
   - name: openbao-policies
