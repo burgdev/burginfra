@@ -108,19 +108,24 @@ NAMESPACE_POLICIES_FILE="/tmp/namespace_policies.txt"
 
 # Build namespace to policies mapping from policy metadata
 while IFS='|' read -r policy_name namespaces service_accounts role; do
-	# Skip policies without namespace metadata (like openbao-admin)
+	# Skip policies without namespace metadata
 	if [ -z "$namespaces" ]; then
+		continue
+	fi
+	
+	# Skip policies with wildcard namespaces (handled as special roles)
+	if [ "$namespaces" = "*" ]; then
 		continue
 	fi
 
 	# Split namespaces by comma and process each
-	echo "$namespaces" | tr ',' '\n' | while read -r namespace; do
+	printf '%s\n' "$namespaces" | tr ',' '\n' | while read -r namespace; do
 		# Trim whitespace
-		namespace=$(echo "$namespace" | xargs)
+		namespace=$(printf '%s' "$namespace" | xargs)
 		
-		if [ -n "$namespace" ]; then
+		if [ -n "$namespace" ] && [ "$namespace" != "*" ]; then
 			# Append to namespace policies mapping
-			echo "$namespace|$policy_name" >> "$NAMESPACE_POLICIES_FILE"
+			printf '%s|%s\n' "$namespace" "$policy_name" >> "$NAMESPACE_POLICIES_FILE"
 		fi
 	done
 done < "$METADATA_FILE"

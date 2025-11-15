@@ -2,7 +2,7 @@
 #
 # !! make sure it is added to 'kustomization.yaml' !!
 #
-# OPENBAO_NAMESPACES: production
+# OPENBAO_NAMESPACES: staging
 
 path "kv/data/apps/*/staging" {
   capabilities = ["read", "list"]
