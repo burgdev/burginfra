@@ -59,9 +59,9 @@ See [policy.template.hcl](policy.template.hcl) for a complete example.
 
 ## Adding a New Policy
 
-1. Create `my-policy.hcl` in this directory
-2. Add metadata comments at the top
-3. Add it to `kustomization.yaml`:
+1. **Create the policy file** `my-policy.hcl` in this directory with metadata comments
+
+2. **Add to kustomization.yaml**:
 
    ```yaml
    configMapGenerator:
@@ -70,7 +70,26 @@ See [policy.template.hcl](policy.template.hcl) for a complete example.
          - policies/my-policy.hcl
    ```
 
-4. Commit and push
+3. **Add VaultAuth resource** in `k8s/infrastructure/vault-secrets-operator/base/vaultauth.yaml`:
+
+   ```yaml
+   ---
+   apiVersion: secrets.hashicorp.com/v1beta1
+   kind: VaultAuth
+   metadata:
+     name: my-policy
+   spec:
+     method: kubernetes
+     mount: kubernetes
+     vaultConnectionRef: openbao-${ENVIRONMENT}
+     kubernetes:
+       role: my-policy
+       serviceAccount: vault-secrets-operator-controller-manager
+   ```
+
+   **Important:** The VaultAuth `name` and `role` must match the policy filename (without `.hcl`)
+
+4. **Commit and push**
 
 The policy will be automatically deployed by Flux and configured by the `openbao-configure-policies` job.
 
