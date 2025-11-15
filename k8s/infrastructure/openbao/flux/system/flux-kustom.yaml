@@ -8,7 +8,7 @@ metadata:
 #dependsOn:
 #- name: base-configs  # optional, only if you have one
 spec:
-  interval: 1h0s
+  interval: 3h0s
   path: "./k8s/infrastructure/openbao/overlays/system"
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml

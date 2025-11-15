@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/version: "1.0"
 spec:
-  ttlSecondsAfterFinished: 3600
+  ttlSecondsAfterFinished: 180 # deleted after 3 min, flux runs it again every 3 hours
   backoffLimit: 3
   template:
     spec:
