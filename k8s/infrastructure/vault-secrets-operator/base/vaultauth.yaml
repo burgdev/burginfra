@@ -5,10 +5,10 @@ metadata:
 spec:
   method: kubernetes
   mount: kubernetes
+  vaultConnectionRef: openbao-system
   kubernetes:
     role: default
     serviceAccount: vault-secrets-operator-controller-manager
-    vaultConnectionRef: openbao-system
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
