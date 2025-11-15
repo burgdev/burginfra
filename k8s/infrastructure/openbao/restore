@@ -18,6 +18,10 @@ kubectl scale statefulset openbao --replicas=0 -n "$SRC_NAMESPACE"
 echo -e "${YELLOW}Applying restore manifest...${RESET}"
 echo "$RESTORE_YAML" | kubectl apply -f -
 
+# check for unseal keys:
+title "Check for unseal key"
+./set-unseal-keys -n "$SRC_NAMESPACE" -c "$CLUSTER"
+
 wait_for_restore
 
 echo -e "${YELLOW}Scaling StatefulSet openbao back up...${RESET}"

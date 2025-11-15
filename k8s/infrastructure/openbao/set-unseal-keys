@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+# Default values
+NAMESPACE=""
+CLUSTER=""
+FORCE=false
+GENERATE=false
+SECRET_NAME="openbao-unseal-1-key"
+SECRET_KEY="unseal-1.key"
+
+usage() {
+	cat <<EOF
+Usage: $0 -n NAMESPACE -c CLUSTER [-f] [-g]
+
+Options:
+    -n NAMESPACE    Kubernetes namespace (required)
+    -c CLUSTER      Cluster context name (required)
+    -f              Force - delete existing secret and recreate
+    -g              Generate random 32-character key instead of prompting
+    -h              Show this help message
+
+Example:
+    $0 -n burginfra-system -c my-cluster
+    $0 -n burginfra-system -c my-cluster -g  # Generate random key
+    $0 -n burginfra-system -c my-cluster -f  # Force recreate
+EOF
+	exit 1
+}
+
+while getopts "n:c:fgh" opt; do
+	case $opt in
+	n) NAMESPACE="$OPTARG" ;;
+	c) CLUSTER="$OPTARG" ;;
+	f) FORCE=true ;;
+	g) GENERATE=true ;;
+	h) usage ;;
+	*) usage ;;
+	esac
+done
+
+# Validate required arguments
+if [ -z "$NAMESPACE" ] || [ -z "$CLUSTER" ]; then
+	error "Error: -n NAMESPACE and -c CLUSTER are required"
+	usage
+fi
+
+cluster_check $CLUSTER
+
+# Check if namespace exists
+if ! kubectl get namespace "$NAMESPACE" &>/dev/null; then
+	error "Error: Namespace '$NAMESPACE' does not exist"
+	exit 1
+fi
+
+# Check if secret already exists
+if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
+	if [ "$FORCE" = true ]; then
+		info "Secret exists. Force flag set - deleting existing secret..."
+		kubectl delete secret "$SECRET_NAME" -n "$NAMESPACE"
+	else
+		success "Secret '$SECRET_NAME' already exists in namespace '$NAMESPACE'"
+		info "  Use -f flag to force recreation"
+		exit 0
+	fi
+fi
+
+# Get or generate the unseal key
+if [ "$GENERATE" = true ]; then
+	info "Generating random 32-character unseal key..."
+	UNSEAL_KEY=$(LC_ALL=C tr -dc '[:graph:]' </dev/urandom | head -c 32)
+	success "Random key generated, store it savely:"
+	echo "$UNSEAL_KEY"
+else
+	# Prompt for key
+	prompt_for_key() {
+		local attempts=0
+		local max_attempts=3
+
+		while [ $attempts -lt $max_attempts ]; do
+			# Use IFS= and read -r to preserve all characters including backslashes
+			IFS= read -rsp "Enter OpenBao unseal key (32 characters): " UNSEAL_KEY
+			echo
+			# Remove all newlines, carriage returns, and whitespace
+			UNSEAL_KEY=$(printf '%s' "$UNSEAL_KEY" | tr -d '\n\r \t')
+
+			# Check if empty
+			if [ -z "$UNSEAL_KEY" ]; then
+				attempts=$((attempts + 1))
+				error "Error: Key cannot be empty. Attempt $attempts of $max_attempts"
+				continue
+			fi
+
+			# Check length - must be exactly 32 characters
+			KEY_LENGTH=${#UNSEAL_KEY}
+			if [ $KEY_LENGTH -ne 32 ]; then
+				attempts=$((attempts + 1))
+				error "Error: Key ($UNSEAL_KEY) must be exactly 32 characters (got $KEY_LENGTH). Attempt $attempts of $max_attempts"
+				continue
+			fi
+
+			return 0
+		done
+
+		error "Error: Maximum attempts reached"
+		return 1
+	}
+
+	title "Creating secret '$SECRET_NAME' in namespace '$NAMESPACE'"
+	if ! prompt_for_key; then
+		exit 1
+	fi
+fi
+
+# Create the Kubernetes secret
+kubectl create secret generic "$SECRET_NAME" \
+	--from-literal="$SECRET_KEY=$UNSEAL_KEY" \
+	-n "$NAMESPACE"
+
+if [ $? -eq 0 ]; then
+	success "Secret '$SECRET_NAME' created successfully in namespace '$NAMESPACE'"
+
+	# Verify the secret
+	info "Verifying secret..."
+	if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
+		success "✓ Secret verified"
+		kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" -o jsonpath='{.metadata.name}{"\n"}'
+	fi
+else
+	error "Error: Failed to create secret"
+	exit 1
+fi

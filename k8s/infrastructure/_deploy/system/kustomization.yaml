@@ -4,8 +4,9 @@ resources:
   - namespaces.yaml
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   - ../../cert-manager/flux/system/
-  - ../../secret-store-csi-driver/flux/system/
   - ../../openebs/flux/system/
+  - ../../openbao/flux/staging/
   - ../../volsync/flux/system/
+  - ../../secret-store-csi-driver/flux/system/
   - ../../csi-driver-rclone/flux/system/
   - ../../vault-secrets-operator/flux/system/
