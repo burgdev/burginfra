@@ -14,7 +14,7 @@ spec:
       containers:
         - name: configure
           image: quay.io/openbao/openbao:latest
-          command: ["/bin/bash", "/scripts/configure-policies.sh"]
+          command: ["/bin/sh", "/scripts/configure-policies.sh"]
           env:
             - name: OPENBAO_ADDR
               value: "http://openbao.${NAMESPACE}.svc.cluster.local:8200"

@@ -1,5 +1,5 @@
-#!/bin/bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 export BAO_ADDR="${OPENBAO_ADDR}"
 
@@ -37,15 +37,14 @@ echo "Creating/Updating Policies"
 echo "========================================"
 
 POLICIES_DIR="/policies"
-MANAGED_POLICIES=()
+MANAGED_POLICIES=""
 
 # Default service account (can be overridden in policy file)
 DEFAULT_SERVICE_ACCOUNT="vault-secrets-operator-controller-manager"
 
-# Associative arrays to store policy metadata
-declare -A POLICY_NAMESPACES
-declare -A POLICY_SERVICE_ACCOUNTS
-declare -A POLICY_ROLES
+# Temporary files to store policy metadata
+METADATA_FILE="/tmp/policy_metadata.txt"
+> "$METADATA_FILE"
 
 # Function to extract metadata from policy file
 extract_metadata() {
@@ -53,28 +52,21 @@ extract_metadata() {
 	local policy_name=$(basename "$file" .hcl)
 
 	# Extract OPENBAO_NAMESPACES
-	local namespaces=$(grep "^# OPENBAO_NAMESPACES:" "$file" | sed 's/^# OPENBAO_NAMESPACES: *//' | tr -d '\r')
+	local namespaces=$(grep "^# OPENBAO_NAMESPACES:" "$file" | sed 's/^# OPENBAO_NAMESPACES: *//' | tr -d '\r' || true)
 
 	# Extract OPENBAO_SERVICE_ACCOUNTS (optional, defaults to VSO SA)
-	local service_accounts=$(grep "^# OPENBAO_SERVICE_ACCOUNTS:" "$file" | sed 's/^# OPENBAO_SERVICE_ACCOUNTS: *//' | tr -d '\r')
+	local service_accounts=$(grep "^# OPENBAO_SERVICE_ACCOUNTS:" "$file" | sed 's/^# OPENBAO_SERVICE_ACCOUNTS: *//' | tr -d '\r' || true)
 
 	# Extract OPENBAO_ROLE (optional, defaults to policy name)
-	local role=$(grep "^# OPENBAO_ROLE:" "$file" | sed 's/^# OPENBAO_ROLE: *//' | tr -d '\r')
+	local role=$(grep "^# OPENBAO_ROLE:" "$file" | sed 's/^# OPENBAO_ROLE: *//' | tr -d '\r' || true)
 
-	# Store metadata
-	if [ -n "$namespaces" ]; then
-		POLICY_NAMESPACES["$policy_name"]="$namespaces"
+	# Default service account if not specified
+	if [ -z "$service_accounts" ]; then
+		service_accounts="$DEFAULT_SERVICE_ACCOUNT"
 	fi
 
-	if [ -n "$service_accounts" ]; then
-		POLICY_SERVICE_ACCOUNTS["$policy_name"]="$service_accounts"
-	else
-		POLICY_SERVICE_ACCOUNTS["$policy_name"]="$DEFAULT_SERVICE_ACCOUNT"
-	fi
-
-	if [ -n "$role" ]; then
-		POLICY_ROLES["$policy_name"]="$role"
-	fi
+	# Store metadata in file format: policy_name|namespaces|service_accounts|role
+	echo "$policy_name|$namespaces|$service_accounts|$role" >> "$METADATA_FILE"
 }
 
 # Loop through all .hcl files and create policies
@@ -90,57 +82,57 @@ for policy_file in "$POLICIES_DIR"/*.hcl; do
 		# Create/update the policy
 		if bao policy write "$policy_name" "$policy_file"; then
 			echo "  ✓ Policy '$policy_name' configured"
-			MANAGED_POLICIES+=("$policy_name")
+			if [ -z "$MANAGED_POLICIES" ]; then
+				MANAGED_POLICIES="$policy_name"
+			else
+				MANAGED_POLICIES="$MANAGED_POLICIES $policy_name"
+			fi
 		else
 			echo "  ✗ Failed to create policy '$policy_name'"
 		fi
 	fi
 done
 
+POLICY_COUNT=$(echo "$MANAGED_POLICIES" | wc -w)
 echo ""
-echo "✓ Created/updated ${#MANAGED_POLICIES[@]} policies"
+echo "✓ Created/updated $POLICY_COUNT policies"
 
 echo ""
 echo "========================================"
 echo "Creating Kubernetes Auth Roles"
 echo "========================================"
 
-MANAGED_ROLES=()
+MANAGED_ROLES=""
+NAMESPACE_POLICIES_FILE="/tmp/namespace_policies.txt"
+> "$NAMESPACE_POLICIES_FILE"
 
 # Build namespace to policies mapping from policy metadata
-declare -A NAMESPACE_TO_POLICIES
-
-for policy_name in "${MANAGED_POLICIES[@]}"; do
-	namespaces="${POLICY_NAMESPACES[$policy_name]:-}"
-
+while IFS='|' read -r policy_name namespaces service_accounts role; do
 	# Skip policies without namespace metadata (like openbao-admin)
 	if [ -z "$namespaces" ]; then
 		continue
 	fi
 
-	# Split namespaces by comma
-	IFS=',' read -ra NS_ARRAY <<<"$namespaces"
-	for namespace in "${NS_ARRAY[@]}"; do
+	# Split namespaces by comma and process each
+	echo "$namespaces" | tr ',' '\n' | while read -r namespace; do
 		# Trim whitespace
 		namespace=$(echo "$namespace" | xargs)
-
+		
 		if [ -n "$namespace" ]; then
-			# Append policy to namespace's policy list
-			if [ -n "${NAMESPACE_TO_POLICIES[$namespace]:-}" ]; then
-				NAMESPACE_TO_POLICIES[$namespace]="${NAMESPACE_TO_POLICIES[$namespace]},$policy_name"
-			else
-				NAMESPACE_TO_POLICIES[$namespace]="$policy_name"
-			fi
+			# Append to namespace policies mapping
+			echo "$namespace|$policy_name" >> "$NAMESPACE_POLICIES_FILE"
 		fi
 	done
-done
+done < "$METADATA_FILE"
 
 # Create roles for each namespace
-for namespace in "${!NAMESPACE_TO_POLICIES[@]}"; do
-	policies="${NAMESPACE_TO_POLICIES[$namespace]}"
+for namespace in $(cut -d'|' -f1 "$NAMESPACE_POLICIES_FILE" | sort -u); do
+	# Collect all policies for this namespace
+	policies=$(grep "^$namespace|" "$NAMESPACE_POLICIES_FILE" | cut -d'|' -f2 | tr '\n' ',' | sed 's/,$//')
+	
 	role_name="$namespace"
 
-	# Use default service account (all policies should use the same SA in our case)
+	# Use default service account
 	service_account="$DEFAULT_SERVICE_ACCOUNT"
 
 	echo "Creating/updating role: $role_name"
@@ -154,7 +146,11 @@ for namespace in "${!NAMESPACE_TO_POLICIES[@]}"; do
 		policies="$policies" \
 		ttl=24h >/dev/null; then
 
-		MANAGED_ROLES+=("$role_name")
+		if [ -z "$MANAGED_ROLES" ]; then
+			MANAGED_ROLES="$role_name"
+		else
+			MANAGED_ROLES="$MANAGED_ROLES $role_name"
+		fi
 		echo "  ✓ Role '$role_name' configured"
 	else
 		echo "  ✗ Failed to create role '$role_name'"
@@ -162,35 +158,35 @@ for namespace in "${!NAMESPACE_TO_POLICIES[@]}"; do
 done
 
 # Handle special roles (like openbao-admin with custom role name and multiple namespaces)
-for policy_name in "${MANAGED_POLICIES[@]}"; do
-	custom_role="${POLICY_ROLES[$policy_name]:-}"
-
+while IFS='|' read -r policy_name namespaces service_accounts custom_role; do
 	if [ -n "$custom_role" ]; then
-		namespaces="${POLICY_NAMESPACES[$policy_name]:-}"
-		service_account="${POLICY_SERVICE_ACCOUNTS[$policy_name]}"
-
 		echo ""
 		echo "Creating/updating special role: $custom_role"
 		echo "  Policy: $policy_name"
 		echo "  Namespaces: $namespaces"
-		echo "  Service Account: $service_account"
+		echo "  Service Account: $service_accounts"
 
 		if bao write auth/kubernetes/role/"$custom_role" \
-			bound_service_account_names="$service_account" \
+			bound_service_account_names="$service_accounts" \
 			bound_service_account_namespaces="$namespaces" \
 			policies="$policy_name" \
 			ttl=1h >/dev/null; then
 
-			MANAGED_ROLES+=("$custom_role")
+			if [ -z "$MANAGED_ROLES" ]; then
+				MANAGED_ROLES="$custom_role"
+			else
+				MANAGED_ROLES="$MANAGED_ROLES $custom_role"
+			fi
 			echo "  ✓ Role '$custom_role' configured"
 		else
 			echo "  ✗ Failed to create role '$custom_role'"
 		fi
 	fi
-done
+done < "$METADATA_FILE"
 
+ROLE_COUNT=$(echo "$MANAGED_ROLES" | wc -w)
 echo ""
-echo "✓ Created/updated ${#MANAGED_ROLES[@]} roles"
+echo "✓ Created/updated $ROLE_COUNT roles"
 
 echo ""
 echo "========================================"
@@ -203,21 +199,21 @@ ALL_POLICIES=$(bao policy list)
 
 for policy in $ALL_POLICIES; do
 	# Skip system policies
-	if [[ "$policy" == "default" || "$policy" == "root" ]]; then
+	if [ "$policy" = "default" ] || [ "$policy" = "root" ]; then
 		continue
 	fi
 
 	# Check if this policy is managed by us
 	is_managed=false
-	for managed in "${MANAGED_POLICIES[@]}"; do
-		if [[ "$policy" == "$managed" ]]; then
+	for managed in $MANAGED_POLICIES; do
+		if [ "$policy" = "$managed" ]; then
 			is_managed=true
 			break
 		fi
 	done
 
 	# Delete if not managed
-	if [[ "$is_managed" == "false" ]]; then
+	if [ "$is_managed" = "false" ]; then
 		echo "  Removing obsolete policy: $policy"
 		bao policy delete "$policy" 2>/dev/null || echo "    (failed to delete, may be in use)"
 	fi
@@ -227,20 +223,20 @@ echo "✓ Policy cleanup complete"
 # Cleanup roles
 echo ""
 echo "Checking for obsolete roles..."
-ALL_ROLES=$(bao list -format=json auth/kubernetes/role 2>/dev/null | jq -r '.[]' 2>/dev/null || echo "")
+ALL_ROLES=$(bao list -format=json auth/kubernetes/role 2>/dev/null | grep -o '"[^"]*"' | tr -d '"' || echo "")
 
 for role in $ALL_ROLES; do
 	# Check if this role is managed by us
 	is_managed=false
-	for managed in "${MANAGED_ROLES[@]}"; do
-		if [[ "$role" == "$managed" ]]; then
+	for managed in $MANAGED_ROLES; do
+		if [ "$role" = "$managed" ]; then
 			is_managed=true
 			break
 		fi
 	done
 
 	# Delete if not managed
-	if [[ "$is_managed" == "false" ]]; then
+	if [ "$is_managed" = "false" ]; then
 		echo "  Removing obsolete role: $role"
 		bao delete "auth/kubernetes/role/$role" 2>/dev/null || echo "    (failed to delete)"
 	fi
@@ -253,26 +249,32 @@ echo "Configuration Summary"
 echo "========================================"
 
 echo ""
-echo "Policies (${#MANAGED_POLICIES[@]}):"
-for policy in "${MANAGED_POLICIES[@]}"; do
+echo "Policies ($POLICY_COUNT):"
+for policy in $MANAGED_POLICIES; do
 	echo "  ✓ $policy"
 done
 
 echo ""
-echo "Namespace Mappings (${#NAMESPACE_TO_POLICIES[@]}):"
-for namespace in "${!NAMESPACE_TO_POLICIES[@]}"; do
-	policies="${NAMESPACE_TO_POLICIES[$namespace]}"
+echo "Namespace Mappings:"
+for namespace in $(cut -d'|' -f1 "$NAMESPACE_POLICIES_FILE" | sort -u); do
+	policies=$(grep "^$namespace|" "$NAMESPACE_POLICIES_FILE" | cut -d'|' -f2 | tr '\n' ',' | sed 's/,$//')
 	echo "  ✓ $namespace → $policies"
 done
 
-if [ ${#POLICY_ROLES[@]} -gt 0 ]; then
+# Show special roles
+SPECIAL_ROLES=$(grep -v '|||$' "$METADATA_FILE" | grep '|[^|]*$' | cut -d'|' -f4 | grep -v '^$' || true)
+if [ -n "$SPECIAL_ROLES" ]; then
 	echo ""
 	echo "Special Roles:"
-	for policy_name in "${!POLICY_ROLES[@]}"; do
-		role="${POLICY_ROLES[$policy_name]}"
-		echo "  ✓ $role (policy: $policy_name)"
-	done
+	while IFS='|' read -r policy_name namespaces service_accounts role; do
+		if [ -n "$role" ]; then
+			echo "  ✓ $role (policy: $policy_name)"
+		fi
+	done < "$METADATA_FILE"
 fi
 
 echo ""
 echo "✓ OpenBao configuration complete!"
+
+# Cleanup temp files
+rm -f "$METADATA_FILE" "$NAMESPACE_POLICIES_FILE"
