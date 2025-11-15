@@ -9,7 +9,8 @@ commonLabels:
   app.kubernetes.io/managed-by: flux
 resources:
   - helmrelease.yaml
-  # - certificate.yaml
+  - serviceaccount.yaml
+  # - certificate.yaml # not used
 configMapGenerator:
   - name: openbao-values
     files:
