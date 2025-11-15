@@ -5,7 +5,7 @@ resources:
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   - ../../cert-manager/flux/system/
   - ../../openebs/flux/system/
-  - ../../openbao/flux/staging/
+  - ../../openbao/flux/system/
   - ../../volsync/flux/system/
   - ../../secret-store-csi-driver/flux/system/
   - ../../csi-driver-rclone/flux/system/
