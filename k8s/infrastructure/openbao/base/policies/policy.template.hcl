@@ -7,7 +7,6 @@
 #
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: staging,production
-# KUBERNETES_ROLE: optional-custom-role-name
 # KUBERNETES_SERVICE_ACCOUNT: optional-custom-service-account
 
 # Example: Read access to application secrets

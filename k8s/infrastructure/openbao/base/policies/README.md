@@ -9,7 +9,6 @@ Add these comment lines at the top of your `.hcl` policy file:
 ```hcl
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: staging,production
-# KUBERNETES_ROLE: custom-role-name
 # KUBERNETES_SERVICE_ACCOUNT: custom-sa-name
 ```
 
@@ -20,9 +19,6 @@ Add these comment lines at the top of your `.hcl` policy file:
 
 - **`KUBERNETES_NAMESPACES`** (required if using kubernetes access): Comma-separated list of K8s namespaces that can use this policy, or `*` for all namespaces.
   - Example: `staging,production` or `*`
-
-- **`KUBERNETES_ROLE`** (optional): Custom role name. If omitted, uses namespace name for regular policies, or policy name for wildcard (`*`) policies.
-  - Example: `my-admin-role`
 
 - **`KUBERNETES_SERVICE_ACCOUNT`** (optional): K8s service account name. Default: `vault-secrets-operator-controller-manager`
   - Example: `my-service-account`
@@ -48,17 +44,6 @@ Creates one Kubernetes role: `apps-kv-staging` bound to namespaces `staging` and
 ```
 
 Creates one Kubernetes role: `infra-kv-all` bound to all namespaces (`*`)
-
-**Custom role name:**
-
-```hcl
-# Policy file: openbao-admin.hcl
-# OPENBAO_ACCESS: kubernetes
-# KUBERNETES_NAMESPACES: *
-# KUBERNETES_ROLE: admin
-```
-
-Creates one Kubernetes role: `admin` (overrides the default `openbao-admin`)
 
 **No access configuration:**
 

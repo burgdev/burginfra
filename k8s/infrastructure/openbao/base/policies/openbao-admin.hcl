@@ -5,7 +5,6 @@
 #
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: *
-# KUBERNETES_ROLE: openbao-admin
 # KUBERNETES_SERVICE_ACCOUNT: openbao-config-manager
 
 # Allow managing policies
@@ -32,4 +31,5 @@ path "auth/kubernetes/config" {
 path "sys/auth" {
   capabilities = ["read"]
 }
+
 

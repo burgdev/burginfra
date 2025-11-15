@@ -56,7 +56,6 @@ extract_metadata() {
 
 	# Extract Kubernetes-specific metadata (new format)
 	local k8s_namespaces=$(grep "^# KUBERNETES_NAMESPACES:" "$file" | sed 's/^# KUBERNETES_NAMESPACES: *//' | tr -d '\r' || true)
-	local k8s_role=$(grep "^# KUBERNETES_ROLE:" "$file" | sed 's/^# KUBERNETES_ROLE: *//' | tr -d '\r' || true)
 	local k8s_service_account=$(grep "^# KUBERNETES_SERVICE_ACCOUNT:" "$file" | sed 's/^# KUBERNETES_SERVICE_ACCOUNT: *//' | tr -d '\r' || true)
 
 	# Backward compatibility: Check for old format
@@ -64,7 +63,6 @@ extract_metadata() {
 		# Try old format
 		k8s_namespaces=$(grep "^# OPENBAO_NAMESPACES:" "$file" | sed 's/^# OPENBAO_NAMESPACES: *//' | tr -d '\r' || true)
 		k8s_service_account=$(grep "^# OPENBAO_SERVICE_ACCOUNTS:" "$file" | sed 's/^# OPENBAO_SERVICE_ACCOUNTS: *//' | tr -d '\r' || true)
-		k8s_role=$(grep "^# OPENBAO_ROLE:" "$file" | sed 's/^# OPENBAO_ROLE: *//' | tr -d '\r' || true)
 		
 		# If we found old format metadata, set access to kubernetes
 		if [ -n "$k8s_namespaces" ]; then
@@ -77,8 +75,8 @@ extract_metadata() {
 		k8s_service_account="$DEFAULT_SERVICE_ACCOUNT"
 	fi
 
-	# Store metadata in file format: policy_name|access_methods|k8s_namespaces|k8s_service_account|k8s_role
-	printf '%s|%s|%s|%s|%s\n' "$policy_name" "$access_methods" "$k8s_namespaces" "$k8s_service_account" "$k8s_role" >> "$METADATA_FILE"
+	# Store metadata in file format: policy_name|access_methods|k8s_namespaces|k8s_service_account
+	printf '%s|%s|%s|%s\n' "$policy_name" "$access_methods" "$k8s_namespaces" "$k8s_service_account" >> "$METADATA_FILE"
 }
 
 # Loop through all .hcl files and create policies
@@ -126,8 +124,8 @@ echo ""
 
 MANAGED_ROLES=""
 
-# Create roles for each policy (not custom roles or wildcards)
-while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account k8s_role; do
+# Create roles for each policy
+while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account; do
 	# Skip if kubernetes is not in access methods
 	if [ -z "$access_methods" ] || ! printf '%s' "$access_methods" | grep -q "kubernetes"; then
 		continue
@@ -135,11 +133,6 @@ while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_acco
 	
 	# Skip policies without namespace metadata
 	if [ -z "$k8s_namespaces" ]; then
-		continue
-	fi
-	
-	# Skip policies with wildcard or custom role (handled separately)
-	if [ "$k8s_namespaces" = "*" ] || [ -n "$k8s_role" ]; then
 		continue
 	fi
 
@@ -165,51 +158,6 @@ while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_acco
 		echo "  ✓ Role '$role_name' configured"
 	else
 		echo "  ✗ Failed to create role '$role_name'"
-	fi
-done < "$METADATA_FILE"
-
-# Handle wildcard namespace policies and custom roles
-while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account k8s_role; do
-	# Skip if kubernetes is not in access methods
-	if [ -z "$access_methods" ] || ! printf '%s' "$access_methods" | grep -q "kubernetes"; then
-		continue
-	fi
-	
-	# Skip if no namespaces specified
-	if [ -z "$k8s_namespaces" ]; then
-		continue
-	fi
-	
-	# Process wildcard namespaces or custom role
-	if [ "$k8s_namespaces" = "*" ] || [ -n "$k8s_role" ]; then
-		# Use custom role name if specified, otherwise use policy name for wildcards
-		if [ -n "$k8s_role" ]; then
-			role_to_create="$k8s_role"
-		else
-			role_to_create="$policy_name"
-		fi
-
-		echo ""
-		echo "Creating/updating role: $role_to_create"
-		echo "  Policy: $policy_name"
-		echo "  Namespaces: $k8s_namespaces"
-		echo "  Service Account: $k8s_service_account"
-
-		if bao write auth/kubernetes/role/"$role_to_create" \
-			bound_service_account_names="$k8s_service_account" \
-			bound_service_account_namespaces="$k8s_namespaces" \
-			policies="$policy_name" \
-			ttl=1h >/dev/null; then
-
-			if [ -z "$MANAGED_ROLES" ]; then
-				MANAGED_ROLES="$role_to_create"
-			else
-				MANAGED_ROLES="$MANAGED_ROLES $role_to_create"
-			fi
-			echo "  ✓ Role '$role_to_create' configured"
-		else
-			echo "  ✗ Failed to create role '$role_to_create'"
-		fi
 	fi
 done < "$METADATA_FILE"
 
@@ -317,7 +265,7 @@ done
 
 echo ""
 echo "Kubernetes Roles ($ROLE_COUNT):"
-while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account k8s_role; do
+while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_account; do
 	# Skip if kubernetes is not in access methods
 	if [ -z "$access_methods" ] || ! printf '%s' "$access_methods" | grep -q "kubernetes"; then
 		continue
@@ -328,16 +276,7 @@ while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_acco
 		continue
 	fi
 	
-	# Determine role name
-	if [ -n "$k8s_role" ]; then
-		role_display="$k8s_role"
-	elif [ "$k8s_namespaces" = "*" ]; then
-		role_display="$policy_name"
-	else
-		role_display="$policy_name"
-	fi
-	
-	echo "  ✓ $role_display → policy: $policy_name, namespaces: $k8s_namespaces"
+	echo "  ✓ $policy_name → namespaces: $k8s_namespaces"
 done < "$METADATA_FILE"
 
 echo ""
