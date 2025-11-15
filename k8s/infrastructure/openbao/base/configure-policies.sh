@@ -246,6 +246,7 @@ echo "========================================"
 # Cleanup policies
 echo "Checking for obsolete policies..."
 ALL_POLICIES=$(bao policy list)
+DELETED_POLICIES=""
 
 for policy in $ALL_POLICIES; do
 	# Skip system policies
@@ -264,16 +265,32 @@ for policy in $ALL_POLICIES; do
 
 	# Delete if not managed
 	if [ "$is_managed" = "false" ]; then
-		echo "  Removing obsolete policy: $policy"
-		bao delete "sys/policy/$policy" 2>/dev/null || echo "    (failed to delete, may be in use)"
+		echo "  Deleting unmanaged policy: $policy"
+		if bao policy delete "$policy" 2>&1; then
+			if [ -z "$DELETED_POLICIES" ]; then
+				DELETED_POLICIES="$policy"
+			else
+				DELETED_POLICIES="$DELETED_POLICIES $policy"
+			fi
+			echo "    ✓ Deleted"
+		else
+			echo "    ✗ Failed to delete"
+		fi
 	fi
 done
-echo "✓ Policy cleanup complete"
+
+DELETED_POLICY_COUNT=$(echo "$DELETED_POLICIES" | wc -w)
+if [ "$DELETED_POLICY_COUNT" -gt 0 ]; then
+	echo "✓ Deleted $DELETED_POLICY_COUNT unmanaged policies: $DELETED_POLICIES"
+else
+	echo "✓ No obsolete policies to clean up"
+fi
 
 # Cleanup Kubernetes roles
 echo ""
 echo "Checking for obsolete Kubernetes roles..."
 ALL_ROLES=$(bao list -format=json auth/kubernetes/role 2>/dev/null | grep -o '"[^"]*"' | tr -d '"' || echo "")
+DELETED_ROLES=""
 
 for role in $ALL_ROLES; do
 	# Check if this role is managed by us
@@ -287,11 +304,26 @@ for role in $ALL_ROLES; do
 
 	# Delete if not managed
 	if [ "$is_managed" = "false" ]; then
-		echo "  Removing obsolete role: $role"
-		bao delete "auth/kubernetes/role/$role" 2>/dev/null || echo "    (failed to delete)"
+		echo "  Deleting unmanaged role: $role"
+		if bao delete "auth/kubernetes/role/$role" 2>&1; then
+			if [ -z "$DELETED_ROLES" ]; then
+				DELETED_ROLES="$role"
+			else
+				DELETED_ROLES="$DELETED_ROLES $role"
+			fi
+			echo "    ✓ Deleted"
+		else
+			echo "    ✗ Failed to delete"
+		fi
 	fi
 done
-echo "✓ Role cleanup complete"
+
+DELETED_ROLE_COUNT=$(echo "$DELETED_ROLES" | wc -w)
+if [ "$DELETED_ROLE_COUNT" -gt 0 ]; then
+	echo "✓ Deleted $DELETED_ROLE_COUNT unmanaged roles: $DELETED_ROLES"
+else
+	echo "✓ No obsolete roles to clean up"
+fi
 
 echo ""
 echo "========================================"
