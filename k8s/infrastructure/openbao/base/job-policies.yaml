@@ -17,7 +17,7 @@ spec:
           command: ["/bin/bash", "/scripts/configure-policies.sh"]
           env:
             - name: OPENBAO_ADDR
-              value: "http://openbao.${NAMEPACE}.svc.cluster.local:8200"
+              value: "http://openbao.${NAMESPACE}.svc.cluster.local:8200"
           volumeMounts:
             - name: config-script
               mountPath: /scripts
