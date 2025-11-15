@@ -20,4 +20,4 @@ spec:
   kubernetes:
     role: default
     serviceAccount: vault-secrets-operator-controller-manager
-    vaultConnectionRef: openbao-staging
+  vaultConnectionRef: openbao-staging
