@@ -2,7 +2,8 @@
 #
 # !! make sure it is added to 'kustomization.yaml' !!
 #
-# OPENBAO_NAMESPACES: *
+# OPENBAO_ACCESS: kubernetes
+# KUBERNETES_NAMESPACES: *
 
 path "kv/data/infrastructure/*" {
   capabilities = ["read", "list"]

@@ -3,9 +3,10 @@
 #
 # !! make sure it is added to 'kustomization.yaml' !!
 #
-# OPENBAO_NAMESPACES: *
-# OPENBAO_ROLE: openbao-admin
-# OPENBAO_SERVICE_ACCOUNTS: openbao-config-manager
+# OPENBAO_ACCESS: kubernetes
+# KUBERNETES_NAMESPACES: *
+# KUBERNETES_ROLE: openbao-admin
+# KUBERNETES_SERVICE_ACCOUNT: openbao-config-manager
 
 # Allow managing policies
 path "sys/policies/acl/*" {
@@ -31,3 +32,4 @@ path "auth/kubernetes/config" {
 path "sys/auth" {
   capabilities = ["read"]
 }
+
