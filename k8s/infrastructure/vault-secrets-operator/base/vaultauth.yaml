@@ -17,7 +17,7 @@ metadata:
 spec:
   method: kubernetes
   mount: kubernetes
+  vaultConnectionRef: openbao-staging
   kubernetes:
     role: default
     serviceAccount: vault-secrets-operator-controller-manager
-  vaultConnectionRef: openbao-staging
