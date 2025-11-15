@@ -4,6 +4,18 @@
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultAuth
 metadata:
+  name: openbao-admin
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: openbao-admin
+    serviceAccount: openbao-config-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
   name: apps-kv-staging
 spec:
   method: kubernetes
