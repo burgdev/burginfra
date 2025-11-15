@@ -1,0 +1,15 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: openbao-system
+spec:
+  address: http://openbao.burginfra-system.svc.cluster.local:8200
+  skipTLSVerify: true
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: openbao-staging
+spec:
+  address: http://openbao.burginfra-staging.svc.cluster.local:8200
+  skipTLSVerify: true

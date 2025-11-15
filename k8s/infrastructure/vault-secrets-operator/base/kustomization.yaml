@@ -7,4 +7,6 @@ commonLabels:
   app.kubernetes.io/part-of: infrastructure
   app.kubernetes.io/environment: ${ENVIRONMENT}
   app.kubernetes.io/managed-by: flux
-resources: []
+resources:
+  - vaultconnection.yaml
+  - vaultauth.yaml

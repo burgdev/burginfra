@@ -1,0 +1,23 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: default
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: default
+    serviceAccount: vault-secrets-operator-controller-manager
+    vaultConnectionRef: openbao-system
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: staging
+spec:
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: default
+    serviceAccount: vault-secrets-operator-controller-manager
+    vaultConnectionRef: openbao-staging

@@ -39,6 +39,35 @@ bao operator init -recovery-shares=1 -recovery-threshold=1
 <<< @/../k8s/infrastructure/openbao/overlays/staging/ingress.yaml{yaml} [overlays/staging/ingress.yaml (STAGING)]
 :::
 
+## Vault Secrets Operator
+
+The [vault secrets operator](https://developer.hashicorp.com/vault/docs/deploy/kubernetes/vso) (VSO) allows Pods
+to consume Vault secrets natively from Kubernetes Secrets.
+
+::: info
+There is a [openbao secrets opertor](https://github.com/openbao/openbao-secrets-operator) (BSO), which at the moment does
+not give any more features and is not really maintained.
+:::
+
+```bash
+# open shell to openbao pod
+kubectl exec -n burginfra-system -it openbao-0 -- sh
+
+bao login ROOT_TOKEN # use the root token created above
+bao auth enable kubernetes # enable kubernetes auth
+
+bao write auth/kubernetes/config \
+  token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+  kubernetes_host="https://kubernetes.default.svc:443" \
+  kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+bao write auth/kubernetes/role/default \
+  bound_service_account_names=vault-secrets-operator-controller-manager \
+  bound_service_account_namespaces=burginfra-system \
+  policies=vso-read \
+  ttl=24h
+```
+
 ## Resources
 
 * Unseal: <https://openbao.org/docs/configuration/seal/static/>
