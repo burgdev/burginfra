@@ -18,8 +18,8 @@ echo "SA_TOKEN: $SA_TOKEN"
 if ! BAO_TOKEN=$(bao write -field=token auth/kubernetes/login role=openbao-admin jwt="$SA_TOKEN" 2>&1); then
 	echo "ERROR: Failed to authenticate to OpenBao"
 	echo "$BAO_TOKEN"
-	echo "Sleep for 5min"
-	sleep 300
+	echo "Sleep for 10min"
+	sleep 600
 	exit 1
 fi
 
