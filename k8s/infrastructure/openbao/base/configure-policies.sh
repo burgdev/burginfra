@@ -13,6 +13,8 @@ echo ""
 echo "==> Authenticating to OpenBao using Kubernetes auth..."
 SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
+echo "SA_TOKEN: $SA_TOKEN"
+
 if ! BAO_TOKEN=$(bao write -field=token auth/kubernetes/login role=openbao-admin jwt="$SA_TOKEN" 2>&1); then
 	echo "ERROR: Failed to authenticate to OpenBao"
 	echo "$BAO_TOKEN"
@@ -44,7 +46,7 @@ DEFAULT_SERVICE_ACCOUNT="vault-secrets-operator-controller-manager"
 
 # Temporary files to store policy metadata
 METADATA_FILE="/tmp/policy_metadata.txt"
-> "$METADATA_FILE"
+>"$METADATA_FILE"
 
 # Function to extract metadata from policy file
 extract_metadata() {
@@ -63,7 +65,7 @@ extract_metadata() {
 		# Try old format
 		k8s_namespaces=$(grep "^# OPENBAO_NAMESPACES:" "$file" | sed 's/^# OPENBAO_NAMESPACES: *//' | tr -d '\r' || true)
 		k8s_service_account=$(grep "^# OPENBAO_SERVICE_ACCOUNTS:" "$file" | sed 's/^# OPENBAO_SERVICE_ACCOUNTS: *//' | tr -d '\r' || true)
-		
+
 		# If we found old format metadata, set access to kubernetes
 		if [ -n "$k8s_namespaces" ]; then
 			access_methods="kubernetes"
@@ -76,14 +78,14 @@ extract_metadata() {
 	fi
 
 	# Store metadata in file format: policy_name|access_methods|k8s_namespaces|k8s_service_account
-	printf '%s|%s|%s|%s\n' "$policy_name" "$access_methods" "$k8s_namespaces" "$k8s_service_account" >> "$METADATA_FILE"
+	printf '%s|%s|%s|%s\n' "$policy_name" "$access_methods" "$k8s_namespaces" "$k8s_service_account" >>"$METADATA_FILE"
 }
 
 # Loop through all .hcl files and create policies
 for policy_file in "$POLICIES_DIR"/*.hcl; do
 	if [ -f "$policy_file" ]; then
 		policy_name=$(basename "$policy_file" .hcl)
-		
+
 		# Skip template file
 		if [ "$policy_name" = "policy.template" ]; then
 			continue
@@ -130,7 +132,7 @@ while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_acco
 	if [ -z "$access_methods" ] || ! printf '%s' "$access_methods" | grep -q "kubernetes"; then
 		continue
 	fi
-	
+
 	# Skip policies without namespace metadata
 	if [ -z "$k8s_namespaces" ]; then
 		continue
@@ -159,7 +161,7 @@ while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_acco
 	else
 		echo "  ✗ Failed to create role '$role_name'"
 	fi
-done < "$METADATA_FILE"
+done <"$METADATA_FILE"
 
 ROLE_COUNT=$(echo "$MANAGED_ROLES" | wc -w)
 echo ""
@@ -270,14 +272,14 @@ while IFS='|' read -r policy_name access_methods k8s_namespaces k8s_service_acco
 	if [ -z "$access_methods" ] || ! printf '%s' "$access_methods" | grep -q "kubernetes"; then
 		continue
 	fi
-	
+
 	# Skip if no namespaces
 	if [ -z "$k8s_namespaces" ]; then
 		continue
 	fi
-	
+
 	echo "  ✓ $policy_name → namespaces: $k8s_namespaces"
-done < "$METADATA_FILE"
+done <"$METADATA_FILE"
 
 echo ""
 echo "✓ OpenBao configuration complete!"
