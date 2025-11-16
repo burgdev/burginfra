@@ -265,7 +265,7 @@ if [ "$NEWLY_INITIALIZED" = "true" ]; then
 fi
 EOFSCRIPT
 
-POLICY_FILE="$SCRIPT_DIR/base/openbao-admin.hcl"
+POLICY_FILE="$SCRIPT_DIR/base/policies/openbao-admin.hcl"
 if [ ! -f "$POLICY_FILE" ]; then
 	echo "ERROR: Policy file not found: $POLICY_FILE"
 	exit 1
