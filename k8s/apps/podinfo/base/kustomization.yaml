@@ -12,7 +12,9 @@ resources:
   - pvc_local_media.yaml
   - pvc_kdrive_data.yaml
   - pvc_kdrive_media.yaml
+  - secrets.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
   - backup.yaml
+
