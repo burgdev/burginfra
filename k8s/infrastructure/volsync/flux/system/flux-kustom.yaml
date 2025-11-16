@@ -42,6 +42,6 @@ spec:
   postBuild:
     substitute:
       NAME: "volsync"
-      NAMESPACE: "burginfra-stystem
+      NAMESPACE: "burginfra-system"
       COMPONENT: "backup"
       ENVIRONMENT: "system"
