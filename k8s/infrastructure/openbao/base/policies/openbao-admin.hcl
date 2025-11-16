@@ -7,7 +7,12 @@
 # KUBERNETES_NAMESPACES: *
 # KUBERNETES_SERVICE_ACCOUNT: openbao-config-manager
 
-# Allow managing policies
+# Allow listing all policies
+path "sys/policies/acl" {
+  capabilities = ["list"]
+}
+
+# Allow managing individual policies
 path "sys/policies/acl/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
@@ -17,7 +22,12 @@ path "sys/auth/*" {
   capabilities = ["create", "read", "update", "delete", "sudo"]
 }
 
-# Allow managing kubernetes auth roles
+# Allow listing all kubernetes auth roles
+path "auth/kubernetes/role" {
+  capabilities = ["list"]
+}
+
+# Allow managing individual kubernetes auth roles
 path "auth/kubernetes/role/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }

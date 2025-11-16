@@ -10,6 +10,7 @@ commonLabels:
 resources:
   - helmrelease.yaml
   - serviceaccount.yaml
+  - rbac.yaml
   - job-policies.yaml
   # - certificate.yaml # not used
 secretGenerator: # use secret, this way variables are not replaced
