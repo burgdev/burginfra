@@ -227,18 +227,8 @@ echo "✓ Kubernetes auth configured"
 echo ""
 echo "==> Creating openbao-admin policy..."
 
-# Read the policy from the policies directory
-POLICY_FILE="$SCRIPT_DIR/base/policies/openbao-admin.hcl"
-
-if [ ! -f "$POLICY_FILE" ]; then
-    echo "ERROR: Policy file not found: $POLICY_FILE"
-    exit 1
-fi
-
-# Copy policy file to pod and apply it
-kubectl cp "$POLICY_FILE" "$NAMESPACE/$OPENBAO_POD:/tmp/openbao-admin.hcl" >/dev/null 2>&1
+# Write the admin policy
 bao policy write openbao-admin /tmp/openbao-admin.hcl
-kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/openbao-admin.hcl >/dev/null 2>&1 || true
 
 echo "✓ openbao-admin policy created"
 
@@ -275,6 +265,12 @@ if [ "$NEWLY_INITIALIZED" = "true" ]; then
 fi
 EOFSCRIPT
 
+POLICY_FILE="$SCRIPT_DIR/base/openbao-admin.hcl"
+if [ ! -f "$POLICY_FILE" ]; then
+	echo "ERROR: Policy file not found: $POLICY_FILE"
+	exit 1
+fi
+kubectl cp "$POLICY_FILE" "$NAMESPACE/$OPENBAO_POD:/tmp/openbao-admin.hcl" >/dev/null 2>&1
 info "Executing configuration in OpenBao pod..."
 echo ""
 
@@ -341,6 +337,8 @@ if kubectl cp "$TEMP_SCRIPT" "$NAMESPACE/$OPENBAO_POD:/tmp/bootstrap.sh" >/dev/n
 		kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- sh /tmp/bootstrap.sh "$NAMESPACE" "$SERVICE_ACCOUNT" "$ADMIN_NAMESPACES" "$RECOVERY_SHARES" "$RECOVERY_THRESHOLD"
 	fi
 	EXIT_CODE=$?
+
+	kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/openbao-admin.hcl >/dev/null 2>&1 || true
 
 	# If newly initialized, capture the credentials
 	if kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- test -f /tmp/bao-init-output.txt 2>/dev/null; then
