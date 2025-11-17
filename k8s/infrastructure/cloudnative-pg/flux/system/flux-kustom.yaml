@@ -6,7 +6,9 @@ metadata:
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/cloudnative-pg/helm/system"
-  prune: true
+  prune: false
+  dependsOn:
+    - name: infra-openebs-system
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra

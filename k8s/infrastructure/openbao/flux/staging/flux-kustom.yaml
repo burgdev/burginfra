@@ -5,8 +5,6 @@ kind: Kustomization
 metadata:
   name: infra-openbao-staging
   namespace: flux-system # do not change!
-#dependsOn:
-#- name: base-configs  # optional, only if you have one
 spec:
   interval: 1h0s
   path: "./k8s/infrastructure/openbao/overlays/staging"

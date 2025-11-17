@@ -8,7 +8,9 @@ metadata:
 spec:
   interval: 3h0s
   path: "./k8s/infrastructure/openbao/overlays/system"
-  prune: true
+  prune: false
+  dependsOn:
+    - name: infra-openebs-system
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
