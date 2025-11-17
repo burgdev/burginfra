@@ -1,4 +1,5 @@
 # OpenBao Admin Policy
+# MANAGED BY GITOPS, DO NOT CHANGE MANUALLY!
 # Used by configuration jobs to manage OpenBao
 #
 # !! make sure it is added to 'kustomization.yaml' !!

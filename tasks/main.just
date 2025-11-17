@@ -4,6 +4,8 @@ import 'core.just'
 mod check
 # 🌊 Run flux commands
 mod flux
+# 🔐 Run openbao commands (init, restore)
+mod bao
 # 🗃️ Run volsync commands (backup, restore, ...)
 mod volsync
 # 📚 Documentation tasks (build, serve, ...)

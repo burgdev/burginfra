@@ -8,9 +8,29 @@ aside: false
 [Openbao](https://openbao.org/) is a secure, distributed, and open source key-value store,
 forked from [Hashicorp Vault](https://vaultproject.io/).
 
-## Initialization
+## Initialization or Restore
 
-After the first start the "vault" needs to be [initialized](https://openbao.org/docs/configuration/self-init/).
+After the first start the "vault" needs to be [initialized](https://openbao.org/docs/configuration/self-init/) or
+restored (if backup available)
+
+::: tip
+Both scripts are interacitve and you need the required credentials (usually saved in bitwarden)
+:::
+
+:::code-group
+
+```bash:no-line-numbers [Initialization]
+just bao init
+```
+
+```bash:no-line-numbers [Restore]
+just bao restore
+```
+
+:::
+
+::: details Initialization commands
+The script runs basically this commands (and some more to create policies and kubernetes access):
 
 ```bash
 # open a shell to openbao-0
@@ -18,6 +38,10 @@ kubectl exec -n burginfra-system -it openbao-0 -- sh
 bao operator init -recovery-shares=1 -recovery-threshold=1
 # without auto file based unseal: -key-shares=1 -key-threshold=1
 ```
+
+::: details :memo: Initialization [source code](https://github.com/burgdev/burginfra/tree/main/k8s/infrastructure/openbao/init-openbao)
+<<< @/../k8s/infrastructure/openbao/init-openbao{bash} [init-openbao (source code)]
+:::
 
 ## Setup
 
@@ -30,7 +54,7 @@ bao operator init -recovery-shares=1 -recovery-threshold=1
 ::: details :package: Helm Installation
 ::: code-group
 <<< @/../k8s/infrastructure/openbao/base/values.yaml{yaml} [base/values.yaml]
-<<< @/../k8s/infrastructure/openbao/base/helmrelease.yaml{yaml} [ase/helmrelease.yaml]
+<<< @/../k8s/infrastructure/openbao/base/helmrelease.yaml{yaml} [base/helmrelease.yaml]
 :::
 
 ::: details :globe_with_meridians: Ingress
@@ -45,33 +69,46 @@ The [vault secrets operator](https://developer.hashicorp.com/vault/docs/deploy/k
 to consume Vault secrets natively from Kubernetes Secrets.
 
 ::: info
-There is a [openbao secrets opertor](https://github.com/openbao/openbao-secrets-operator) (BSO), which at the moment does
+There is a [openbao secrets operator](https://github.com/openbao/openbao-secrets-operator) (BSO), which at the moment does
 not give any more features and is not really maintained.
 :::
 
-```bash
-# open shell to openbao pod
-kubectl exec -n burginfra-system -it openbao-0 -- sh
+The initialization script prepares the openbao pod to be able to use the VSO.
+rll policies are stored under `k8s/infrastructure/openbao/base/policies/` and `VaultAuth` resources
+under `k8s/infrastructure/vault-secrets-operators/base/vaultauth.yaml`.
 
-bao login ROOT_TOKEN # use the root token created above
-bao auth enable kubernetes # enable kubernetes auth
+::: warning Do not manually update the policies in openbao!
+The policies are synced with the one defined in the repository, every manual change is reverted every few hours.
+:::
 
-bao write auth/kubernetes/config \
-  token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-  kubernetes_host="https://kubernetes.default.svc:443" \
-  kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+::: details Openbao apps policies
+::: code-group
+<<< @/../k8s/infrastructure/openbao/base/policies/apps-kv-all.hcl{hcl} [apps-kv-all.hcl]
+<<< @/../k8s/infrastructure/openbao/base/policies/apps-kv-staging.hcl{hcl} [apps-kv-staging.hcl]
+<<< @/../k8s/infrastructure/openbao/base/policies/apps-kv-production.hcl{hcl} [apps-kv-production.hcl]
+:::
+::: details Openbao infra policies
+::: code-group
+<<< @/../k8s/infrastructure/openbao/base/policies/infra-kv-all.hcl{hcl} [infra-kv-all.hcl]
+<<< @/../k8s/infrastructure/openbao/base/policies/infra-kv-staging.hcl{hcl} [infra-kv-staging.hcl]
+<<< @/../k8s/infrastructure/openbao/base/policies/infra-kv-system.hcl{hcl} [infra-kv-system.hcl]
+<<< @/../k8s/infrastructure/openbao/base/policies/openbao-admin.hcl{hcl} [openbao-admin.hcl]
+:::
 
-bao write auth/kubernetes/role/default \
-  bound_service_account_names=vault-secrets-operator-controller-manager \
-  bound_service_account_namespaces=burginfra-system \
-  policies=vso-read \
-  ttl=24h
-```
+The `VaultAuth` resources have the same name as the policies.
+::: details `VaultAuth` resources
+<<< @/../k8s/infrastructure/vault-secrets-operator/base/vaultauth.yaml{yaml} [vaultauth.yaml]
+:::
+
+Example:
+
+<<< @/../k8s/apps/podinfo/base/secrets.yaml{yaml} [vaultauth.yaml]
 
 ## Resources
 
 * Unseal: <https://openbao.org/docs/configuration/seal/static/>
 * Self-init: <https://openbao.org/docs/configuration/self-init/>
+* Bank-vaults: <https://bank-vaults.dev/> (manage vault or openbao in kubernetes)
 
 ### Installation
 

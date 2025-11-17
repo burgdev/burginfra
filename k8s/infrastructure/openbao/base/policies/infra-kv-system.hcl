@@ -1,4 +1,5 @@
 # Infrastructure Secrets - System Environment Only
+# MANAGED BY GITOPS, DO NOT CHANGE MANUALLY!
 #
 # !! make sure it is added to 'kustomization.yaml' !!
 #

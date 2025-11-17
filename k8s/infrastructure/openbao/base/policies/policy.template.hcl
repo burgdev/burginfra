@@ -1,4 +1,5 @@
 # OpenBao Policy Template
+# MANAGED BY GITOPS, DO NOT CHANGE MANUALLY!
 #
 # Copy this file to create a new policy, then customize the paths and metadata.
 # See README.md for detailed documentation.
