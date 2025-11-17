@@ -4,12 +4,13 @@ metadata:
   name: podinfo-data # 'username' for kopia
 spec:
   trigger:
-    schedule: "*/5 * * * *" # every 5 minutes
+    schedule: "0 */2 * * *" # every 2 hours
   kopia:
     # Overwrite Retention Policy
     retain:
-      hourly: 24
-      daily: 2
-      weekly: 2
-      monthly: 1
+      hourly: 10
+      daily: 1
+      weekly: 1
+      monthly: 0
       yearly: 0
+

@@ -3,10 +3,6 @@ kind: Kustomization
 resources:
   - ../../base
 patches:
-  - path: ingress_patch.yaml
-    target:
-      kind: Ingress
-      name: podinfo
   - path: backup_patch.yaml
     target:
       kind: ReplicationSource

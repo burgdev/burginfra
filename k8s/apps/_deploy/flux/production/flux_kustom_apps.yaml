@@ -1,27 +1,24 @@
 # this is used by flux, do not include in any app kustomization.yaml file!
-# TODO: add to k8s/flux/*/kustomization.yaml 
+# TODO: add to k8s/flux/*/kustomization.yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: app-podinfo-dev
+  name: apps-sync-all-production
   namespace: flux-system # do not change!
 spec:
   interval: 5s
-  path: "./k8s/apps/podinfo-image/overlays/dev"
+  path: "./k8s/apps/_deploy/production"
   prune: true
   dependsOn:
-    - name: infra-csi-driver-rclone-local
-    - name: infra-openebs-local
+    - name: infra-csi-driver-rclone-system
+    - name: infra-openebs-system
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
   postBuild:
     substitute:
-      NAME: "podinfo"
-      NAMESPACE: "development"
-      ENVIRONMENT: "dev"
-      CLUSTER: "local"
+      NAMESPACE: "production"
+      ENVIRONMENT: "prod"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
-        name: podinfo-config-vars
-        optional: true
+        name: cluster-settings

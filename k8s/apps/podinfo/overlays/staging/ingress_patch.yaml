@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: podinfo
+spec:
+  rules:
+    - host: podinfo.staging.${BURGINFRA_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: podinfo
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - podinfo.staging.${BURGINFRA_HOST}
