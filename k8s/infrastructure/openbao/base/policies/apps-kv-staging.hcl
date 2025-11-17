@@ -6,10 +6,10 @@
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: staging
 
-path "kv/data/apps/*/staging" {
+path "kv/data/apps/+/staging" {
   capabilities = ["read", "list"]
 }
 
-path "kv/metadata/apps/*/staging" {
+path "kv/metadata/apps/+/staging" {
   capabilities = ["read", "list"]
 }
