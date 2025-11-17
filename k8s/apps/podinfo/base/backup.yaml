@@ -1,11 +1,11 @@
-# docu from fork: https://perfectra1n.github.io/volsync/usage/kopia/index.html#
+# docu from fork: https://perfectra1n.github.io/volsync/usage/kopia/index.html
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
   name: ${CLUSTER}-podinfo-data # 'username' for kopia
   namespace: ${NAMESPACE}
 spec:
-  sourcePVC: fast-data-pvc-v1
+  sourcePVC: podinfo-fast-data-pvc-v1
   trigger:
     schedule: "*/10 * * * *" # every 2 minutes
     #manual: backup-01

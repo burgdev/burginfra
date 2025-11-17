@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: fast-data-pvc-v1 # update deployment.yaml
+  name: podinfo-fast-data-pvc-v1 # update deployment.yaml
 spec:
   accessModes:
     - ReadWriteOnce
@@ -9,3 +9,4 @@ spec:
   resources:
     requests:
       storage: 50Mi
+

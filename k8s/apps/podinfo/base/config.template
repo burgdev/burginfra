@@ -1,0 +1,5 @@
+# Values are defined in openbao and synced to 'podinfo-config-secrets'. See secrets.yaml!
+# This is just for reference:
+PODINFO_UI_COLOR="#34577c"
+PODINFO_UI_LOGO="https://burgdev.ch/index_logo_tmp.png"
+

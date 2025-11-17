@@ -1,7 +1,7 @@
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
-  name: podinfo-data # 'username' for kopia
+  name: ${CLUSTER}-podinfo-data # 'username' for kopia
 spec:
   trigger:
     schedule: "0 */2 * * *" # every 2 hours
