@@ -10,3 +10,4 @@ resources:
   - ../../secret-store-csi-driver/flux/system/
   - ../../csi-driver-rclone/flux/system/
   - ../../vault-secrets-operator/flux/system/
+  - ../../reloader/flux/system/
