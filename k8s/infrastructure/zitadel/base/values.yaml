@@ -1,0 +1,85 @@
+# Zitadel Helm Chart Values
+# https://github.com/zitadel/zitadel-charts
+zitadel:
+  # masterkey is provided via envVarsSecret from OpenBao
+  masterkeySecretName: zitadel-config-secret
+  
+  configmapConfig:
+    ExternalDomain: iam.staging.${BURGDEV_HOST}
+    ExternalPort: 443
+    ExternalSecure: true
+    
+    TLS:
+      Enabled: false  # TLS termination handled by Traefik
+    
+    Database:
+      Postgres:
+        Host: zitadel-postgresql
+        Port: 5432
+        Database: zitadel
+        MaxOpenConns: 20
+        MaxIdleConns: 10
+        MaxConnLifetime: 30m
+        MaxConnIdleTime: 5m
+        User:
+          Username: zitadel
+          SSL:
+            Mode: disable
+        Admin:
+          Username: postgres
+          SSL:
+            Mode: disable
+  
+  # All secrets (masterkey, db passwords) come from OpenBao
+  envVarsSecret: zitadel-config-secret
+  
+# Bundled PostgreSQL configuration
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: zitadel-config-secret
+    secretKeys:
+      adminPasswordKey: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+      userPasswordKey: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+    username: zitadel
+    database: zitadel
+  
+  primary:
+    persistence:
+      enabled: true
+      storageClass: fast-local-data-v1
+      size: 10Gi
+
+# Enable ingress
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: iam.staging.${BURGDEV_HOST}
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: zitadel-tls
+      hosts:
+        - iam.staging.${BURGDEV_HOST}
+
+# Login UI ingress
+login:
+  enabled: true
+  ingress:
+    enabled: true
+    className: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - host: iam.staging.${BURGDEV_HOST}
+        paths:
+          - path: /login
+            pathType: Prefix
+    tls:
+      - secretName: zitadel-login-tls
+        hosts:
+          - iam.staging.${BURGDEV_HOST}

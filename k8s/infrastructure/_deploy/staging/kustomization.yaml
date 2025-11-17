@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
   - ../../traefik/flux/staging/
+  - ../../zitadel/flux/staging/
   # - ../../openbao/flux/staging/
   #- ../../k8up/flux/local/flux-kustom.yaml
   #- ../../cert-manager/flux/local/flux-kustom.yaml

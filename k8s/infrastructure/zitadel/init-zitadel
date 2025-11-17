@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+# Default values
+NAMESPACE="burginfra-staging"
+CLUSTER=""
+ENVIRONMENT="staging"
+FORCE=false
+
+usage() {
+	cat <<EOF
+Usage: $0 -c CLUSTER [-n NAMESPACE] [-e ENVIRONMENT] [-f]
+
+This script initializes Zitadel secrets in OpenBao:
+  1. Checks if secrets already exist
+  2. Generates secure random secrets for Zitadel
+  3. Stores them in OpenBao at the correct path using Kubernetes authentication
+  4. Creates all required secrets for Zitadel operation
+
+This should be run ONCE when setting up Zitadel in a new environment.
+
+Requirements:
+  - OpenBao must be deployed and initialized
+  - The openbao-secrets-manager service account must exist
+  - The openbao-secrets-manager policy and role must be configured in OpenBao
+
+Options:
+    -c CLUSTER      Cluster context name (required)
+    -n NAMESPACE    Kubernetes namespace where Zitadel will run (default: $NAMESPACE)
+    -e ENVIRONMENT  Environment (staging/production) (default: $ENVIRONMENT)
+    -f              Force overwrite without prompting (default: false)
+    -h              Show this help message
+
+Example:
+    $0 -c local
+    $0 -c burginfra-system -n burginfra-production -e production
+    $0 -c local -f  # Force overwrite without confirmation
+EOF
+	exit 1
+}
+
+while getopts "n:c:e:fh" opt; do
+	case $opt in
+	n) NAMESPACE="$OPTARG" ;;
+	c) CLUSTER="$OPTARG" ;;
+	e) ENVIRONMENT="$OPTARG" ;;
+	f) FORCE=true ;;
+	h) usage ;;
+	*) usage ;;
+	esac
+done
+
+# Validate required arguments
+if [ -z "$CLUSTER" ]; then
+	error "-c CLUSTER is required"
+	usage
+fi
+
+title "Zitadel Secret Initialization"
+info "This script will generate and store Zitadel secrets in OpenBao"
+info "Target namespace: $NAMESPACE"
+info "Environment: $ENVIRONMENT"
+echo ""
+
+cluster_check "$CLUSTER"
+
+# Check if namespace exists
+if ! kubectl get namespace "$NAMESPACE" &>/dev/null; then
+	error "Namespace '$NAMESPACE' does not exist"
+	exit 1
+fi
+success "Namespace '$NAMESPACE' exists"
+
+# Determine the OpenBao namespace based on environment
+OPENBAO_NAMESPACE="burginfra-system"
+if [ "$ENVIRONMENT" = "staging" ]; then
+	OPENBAO_NAMESPACE="burginfra-staging"
+fi
+
+# Check if OpenBao is running
+info "Checking OpenBao in namespace '$OPENBAO_NAMESPACE'..."
+OPENBAO_POD=$(kubectl get pod -n "$OPENBAO_NAMESPACE" -l app.kubernetes.io/name=openbao -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+
+if [ -z "$OPENBAO_POD" ]; then
+	error "Could not find OpenBao pod in namespace '$OPENBAO_NAMESPACE'"
+	info "Make sure OpenBao is deployed with label 'app.kubernetes.io/name=openbao'"
+	exit 1
+fi
+success "Found OpenBao pod: $OPENBAO_POD"
+
+# Check if service account exists
+SERVICE_ACCOUNT="openbao-secrets-manager"
+if ! kubectl get serviceaccount "$SERVICE_ACCOUNT" -n "$OPENBAO_NAMESPACE" &>/dev/null; then
+	error "ServiceAccount '$SERVICE_ACCOUNT' does not exist in namespace '$OPENBAO_NAMESPACE'"
+	info "Please deploy OpenBao base resources first which includes this service account"
+	exit 1
+fi
+success "ServiceAccount '$SERVICE_ACCOUNT' exists"
+
+# Determine the OpenBao path
+OPENBAO_PATH="infrastructure/zitadel/$NAMESPACE"
+
+# Use the OpenBao wrapper script
+BAO_WRAPPER="$SCRIPT_DIR/../openbao/bao"
+
+if [ ! -x "$BAO_WRAPPER" ]; then
+	error "OpenBao wrapper script not found or not executable: $BAO_WRAPPER"
+	exit 1
+fi
+
+echo ""
+title "Checking Existing Secrets"
+
+# Check if secrets already exist
+info "Checking if secrets exist at kv/$OPENBAO_PATH..."
+if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv get "kv/$OPENBAO_PATH" >/dev/null 2>&1; then
+	warn "Secrets already exist at kv/$OPENBAO_PATH"
+	echo ""
+	warn "Overwriting will generate NEW secrets and replace the existing ones."
+	warn "This may break existing Zitadel deployments that use the old secrets!"
+	echo ""
+
+	if [ "$FORCE" = false ]; then
+		# Prompt for confirmation
+		read -rp "Do you want to overwrite the existing secrets? (yes/no): " confirm
+		if [ "$confirm" != "yes" ]; then
+			info "Operation cancelled by user"
+			echo ""
+			info "To view existing secrets, run:"
+			echo "  $BAO_WRAPPER -c $CLUSTER -n $OPENBAO_NAMESPACE -- kv get kv/$OPENBAO_PATH"
+			exit 0
+		fi
+		echo ""
+	else
+		info "Force flag (-f) is set. Overwriting without confirmation."
+		echo ""
+	fi
+else
+	success "No existing secrets found. Proceeding with initialization."
+fi
+
+echo ""
+title "Generating Zitadel Secrets"
+
+# Generate secure random secrets
+info "Generating masterkey (32 bytes)..."
+ZITADEL_MASTERKEY=$(openssl rand -base64 32)
+success "Masterkey generated"
+
+info "Generating PostgreSQL admin password..."
+POSTGRES_ADMIN_PASSWORD=$(openssl rand -base64 32)
+success "PostgreSQL admin password generated"
+
+info "Generating PostgreSQL user password..."
+POSTGRES_USER_PASSWORD=$(openssl rand -base64 32)
+success "PostgreSQL user password generated"
+
+echo ""
+title "Storing Secrets in OpenBao"
+
+info "OpenBao path: kv/$OPENBAO_PATH"
+info "Storing secrets using Kubernetes authentication..."
+echo ""
+
+# Store all secrets in one operation
+if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv put "kv/$OPENBAO_PATH" \
+	"ZITADEL_MASTERKEY=$ZITADEL_MASTERKEY" \
+	"ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD=$POSTGRES_ADMIN_PASSWORD" \
+	"ZITADEL_DATABASE_POSTGRES_USER_PASSWORD=$POSTGRES_USER_PASSWORD"; then
+
+	echo ""
+	success "Secrets stored successfully!"
+
+	# Verify the secrets were stored
+	info "Verifying secrets..."
+	if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv get "kv/$OPENBAO_PATH" >/dev/null 2>&1; then
+		success "Secrets verified!"
+	else
+		warn "Could not verify secrets, but they may have been stored correctly"
+	fi
+
+	echo ""
+	success "Zitadel secrets initialized successfully!"
+	echo ""
+	info "Next steps:"
+	echo "  1. Deploy Zitadel using Flux or Kustomize"
+	echo "  2. The VaultStaticSecret will automatically sync secrets from OpenBao"
+	echo "  3. Zitadel will use the secrets for database and configuration"
+	echo ""
+	info "OpenBao path: kv/$OPENBAO_PATH"
+	info "VaultAuth reference: infra-kv-$NAMESPACE"
+	echo ""
+	warn "Security notes:"
+	echo "  • The generated secrets were NOT displayed for security"
+	echo "  • Secrets are stored securely in OpenBao"
+	echo "  • Access is controlled by OpenBao policies"
+	echo "  • You can view secrets using: $BAO_WRAPPER -c $CLUSTER -n $OPENBAO_NAMESPACE -- kv get kv/$OPENBAO_PATH"
+else
+	error "Failed to store secrets in OpenBao"
+	exit 1
+fi

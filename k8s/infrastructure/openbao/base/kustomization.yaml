@@ -30,6 +30,7 @@ configMapGenerator:
       # When adding a new policy, also add a VaultAuth resource in:
       # k8s/infrastructure/vault-secrets-operator/base/vaultauth.yaml
       - policies/openbao-admin.hcl
+      - policies/openbao-secrets-manager.hcl
       - policies/apps-kv-staging.hcl
       - policies/apps-kv-production.hcl
       - policies/apps-kv-all.hcl

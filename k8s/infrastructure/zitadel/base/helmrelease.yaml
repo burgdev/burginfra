@@ -1,0 +1,31 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: zitadel
+  namespace: flux-system
+spec:
+  type: "oci"
+  interval: 1h0s
+  url: oci://ghcr.io/zitadel/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: zitadel
+spec:
+  chart:
+    spec:
+      chart: zitadel
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: zitadel
+        namespace: flux-system
+      version: "9.*"
+  install:
+    createNamespace: false
+  valuesFrom:
+    - kind: ConfigMap
+      name: zitadel-values
+      valuesKey: values.yaml
+  interval: 1h0s
