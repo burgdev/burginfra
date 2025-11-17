@@ -6,10 +6,10 @@
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: burginfra-staging
 
-path "kv/data/infrastructure/*/staging" {
+path "kv/data/infrastructure/+/burginfra-staging" {
   capabilities = ["read", "list"]
 }
 
-path "kv/metadata/infrastructure/*/staging" {
+path "kv/metadata/infrastructure/+/burginfra-staging" {
   capabilities = ["read", "list"]
 }

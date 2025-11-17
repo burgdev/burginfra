@@ -6,10 +6,10 @@
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: burginfra-system
 
-path "kv/data/infrastructure/*/system" {
+path "kv/data/infrastructure/+/burginfra-system" {
   capabilities = ["read", "list"]
 }
 
-path "kv/metadata/infrastructure/*/system" {
+path "kv/metadata/infrastructure/+/burginfra-system" {
   capabilities = ["read", "list"]
 }

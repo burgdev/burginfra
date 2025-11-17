@@ -4,7 +4,7 @@
 # !! make sure it is added to 'kustomization.yaml' !!
 #
 # OPENBAO_ACCESS: kubernetes
-# KUBERNETES_NAMESPACES: staging,production
+# KUBERNETES_NAMESPACES: staging,production,development
 
 path "kv/data/apps/*" {
   capabilities = ["read", "list"]
