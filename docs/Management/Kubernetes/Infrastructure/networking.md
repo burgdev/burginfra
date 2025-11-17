@@ -36,7 +36,7 @@ Ingress example (`podinfo`):
 
 ::: code-group
 <<< @/../k8s/apps/podinfo/base/ingress.yaml{yaml}
-<<< @/../k8s/apps/podinfo/overlays/staging/ingress.patch.yaml{yaml}
+<<< @/../k8s/apps/podinfo/overlays/staging/ingress_patch.yaml{yaml}
 :::
 
 ### Certificates (local)

@@ -10,7 +10,7 @@
 # !! make sure it is added to 'kustomization.yaml' !!
 #
 # OPENBAO_ACCESS: kubernetes
-# KUBERNETES_NAMESPACES: burginfra-staging,burginfra-system,burginfra-production
+# KUBERNETES_NAMESPACES: burginfra-staging,burginfra-system,production,staging
 # KUBERNETES_SERVICE_ACCOUNT: openbao-secrets-manager
 
 # Allow full access to infrastructure secrets

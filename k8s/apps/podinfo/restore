@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("staging" "production")
+
+# Source the helper: sets RESTORE_YAML and provides wait_for_restore()
+source "${ROOT_DIR}/scripts/k8s/_restore.sh"
+
+# --- Scenario-specific steps ---
+echo -e "${YELLOW}Suspending Flux reconciliation for all apps...${RESET}"
+flux suspend kustomization apps-sync-all-${SRC_NAMESPACE}
+
+echo -e "${YELLOW}Scaling down deployment podinfo...${RESET}"
+kubectl scale deployment podinfo --replicas=0 -n "$SRC_NAMESPACE"
+
+echo -e "${YELLOW}Applying restore manifest...${RESET}"
+echo "$RESTORE_YAML" | kubectl apply -f -
+
+wait_for_restore
+
+echo -e "${YELLOW}Scaling deployment podinfo back up...${RESET}"
+kubectl scale deployment podinfo --replicas=1 -n "$SRC_NAMESPACE"
+
+sleep 5 # wait until ready
+
+echo -e "${YELLOW}Resuming Flux reconciliation for all apps...${RESET}"
+flux resume kustomization apps-sync-all-${SRC_NAMESPACE}
+
+echo -e "${GREEN}Restore scenario completed successfully.${RESET}"

@@ -11,3 +11,4 @@ resources:
   - ../../csi-driver-rclone/flux/system/
   - ../../vault-secrets-operator/flux/system/
   - ../../reloader/flux/system/
+  #- ../../zitadel/flux/system/
