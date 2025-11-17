@@ -9,7 +9,7 @@ commonLabels:
   app.kubernetes.io/managed-by: flux
 resources:
   - secrets.yaml
-  - postgres-secrets.yaml
+  - postgres-secrets.yaml # Only creates zitadel-postgres-credentials
   - postgres-cluster.yaml
   - helmrelease.yaml
 configMapGenerator:
