@@ -9,22 +9,26 @@ zitadel:
     - name: wait-for-db
       image: postgres:16-alpine
       command:
-        - sh
+        - /bin/sh
         - -c
         - |
+          set -e
           echo "Waiting for PostgreSQL to be ready..."
-          until pg_isready -h zitadel-postgres-rw -p 5432 -U postgres; do
-            echo "PostgreSQL is unavailable - sleeping"
-            sleep 2
-          done
-          echo "PostgreSQL is ready!"
 
-          # Additional check: ensure database is accepting connections
-          until PGPASSWORD="$POSTGRES_PASSWORD" psql -h zitadel-postgres-rw -U postgres -d postgres -c "SELECT 1" > /dev/null 2>&1; do
-            echo "PostgreSQL is not accepting connections yet - sleeping"
+          # Wait for service to respond
+          until pg_isready -h zitadel-postgres-rw -p 5432 -U postgres 2>&1; do
+            echo "PostgreSQL service is unavailable - waiting..."
             sleep 2
           done
-          echo "PostgreSQL is accepting connections!"
+          echo "PostgreSQL service is ready!"
+
+          # Wait for database to accept connections
+          echo "Testing database connection..."
+          until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h zitadel-postgres-rw -p 5432 -U postgres -d postgres -c "SELECT 1" >/dev/null 2>&1; do
+            echo "Database not accepting connections yet - waiting..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready and accepting connections!"
       env:
         - name: POSTGRES_PASSWORD
           valueFrom:
