@@ -9,6 +9,8 @@ spec:
   interval: 1h0s
   path: "./k8s/infrastructure/openbao/overlays/staging"
   prune: true
+  dependsOn:
+    - name: infra-openebs-system
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra

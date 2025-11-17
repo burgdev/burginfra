@@ -9,6 +9,7 @@ spec:
   prune: false
   dependsOn:
     - name: infra-openebs-system
+    # - name: helm-kube-prometheus-stack-system # Ensure Prometheus Operator CRDs exist (currently disabled)
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
