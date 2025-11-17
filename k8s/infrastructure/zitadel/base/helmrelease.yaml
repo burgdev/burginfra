@@ -4,9 +4,8 @@ metadata:
   name: zitadel
   namespace: flux-system
 spec:
-  type: "oci"
   interval: 1h0s
-  url: oci://ghcr.io/zitadel/charts
+  url: https://charts.zitadel.com
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
