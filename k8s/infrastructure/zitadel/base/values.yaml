@@ -16,24 +16,24 @@ zitadel:
           echo "Waiting for PostgreSQL to be ready..."
 
           # Wait for service to respond
-          until pg_isready -h zitadel-postgres-rw -p 5432 -U postgres 2>&1; do
+          until pg_isready -h zitadel-postgres-rw -p 5432 -U zitadel 2>&1; do
             echo "PostgreSQL service is unavailable - waiting..."
             sleep 2
           done
           echo "PostgreSQL service is ready!"
 
-          # Wait for database to accept connections
-          echo "Testing database connection..."
-          until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h zitadel-postgres-rw -p 5432 -U postgres -d postgres -c "SELECT 1" >/dev/null 2>&1; do
+          # Wait for database to accept connections using zitadel user
+          echo "Testing database connection with zitadel user..."
+          until PGPASSWORD="${ZITADEL_PASSWORD}" psql -h zitadel-postgres-rw -p 5432 -U zitadel -d zitadel -c "SELECT 1" >/dev/null 2>&1; do
             echo "Database not accepting connections yet - waiting..."
             sleep 2
           done
           echo "PostgreSQL is ready and accepting connections!"
       env:
-        - name: POSTGRES_PASSWORD
+        - name: ZITADEL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: zitadel-postgres-superuser
+              name: zitadel-postgres-credentials
               key: password
 
   configmapConfig:
