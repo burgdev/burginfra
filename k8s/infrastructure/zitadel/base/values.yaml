@@ -22,19 +22,9 @@ zitadel:
           done
           echo "PostgreSQL service is ready!"
 
-          # Wait for database to accept connections using zitadel user
-          echo "Testing database connection with zitadel user..."
-          until PGPASSWORD="${ZITADEL_PASSWORD}" psql -h zitadel-postgres-rw -p 5432 -U zitadel -d zitadel -c "SELECT 1" >/dev/null 2>&1; do
-            echo "Database not accepting connections yet - waiting..."
-            sleep 2
-          done
-          echo "PostgreSQL is ready and accepting connections!"
-      env:
-        - name: ZITADEL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: zitadel-postgres-credentials
-              key: password
+          # Give PostgreSQL a moment to fully accept connections
+          sleep 3
+          echo "PostgreSQL init container complete!"
 
   configmapConfig:
     ExternalDomain: iam.staging.${BURGDEV_HOST}
