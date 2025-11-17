@@ -8,7 +8,7 @@ metadata:
 spec:
   interval: 5s
   path: "./k8s/apps/_deploy/production"
-  prune: true
+  prune: false
   dependsOn:
     - name: infra-csi-driver-rclone-system
     - name: infra-openebs-system

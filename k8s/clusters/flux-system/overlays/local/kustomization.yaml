@@ -4,7 +4,7 @@ resources:
   - ../../base
   - cluster_settings.yaml
 patches:
-  - path: source.patch.yaml
+  - path: source_patch.yaml
     target:
       kind: GitRepository
       name: burgdev-burginfra
