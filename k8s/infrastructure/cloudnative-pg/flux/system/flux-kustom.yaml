@@ -1,21 +1,19 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: infra-zitadel-staging
+  name: helm-cloudnative-pg-system
   namespace: flux-system # do not change!
-dependsOn:
-  - name: helm-cloudnative-pg-system # Ensure CloudNativePG operator is ready
 spec:
   interval: 1h0s
-  path: "./k8s/infrastructure/zitadel/overlays/staging"
+  path: "./k8s/infrastructure/cloudnative-pg/helm/system"
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
   postBuild:
     substitute:
-      NAMESPACE: "burginfra-staging"
-      ENVIRONMENT: "staging"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings

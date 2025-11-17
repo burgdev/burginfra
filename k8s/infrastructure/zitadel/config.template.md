@@ -16,9 +16,10 @@ cd k8s/infrastructure/zitadel
 ```
 
 The script will:
-1. Generate secure random secrets for Zitadel
+1. Generate secure random secrets for Zitadel and PostgreSQL
 2. Store them in OpenBao at the correct path
 3. Verify the secrets were created successfully
+4. The same secrets are used for both Zitadel configuration and CloudNativePG cluster
 
 ## Manual Setup
 
@@ -53,6 +54,8 @@ openssl rand -base64 32
 
 Password for the PostgreSQL admin user (`postgres`). This user has full administrative privileges on the database.
 
+**Used by**: CloudNativePG Cluster superuser secret
+
 **How to generate**:
 ```bash
 openssl rand -base64 32
@@ -60,7 +63,11 @@ openssl rand -base64 32
 
 ### 3. ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
 
-Password for the PostgreSQL application user (`zitadel`). This user is used by Zitadel for normal database operations.
+Password for the PostgreSQL application user (`zitadel`). This user is used by Zitadel for normal database operations and owns the Zitadel database.
+
+**Used by**: 
+- CloudNativePG Cluster bootstrap (application user)
+- Zitadel application configuration
 
 **How to generate**:
 ```bash

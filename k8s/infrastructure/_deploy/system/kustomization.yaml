@@ -11,4 +11,5 @@ resources:
   - ../../csi-driver-rclone/flux/system/
   - ../../vault-secrets-operator/flux/system/
   - ../../reloader/flux/system/
+  - ../../cloudnative-pg/flux/system/
   #- ../../zitadel/flux/system/

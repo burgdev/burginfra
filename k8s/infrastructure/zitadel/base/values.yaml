@@ -3,18 +3,46 @@
 zitadel:
   # masterkey is provided via envVarsSecret from OpenBao
   masterkeySecretName: zitadel-config-secret
-  
+
+  # Init container to wait for PostgreSQL to be ready
+  initContainers:
+    - name: wait-for-db
+      image: postgres:16-alpine
+      command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h zitadel-postgres-rw -p 5432 -U postgres; do
+            echo "PostgreSQL is unavailable - sleeping"
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+
+          # Additional check: ensure database is accepting connections
+          until PGPASSWORD="$POSTGRES_PASSWORD" psql -h zitadel-postgres-rw -U postgres -d postgres -c "SELECT 1" > /dev/null 2>&1; do
+            echo "PostgreSQL is not accepting connections yet - sleeping"
+            sleep 2
+          done
+          echo "PostgreSQL is accepting connections!"
+      env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: zitadel-postgres-superuser
+              key: password
+
   configmapConfig:
     ExternalDomain: iam.staging.${BURGDEV_HOST}
     ExternalPort: 443
     ExternalSecure: true
-    
+
     TLS:
-      Enabled: false  # TLS termination handled by Traefik
-    
+      Enabled: false # TLS termination handled by Traefik
+
     Database:
       Postgres:
-        Host: zitadel-postgresql
+        Host: zitadel-postgres-rw # CloudNativePG read-write service
         Port: 5432
         Database: zitadel
         MaxOpenConns: 20
@@ -29,26 +57,13 @@ zitadel:
           Username: postgres
           SSL:
             Mode: disable
-  
+
   # All secrets (masterkey, db passwords) come from OpenBao
   envVarsSecret: zitadel-config-secret
-  
-# Bundled PostgreSQL configuration
+
+# Disable bundled PostgreSQL - using CloudNativePG instead
 postgresql:
-  enabled: true
-  auth:
-    existingSecret: zitadel-config-secret
-    secretKeys:
-      adminPasswordKey: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
-      userPasswordKey: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
-    username: zitadel
-    database: zitadel
-  
-  primary:
-    persistence:
-      enabled: true
-      storageClass: fast-local-data-v1
-      size: 10Gi
+  enabled: false
 
 # Enable ingress
 ingress:
