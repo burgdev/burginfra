@@ -6,10 +6,11 @@
 # OPENBAO_ACCESS: kubernetes
 # KUBERNETES_NAMESPACES: production
 
-path "kv/data/apps/*/production" {
+path "kv/data/apps/+/production" {
   capabilities = ["read", "list"]
 }
 
-path "kv/metadata/apps/*/production" {
+path "kv/metadata/apps/+/production" {
   capabilities = ["read", "list"]
 }
+
