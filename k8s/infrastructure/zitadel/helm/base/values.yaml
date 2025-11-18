@@ -41,6 +41,8 @@ zitadel:
         Admin:
           Username: zitadel
           ExistingDatabase: zitadel
+          SSL:
+            Mode: disable
         User:
           Username: zitadel
           SSL:
