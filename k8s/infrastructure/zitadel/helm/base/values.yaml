@@ -38,7 +38,11 @@ zitadel:
         Host: zitadel-postgres-rw # CloudNativePG read-write service
         Port: 5432
         Database: zitadel
+        Admin:
+          Username: zitadel
+          ExistingDatabase: zitadel
         User:
+          Username: zitadel
           SSL:
             Mode: disable
 
