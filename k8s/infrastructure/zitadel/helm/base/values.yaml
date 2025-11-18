@@ -11,15 +11,6 @@ zitadel:
     TLS:
       Enabled: false # TLS termination handled by Traefik
 
-    FirstInstance:
-      Org:
-        Human:
-          # Username and password come from environment variables
-          # ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
-          # ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
-          UserName: root # Will be overridden by env var
-          Password: "" # Will be overridden by env var
-
     Database:
       Postgres:
         Host: zitadel-postgres-rw # CloudNativePG read-write service
