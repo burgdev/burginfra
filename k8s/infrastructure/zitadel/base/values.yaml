@@ -1,8 +1,7 @@
 # Zitadel Helm Chart Values
 # https://github.com/zitadel/zitadel-charts
 zitadel:
-  # Masterkey for encryption - provided via masterkeySecretName
-  masterkeySecretName: zitadel-config-secret
+  masterkeySecretName: zitadel-masterkey
 
   # Init container to wait for PostgreSQL to be ready
   initContainers:
@@ -50,10 +49,13 @@ zitadel:
     - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: zitadel-config-secret
-          key: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+          name: zitadel-postgres-credentials
+          key: password
     - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
-      value: zitadel
+      valueFrom:
+        secretKeyRef:
+          name: zitadel-postgres-credentials
+          key: username
 
 # Disable bundled PostgreSQL - using CloudNativePG instead
 postgresql:
