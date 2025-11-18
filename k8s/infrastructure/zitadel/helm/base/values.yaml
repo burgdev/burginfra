@@ -1,29 +1,7 @@
-# Zitadel Helm Chart Values
-# https://github.com/zitadel/zitadel-charts
+# https://artifacthub.io/packages/helm/zitadel/zitadel
+# Default valus: https://github.com/zitadel/zitadel/blob/main/cmd/defaults.yaml
 zitadel:
   masterkeySecretName: zitadel-masterkey
-
-  # Init container to wait for PostgreSQL to be ready
-  initContainers:
-    - name: wait-for-db
-      image: postgres:16-alpine
-      command:
-        - /bin/sh
-        - -c
-        - |
-          set -e
-          echo "Waiting for PostgreSQL to be ready..."
-
-          # Wait for service to respond
-          until pg_isready -h zitadel-postgres-rw -p 5432 -U zitadel 2>&1; do
-            echo "PostgreSQL service is unavailable - waiting..."
-            sleep 2
-          done
-          echo "PostgreSQL service is ready!"
-
-          # Give PostgreSQL a moment to fully accept connections
-          sleep 3
-          echo "PostgreSQL init container complete!"
 
   configmapConfig:
     ExternalDomain: auth.staging.${BURGDEV_HOST}
@@ -39,21 +17,19 @@ zitadel:
           # Username and password come from environment variables
           # ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
           # ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
-          UserName: admin # Will be overridden by env var
+          UserName: root # Will be overridden by env var
           Password: "" # Will be overridden by env var
 
     Database:
       Postgres:
         Host: zitadel-postgres-rw # CloudNativePG read-write service
-        Port: 5432
-        Database: zitadel
+        # Admin and USer name is set by the 'zitadel-envvars' secret.
+        # The same credentials are used.
         Admin:
-          Username: zitadel
           ExistingDatabase: zitadel
           SSL:
             Mode: disable
         User:
-          Username: zitadel
           SSL:
             Mode: disable
 
@@ -90,10 +66,6 @@ envVarsSecret: "zitadel-envvars"
 #      secretKeyRef:
 #        name: zitadel-firstinstance-credentials
 #        key: username
-
-# Disable bundled PostgreSQL - using CloudNativePG instead
-postgresql:
-  enabled: false
 
 # Enable ingress
 ingress:
