@@ -14,7 +14,9 @@ spec:
       database: zitadel
       owner: zitadel
       secret:
-        name: zitadel-postgres-credentials
+        name: zitadel-postgres-app
+
+  superuserSecret: zidatel-postgres-superuser
 
   # Resource limits - optimized for single node
   resources:

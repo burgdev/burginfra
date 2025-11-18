@@ -1,7 +1,7 @@
 # Zitadel Helm Chart Values
 # https://github.com/zitadel/zitadel-charts
 zitadel:
-  # masterkey is provided via envVarsSecret from OpenBao
+  # Masterkey for encryption - provided via masterkeySecretName
   masterkeySecretName: zitadel-config-secret
 
   # Init container to wait for PostgreSQL to be ready
@@ -39,21 +39,21 @@ zitadel:
         Host: zitadel-postgres-rw # CloudNativePG read-write service
         Port: 5432
         Database: zitadel
-        MaxOpenConns: 20
-        MaxIdleConns: 10
-        MaxConnLifetime: 30m
-        MaxConnIdleTime: 5m
         User:
-          Username: zitadel
-          SSL:
-            Mode: disable
-        Admin:
-          Username: zitadel # Use zitadel user (database owner) for admin operations
           SSL:
             Mode: disable
 
-  # All secrets (masterkey, db passwords) come from OpenBao
-  envVarsSecret: zitadel-config-secret
+  # Database password provided via environment variable from secret
+  # The zitadel user already owns the database (created by CloudNativePG)
+  # No admin user needed since database already exists
+  env:
+    - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: zitadel-config-secret
+          key: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+    - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+      value: zitadel
 
 # Disable bundled PostgreSQL - using CloudNativePG instead
 postgresql:
