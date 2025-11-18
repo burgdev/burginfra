@@ -51,50 +51,51 @@ zitadel:
   # Database password provided via environment variable from secret
   # The zitadel user already owns the database (created by CloudNativePG)
   # No admin user needed since database already exists
-  env:
-    - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: zitadel-postgres-credentials
-          key: password
-    - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
-      valueFrom:
-        secretKeyRef:
-          name: zitadel-postgres-credentials
-          key: username
-    - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: zitadel-firstinstance-credentials
-          key: password
-    - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
-      valueFrom:
-        secretKeyRef:
-          name: zitadel-firstinstance-credentials
-          key: username
+  # env:
+  #   - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: zitadel-postgres-credentials
+  #         key: password
+  #   - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: zitadel-postgres-credentials
+  #         key: username
+  #   - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: zitadel-firstinstance-credentials
+  #         key: password
+  #   - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: zitadel-firstinstance-credentials
+  #         key: username
 
+envVarSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
-env:
-  - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-postgres-credentials
-        key: password
-  - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-postgres-credentials
-        key: username
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-firstinstance-credentials
-        key: password
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-firstinstance-credentials
-        key: username
+# env:
+#   - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+#     valueFrom:
+#       secretKeyRef:
+#         name: zitadel-postgres-credentials
+#         key: password
+#   - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+#     valueFrom:
+#       secretKeyRef:
+#         name: zitadel-postgres-credentials
+#         key: username
+#   - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
+#     valueFrom:
+#       secretKeyRef:
+#         name: zitadel-firstinstance-credentials
+#         key: password
+#   - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
+#     valueFrom:
+#       secretKeyRef:
+#         name: zitadel-firstinstance-credentials
+#         key: username
 
 # Disable bundled PostgreSQL - using CloudNativePG instead
 postgresql:
