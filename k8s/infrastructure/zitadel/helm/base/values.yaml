@@ -26,7 +26,7 @@ zitadel:
           echo "PostgreSQL init container complete!"
 
   configmapConfig:
-    ExternalDomain: iam.staging.${BURGDEV_HOST}
+    ExternalDomain: auth.staging.${BURGDEV_HOST}
     ExternalPort: 443
     ExternalSecure: true
 
@@ -93,14 +93,14 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
-    - host: iam.staging.${BURGDEV_HOST}
+    - host: auth.staging.${BURGDEV_HOST}
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: zitadel-tls
       hosts:
-        - iam.staging.${BURGDEV_HOST}
+        - auth.staging.${BURGDEV_HOST}
 
 # Login UI ingress
 login:
@@ -111,11 +111,11 @@ login:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
     hosts:
-      - host: iam.staging.${BURGDEV_HOST}
+      - host: auth.staging.${BURGDEV_HOST}
         paths:
           - path: /login
             pathType: Prefix
     tls:
       - secretName: zitadel-login-tls
         hosts:
-          - iam.staging.${BURGDEV_HOST}
+          - auth.staging.${BURGDEV_HOST}
