@@ -8,5 +8,10 @@ commonLabels:
   app.kubernetes.io/part-of: infrastructure
   app.kubernetes.io/managed-by: flux
 resources:
-  - secrets.yaml
-  - postgres.yaml
+  - helmrelease.yaml
+configMapGenerator:
+  - name: zitadel-values
+    files:
+      - values.yaml
+    options:
+      disableNameSuffixHash: true

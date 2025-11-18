@@ -56,6 +56,16 @@ zitadel:
         secretKeyRef:
           name: zitadel-postgres-credentials
           key: username
+    - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: zitadel-firstinstance-credentials
+          key: password
+    - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: zitadel-firstinstance-credentials
+          key: username
 
 # Disable bundled PostgreSQL - using CloudNativePG instead
 postgresql:

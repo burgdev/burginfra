@@ -19,3 +19,26 @@ spec:
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
+---
+# we install first all secrets and DB cluster and then install the zitadel helm chart
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: helm-zitadel-staging
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  path: "./k8s/infrastructure/zitadel/helm/base"
+  prune: true
+  dependsOn:
+    - name: infra-zitadel-staging # Make sure all secrets and DB are ready
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAMESPACE: "burginfra-staging"
+      ENVIRONMENT: "staging"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
