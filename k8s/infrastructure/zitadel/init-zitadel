@@ -148,7 +148,7 @@ title "Generating Zitadel Secrets"
 
 # Generate secure random secrets
 info "Generating masterkey (32 bytes)..."
-ZITADEL_MASTERKEY=$(openssl rand -base64 32)
+ZITADEL_MASTERKEY="$(LC_ALL=C tr -dc '[:graph:]' </dev/urandom | head -c 32)"
 success "Masterkey generated"
 
 info "Generating PostgreSQL admin password..."
