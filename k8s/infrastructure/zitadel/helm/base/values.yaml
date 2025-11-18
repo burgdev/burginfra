@@ -57,39 +57,39 @@ zitadel:
           SSL:
             Mode: disable
 
-#envVarsSecret: "zitadel-envvars"
+envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
-env:
-  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-postgres-credentials
-        key: password
-  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-postgres-credentials
-        key: username
-  - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-postgres-credentials
-        key: password
-  - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-postgres-credentials
-        key: username
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-firstinstance-credentials
-        key: password
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: zitadel-firstinstance-credentials
-        key: username
+#env:
+#  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+#    valueFrom:
+#      secretKeyRef:
+#        name: zitadel-postgres-credentials
+#        key: password
+#  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
+#    valueFrom:
+#      secretKeyRef:
+#        name: zitadel-postgres-credentials
+#        key: username
+#  - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+#    valueFrom:
+#      secretKeyRef:
+#        name: zitadel-postgres-credentials
+#        key: password
+#  - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+#    valueFrom:
+#      secretKeyRef:
+#        name: zitadel-postgres-credentials
+#        key: username
+#  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
+#    valueFrom:
+#      secretKeyRef:
+#        name: zitadel-firstinstance-credentials
+#        key: password
+#  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
+#    valueFrom:
+#      secretKeyRef:
+#        name: zitadel-firstinstance-credentials
+#        key: username
 
 # Disable bundled PostgreSQL - using CloudNativePG instead
 postgresql:
@@ -99,19 +99,21 @@ postgresql:
 ingress:
   enabled: true
   className: traefik
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-  hosts:
-    - host: auth.staging.${BURGDEV_HOST}
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: zitadel-tls
-      hosts:
-        - auth.staging.${BURGDEV_HOST}
+  #annotations:
+  #  cert-manager.io/cluster-issuer: letsencrypt-prod
+  #hosts:
+  #  - host: auth.staging.${BURGDEV_HOST}
+  #    paths:
+  #      - path: /
+  #        pathType: Prefix
+  #tls:
+  #  - secretName: zitadel-tls
+  #    hosts:
+  #      - auth.staging.${BURGDEV_HOST}
 
 # Login UI ingress - Disabled as Zitadel v4+ has login built-in
 # The login UI is served by the main Zitadel application at /ui/v2/login/
 login:
-  enabled: false
+  ingress:
+    enabled: true
+    className: traefik
