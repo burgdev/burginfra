@@ -111,20 +111,7 @@ ingress:
       hosts:
         - auth.staging.${BURGDEV_HOST}
 
-# Login UI ingress
+# Login UI ingress - Disabled as Zitadel v4+ has login built-in
+# The login UI is served by the main Zitadel application at /ui/v2/login/
 login:
-  enabled: true
-  ingress:
-    enabled: true
-    className: traefik
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-    hosts:
-      - host: auth.staging.${BURGDEV_HOST}
-        paths:
-          - path: /login
-            pathType: Prefix
-    tls:
-      - secretName: zitadel-login-tls
-        hosts:
-          - auth.staging.${BURGDEV_HOST}
+  enabled: false
