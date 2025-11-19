@@ -24,6 +24,13 @@ zitadel:
           SSL:
             Mode: disable
 
+  FirstInstance:
+    Org:
+      Human:
+        # use the loginname root@zitadel.localhost
+        Username: "root"
+        Password: "RootPassword1!"
+
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
 env:
@@ -47,16 +54,6 @@ env:
       secretKeyRef:
         name: zitadel-postgres-app
         key: username
-#  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
-#    valueFrom:
-#      secretKeyRef:
-#        name: zitadel-firstinstance-credentials
-#        key: password
-#  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
-#    valueFrom:
-#      secretKeyRef:
-#        name: zitadel-firstinstance-credentials
-#        key: username
 
 # Enable ingress
 ingress:

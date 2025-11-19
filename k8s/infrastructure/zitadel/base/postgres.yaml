@@ -13,16 +13,7 @@ spec:
     initdb:
       database: zitadel
       owner: zitadel
-      # Note: CNPG will read the password from this secret during init
-      # The secret must exist before the cluster is created
-      #secret:
-      #  name: zitadel-postgres-credentials
-      #postInitSQL:
-      #  # Grant privileges needed for Zitadel to manage its schema
-      #  - ALTER USER zitadel WITH CREATEROLE CREATEDB;
 
-  #superuserSecret:
-  #  name: zidatel-postgres-superuser
   enableSuperuserAccess: true
 
   # Resource limits - optimized for single node
