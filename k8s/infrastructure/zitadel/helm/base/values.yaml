@@ -26,27 +26,27 @@ zitadel:
 
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
-#env:
-#  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
-#    valueFrom:
-#      secretKeyRef:
-#        name: zitadel-postgres-credentials
-#        key: password
-#  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
-#    valueFrom:
-#      secretKeyRef:
-#        name: zitadel-postgres-credentials
-#        key: username
-#  - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
-#    valueFrom:
-#      secretKeyRef:
-#        name: zitadel-postgres-credentials
-#        key: password
-#  - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
-#    valueFrom:
-#      secretKeyRef:
-#        name: zitadel-postgres-credentials
-#        key: username
+env:
+  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-superuser
+        key: password
+  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-superuser
+        key: username
+  - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-app
+        key: password
+  - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-app
+        key: username
 #  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
 #    valueFrom:
 #      secretKeyRef:

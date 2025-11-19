@@ -1,18 +1,19 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: zitadel-postgres
+  name: cloudnative-pg-postgres1
+  namespace: development
 spec:
   instances: 1
   storage:
     storageClass: fast-local-data-v1
-    size: 5Gi
+    size: 500Mi
 
   # Bootstrap with database and users
   bootstrap:
     initdb:
-      database: zitadel
-      owner: zitadel
+      database: example
+      owner: example
       # Note: CNPG will read the password from this secret during init
       # The secret must exist before the cluster is created
       #secret:
@@ -21,9 +22,18 @@ spec:
       #  # Grant privileges needed for Zitadel to manage its schema
       #  - ALTER USER zitadel WITH CREATEROLE CREATEDB;
 
+  ## Managed roles - CNPG will sync password from secret automatically
+  #managed:
+  #  roles:
+  #    - name: zitadel
+  #      ensure: present
+  #      login: true
+  #      passwordSecret:
+  #        name: zitadel-postgres-credentials
+
   #superuserSecret:
   #  name: zidatel-postgres-superuser
-  enableSuperuserAccess: true
+  #enableSuperuserAccess: true
 
   # Resource limits - optimized for single node
   resources:
@@ -62,15 +72,6 @@ spec:
       log_connections: "off"
       log_disconnections: "off"
       log_lock_waits: "on"
-
-  # Start delay to ensure proper initialization
-  startDelay: 30
-  stopDelay: 30
-  switchoverDelay: 60
-
-  # Ensure proper readiness before marking as ready
-  minSyncReplicas: 0
-  maxSyncReplicas: 0
 
   # Backup configuration (optional, can be added later)
   # backup:
