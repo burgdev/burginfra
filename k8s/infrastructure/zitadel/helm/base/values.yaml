@@ -4,8 +4,10 @@ zitadel:
   masterkeySecretName: zitadel-masterkey
 
   configmapConfig:
+    # login with
+    # ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_USERNAME@ZITADEL_DEFAULTINSTANCE_ORG_NAME.ExternalDomain
+    # e.g. root@burginfra.auth.DOMAIN
     ExternalDomain: auth.staging.${BURGDEV_HOST}
-    #ExternalDomain: pg-insecure.127.0.0.1.sslip.io
     ExternalPort: 443
     ExternalSecure: true
 
@@ -42,6 +44,18 @@ zitadel:
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
 env:
+  - name: ZITADEL_DEFAULTINSTANCE_INSTANCENAME
+    value: "BURGINFRA"
+  - name: ZITADEL_DEFAULTINSTANCE_ORG_NAME
+    value: "BurgInfra"
+  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_USERNAME
+    value: "root"
+  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_FIRSTNAME
+    value: "Burginfra"
+  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_NICKNAME
+    value: "BurgAdmin"
+  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_PASSWORD
+    value: "ThisWillChangeSoon@4"
   - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
     valueFrom:
       secretKeyRef:
