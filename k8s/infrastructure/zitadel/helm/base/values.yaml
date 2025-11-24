@@ -25,19 +25,19 @@ zitadel:
           SSL:
             Mode: disable
 
-    FirstInstance:
-      Org:
-        Human:
-          # use the loginname zitadel-admin@pg-insecure.127.0.0.1.sslip.io
-          UserName: "zitadel-admin"
-          FirstName: "ZITADEL"
-          LastName: "Admin"
-          Email:
-            Address: ""
-            Verified: true
-          Password: "Password1!"
-          PasswordChangeRequired: false
-          PreferredLanguage: "en"
+    #FirstInstance:
+    #  Org:
+    #    Human:
+    #      # use the loginname zitadel-admin@pg-insecure.127.0.0.1.sslip.io
+    #      UserName: "zitadel-admin"
+    #      FirstName: "ZITADEL"
+    #      LastName: "Admin"
+    #      Email:
+    #        Address: ""
+    #        Verified: true
+    #      Password: "Password1!"
+    #      PasswordChangeRequired: false
+    #      PreferredLanguage: "en"
 
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
