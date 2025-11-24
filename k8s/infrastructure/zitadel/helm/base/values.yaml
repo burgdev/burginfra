@@ -44,18 +44,18 @@ zitadel:
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
 env:
-  - name: ZITADEL_DEFAULTINSTANCE_INSTANCENAME
+  - name: ZITADEL_FIRSTINSTANCE_INSTANCENAME
     value: "BURGINFRA"
-  - name: ZITADEL_DEFAULTINSTANCE_ORG_NAME
+  - name: ZITADEL_FIRSTINSTANCE_ORG_NAME
     value: "BurgInfra"
-  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_USERNAME
+  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
     value: "root"
-  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_FIRSTNAME
+  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_FIRSTNAME
     value: "Burginfra"
-  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_NICKNAME
+  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_NICKNAME
     value: "BurgAdmin"
-  - name: ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_PASSWORD
-    value: "ThisWillChangeSoon@4"
+  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
+    value: "Password1!"
   - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
     valueFrom:
       secretKeyRef:
