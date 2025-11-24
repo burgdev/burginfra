@@ -236,6 +236,26 @@ kubectl rollout restart deployment -n staging -l app.kubernetes.io/name=zitadel
 
 ## Troubleshooting
 
+### Fresh Starting
+
+1. **Delete the existing Zitadel installation** (since the first instance can only be created once):
+
+   ```bash
+   kubectl delete helmrelease zitadel -n burginfra-staging
+   ```
+
+2. **Delete the PostgreSQL database** to start fresh:
+
+   ```bash
+   kubectl delete cluster zitadel-postgres -n burginfra-staging
+   ```
+
+3. **Wait for Flux to reconcile** or manually trigger:
+
+   ```bash
+   flux reconcile kustomization helm-zitadel-staging --with-source
+   ```
+
 ### Pods Not Starting
 
 Check HelmRelease status:

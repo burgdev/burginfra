@@ -4,8 +4,8 @@ zitadel:
   masterkeySecretName: zitadel-masterkey
 
   configmapConfig:
-    #ExternalDomain: auth.staging.${BURGDEV_HOST}
-    ExternalDomain: pg-insecure.127.0.0.1.sslip.io
+    ExternalDomain: auth.staging.${BURGDEV_HOST}
+    #ExternalDomain: pg-insecure.127.0.0.1.sslip.io
     ExternalPort: 443
     ExternalSecure: true
 
@@ -25,12 +25,19 @@ zitadel:
           SSL:
             Mode: disable
 
-  #FirstInstance:
-  #  Org:
-  #    Human:
-  #      # use the loginname root@zitadel.localhost
-  #      Username: "root"
-  #      Password: "RootPassword1!"
+    FirstInstance:
+      Org:
+        Human:
+          # use the loginname zitadel-admin@pg-insecure.127.0.0.1.sslip.io
+          UserName: "zitadel-admin"
+          FirstName: "ZITADEL"
+          LastName: "Admin"
+          Email:
+            Address: ""
+            Verified: true
+          Password: "Password1!"
+          PasswordChangeRequired: false
+          PreferredLanguage: "en"
 
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
