@@ -84,3 +84,15 @@ spec:
   kubernetes:
     role: infra-kv-all
     serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: configs-kv-all
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: configs-kv-all
+    serviceAccount: vault-secrets-operator-controller-manager

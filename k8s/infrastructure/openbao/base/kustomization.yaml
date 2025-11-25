@@ -27,7 +27,7 @@ configMapGenerator:
       disableNameSuffixHash: true
   - name: openbao-policies
     files:
-      # When adding a new policy, also add a VaultAuth resource in:
+      # NOTE: When adding a new policy, also add a VaultAuth resource in:
       # k8s/infrastructure/vault-secrets-operator/base/vaultauth.yaml
       - policies/openbao-admin.hcl
       - policies/openbao-secrets-manager.hcl
