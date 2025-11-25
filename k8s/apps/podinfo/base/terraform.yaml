@@ -11,14 +11,19 @@ spec:
     kind: GitRepository
     name: burgdev-burginfra
     namespace: flux-system
-  
+
   # Variables from cluster-settings ConfigMap
   varsFrom:
     - kind: ConfigMap
       name: cluster-settings
       varsKeys:
         - BURGDEV_HOST
-  
+    # JWT profile for Zitadel authentication (from Secret)
+    - kind: Secret
+      name: zitadel-terraform-credentials
+      varsKeys:
+        - zitadel_jwt_profile
+
   # Additional inline variables
   vars:
     - name: environment
@@ -27,14 +32,7 @@ spec:
       value: auth.${ENVIRONMENT}.${BURGDEV_HOST}
     - name: podinfo_domain
       value: podinfo.${ENVIRONMENT}.${BURGDEV_HOST}
-  
-  # JWT profile for Zitadel authentication (from Secret)
-  varsFrom:
-    - kind: Secret
-      name: zitadel-terraform-credentials
-      varsKeys:
-        - zitadel_jwt_profile
-  
+
   # Write outputs to a Secret for use by podinfo
   writeOutputsToSecret:
     name: podinfo-oidc-credentials
