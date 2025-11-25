@@ -151,14 +151,6 @@ info "Generating masterkey (32 bytes)..."
 ZITADEL_MASTERKEY="$(LC_ALL=C tr -dc '[:graph:]' </dev/urandom | head -c 32)"
 success "Masterkey generated"
 
-info "Generating PostgreSQL admin password..."
-POSTGRES_ADMIN_PASSWORD=$(openssl rand -base64 32)
-success "PostgreSQL admin password generated"
-
-info "Generating PostgreSQL user password..."
-POSTGRES_USER_PASSWORD=$(openssl rand -base64 32)
-success "PostgreSQL user password generated"
-
 echo ""
 title "Storing Secrets in OpenBao"
 
@@ -168,9 +160,7 @@ echo ""
 
 # Store all secrets in one operation
 if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv put "kv/$OPENBAO_PATH" \
-	"ZITADEL_MASTERKEY=$ZITADEL_MASTERKEY" \
-	"ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD=$POSTGRES_ADMIN_PASSWORD" \
-	"ZITADEL_DATABASE_POSTGRES_USER_PASSWORD=$POSTGRES_USER_PASSWORD"; then
+	"ZITADEL_MASTERKEY=$ZITADEL_MASTERKEY"; then
 
 	echo ""
 	success "Secrets stored successfully!"
@@ -190,6 +180,7 @@ if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv put "kv/$OPENBAO_P
 	echo "  1. Deploy Zitadel using Flux or Kustomize"
 	echo "  2. The VaultStaticSecret will automatically sync secrets from OpenBao"
 	echo "  3. Zitadel will use the secrets for database and configuration"
+	echo "  4. After Zitadel starts, the sync job will push the service admin JWT to OpenBao"
 	echo ""
 	info "OpenBao path: kv/$OPENBAO_PATH"
 	info "VaultAuth reference: infra-kv-$NAMESPACE"
@@ -199,6 +190,12 @@ if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv put "kv/$OPENBAO_P
 	echo "  • Secrets are stored securely in OpenBao"
 	echo "  • Access is controlled by OpenBao policies"
 	echo "  • You can view secrets using: $BAO_WRAPPER -c $CLUSTER -n $OPENBAO_NAMESPACE -- kv get kv/$OPENBAO_PATH"
+	echo ""
+	info "Service Admin JWT Sync:"
+	echo "  • The Zitadel service admin JWT will be automatically synced to OpenBao"
+	echo "  • This happens via the post-install sync job after Zitadel creates the secret"
+	echo "  • Apps can then use VaultStaticSecret to pull the JWT from OpenBao"
+	echo "  • Key name in OpenBao: ZITADEL_ADMIN_JWT"
 else
 	error "Failed to store secrets in OpenBao"
 	exit 1

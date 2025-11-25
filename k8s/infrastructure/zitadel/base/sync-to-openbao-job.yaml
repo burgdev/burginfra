@@ -1,0 +1,133 @@
+# Job to sync Zitadel service admin secret to OpenBao
+# This runs after Zitadel's setup job creates the zitadel-service-admin secret
+# The secret is stored at: kv/infrastructure/zitadel/${NAMESPACE} with key ZITADEL_ADMIN_JWT
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: zitadel-sync-to-openbao
+  annotations:
+    # Run after Zitadel setup job (which has weight "2")
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  ttlSecondsAfterFinished: 600 # Clean up 10 minutes after completion
+  backoffLimit: 10
+  template:
+    spec:
+      serviceAccountName: openbao-secrets-manager
+      restartPolicy: OnFailure
+      containers:
+        - name: sync-to-openbao
+          image: alpine/k8s:1.29.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              #!/bin/sh
+              set -e
+
+              NAMESPACE="${NAMESPACE}"
+              SECRET_NAME="zitadel-service-admin"
+              SECRET_KEY="zitadel-key.json"
+              OPENBAO_NAMESPACE="${OPENBAO_NAMESPACE}"
+              OPENBAO_PATH="infrastructure/zitadel/${NAMESPACE}"
+
+              echo "============================================"
+              echo "Zitadel Service Admin Secret → OpenBao Sync"
+              echo "============================================"
+              echo ""
+              echo "Target namespace: $NAMESPACE"
+              echo "OpenBao namespace: $OPENBAO_NAMESPACE"
+              echo "OpenBao path: kv/$OPENBAO_PATH"
+              echo ""
+
+              # Wait for the secret to be created (with timeout)
+              echo "⏳ Waiting for secret '$SECRET_NAME' to be created..."
+              MAX_ATTEMPTS=60
+              ATTEMPT=0
+
+              while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
+                  echo "✓ Secret found!"
+                  break
+                fi
+
+                ATTEMPT=$((ATTEMPT + 1))
+                echo "   Attempt $ATTEMPT/$MAX_ATTEMPTS - waiting 5 seconds..."
+                sleep 5
+              done
+
+              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+                echo "✗ ERROR: Secret '$SECRET_NAME' was not created within timeout"
+                echo "This might be a first-time install issue. The secret will be synced on next upgrade."
+                exit 0  # Exit gracefully to not block deployment
+              fi
+
+              # Extract the secret value
+              echo ""
+              echo "📤 Extracting secret data..."
+              SECRET_VALUE=$(kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" \
+                -o jsonpath="{.data.$SECRET_KEY}" | base64 -d)
+
+              if [ -z "$SECRET_VALUE" ]; then
+                echo "✗ ERROR: Secret key '$SECRET_KEY' is empty or not found"
+                exit 1
+              fi
+
+              echo "✓ Secret extracted successfully"
+
+              # Get OpenBao token using Kubernetes auth
+              echo ""
+              echo "🔐 Authenticating to OpenBao..."
+              SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+              # Login to OpenBao using Kubernetes auth
+              VAULT_TOKEN=$(kubectl exec -n "$OPENBAO_NAMESPACE" openbao-0 -- sh -c "
+                vault write -field=token auth/kubernetes/login \
+                  role=openbao-secrets-manager \
+                  jwt='$SA_TOKEN'
+              ")
+
+              if [ -z "$VAULT_TOKEN" ]; then
+                echo "✗ ERROR: Failed to authenticate to OpenBao"
+                exit 1
+              fi
+
+              echo "✓ Authenticated to OpenBao"
+
+              # Store in OpenBao (patch to preserve other keys like ZITADEL_MASTERKEY)
+              echo ""
+              echo "💾 Storing secret in OpenBao..."
+              echo "   Using patch to preserve existing keys..."
+
+              # Use kv patch to add/update only ZITADEL_ADMIN_JWT without affecting other keys
+              kubectl exec -n "$OPENBAO_NAMESPACE" openbao-0 -- sh -c "
+                export VAULT_TOKEN='$VAULT_TOKEN'
+                vault kv patch kv/$OPENBAO_PATH ZITADEL_ADMIN_JWT='$SECRET_VALUE'
+              "
+
+              if [ $? -eq 0 ]; then
+                echo "✓ Secret synced to OpenBao successfully!"
+                echo ""
+                echo "============================================"
+                echo "✅ Sync completed successfully!"
+                echo "============================================"
+                echo ""
+                echo "The Zitadel service admin JWT is now available at:"
+                echo "  kv/$OPENBAO_PATH"
+                echo ""
+                echo "Key name: ZITADEL_ADMIN_JWT"
+                echo ""
+                echo "Apps can now use VaultStaticSecret to pull this credential."
+              else
+                echo "✗ ERROR: Failed to store secret in OpenBao"
+                exit 1
+              fi
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPENBAO_NAMESPACE
+              value: burginfra-${ENVIRONMENT}

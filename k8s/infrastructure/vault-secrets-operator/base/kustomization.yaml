@@ -11,3 +11,4 @@ resources:
   - serviceaccount.yaml
   - vaultconnection.yaml
   - vaultauth.yaml
+  - zitadel-credentials.yaml

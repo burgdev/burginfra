@@ -18,4 +18,3 @@ resources:
   - ingress.yaml
   - backup.yaml
   - terraform.yaml
-
