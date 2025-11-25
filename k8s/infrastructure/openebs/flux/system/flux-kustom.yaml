@@ -17,7 +17,7 @@ spec:
       ENVIRONMENT: "system"
       REPO_INTERVAL: "1h0s"
       SOURCE_INTERVAL: "1h0s"
-      CHART_VERSION: "4.3.*"
+      CHART_VERSION: "4.4.*"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
