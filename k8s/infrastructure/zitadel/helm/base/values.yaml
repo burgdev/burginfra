@@ -84,12 +84,12 @@ env:
     valueFrom:
       secretKeyRef:
         name: zitadel-smtp-vars
-        key: SMTP_HOST_USERNAME
+        key: SMTP_USERNAME
   - name: ZITADEL_DEFAULTINSTANCE_SMTPCONFIGURATION_SMTP_PASSWORD
     valueFrom:
       secretKeyRef:
         name: zitadel-smtp-vars
-        key: SMTP_HOST_PASSWORD
+        key: SMTP_PASSWORD
   - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
     valueFrom:
       secretKeyRef:
