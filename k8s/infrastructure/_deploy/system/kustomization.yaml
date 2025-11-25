@@ -12,5 +12,6 @@ resources:
   - ../../vault-secrets-operator/flux/system/
   - ../../reloader/flux/system/
   - ../../cloudnative-pg/flux/system/
+  - ../../zitadel/flux/system/
   - ../../tofu-controller/flux/system/
   #- ../../zitadel/flux/system/
