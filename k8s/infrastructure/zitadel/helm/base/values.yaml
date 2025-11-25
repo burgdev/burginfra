@@ -27,44 +27,69 @@ zitadel:
           SSL:
             Mode: disable
 
-    FirstInstance:
+    #FirstInstance:
+    DefaultInstance:
+      InstanceName: BURGINFRA
       Org:
+        Name: BurgInfra
+        Human:
+          UserName: root
+          FirstName: Burginfra
+          LastName: Admin
+          NickName: BurgAdmin
+          Email:
+            Address: "tobias@burgdev.ch"
+            Verified: true
+          Password: "Password1!"
+          PasswordChangeRequired: false
+          PreferredLanguage: "en"
         Machine:
           Machine:
-            Username: terraform-admin
-            Name: "Terraform Service Account"
+            Username: zitadel-service-admin
+            Name: "Service Admin Account"
           MachineKey:
-            # Machine key will expire in ~1 year, adjust as needed
-            ExpirationDate: "2026-11-24T00:00:00Z"
+            # Machine key will not expire, adjust as needed
+            ExpirationDate: "2526-11-24T00:00:00Z"
             # Type 1 = JSON key for service account authentication
             Type: 1
-    #    Human:
-    #      # use the loginname zitadel-admin@pg-insecure.127.0.0.1.sslip.io
-    #      UserName: "zitadel-admin"
-    #      FirstName: "ZITADEL"
-    #      LastName: "Admin"
-    #      Email:
-    #        Address: ""
-    #        Verified: true
-    #      Password: "Password1!"
-    #      PasswordChangeRequired: false
-    #      PreferredLanguage: "en"
+        LoginClient:
+          Machine:
+            Username: zitadel-service-login
+            Name: "Service Login Account"
+    SMTPConfiguration:
+      From: no-reply@{BURGDEV_HOST}
+      FromName: "No Reply"
 
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
 env:
-  - name: ZITADEL_FIRSTINSTANCE_INSTANCENAME
-    value: "BURGINFRA"
-  - name: ZITADEL_FIRSTINSTANCE_ORG_NAME
-    value: "BurgInfra"
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
-    value: "root"
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_FIRSTNAME
-    value: "Burginfra"
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_NICKNAME
-    value: "BurgAdmin"
-  - name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
-    value: "Password1!"
+  #- name: ZITADEL_FIRSTINSTANCE_INSTANCENAME
+  #  value: "BURGINFRA"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_NAME
+  #  value: "BurgInfra"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
+  #  value: "root"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_FIRSTNAME
+  #  value: "Burginfra"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_NICKNAME
+  #  value: "BurgAdmin"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
+  #  value: "Password1!"
+  - name: ZITADEL_DEFAULTINSTANCE_SMTPCONFIGURATION_SMTP_HOST # inluding PORT
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-smtp-vars
+        key: SMTP_HOST_PORT
+  - name: ZITADEL_DEFAULTINSTANCE_SMTPCONFIGURATION_SMTP_USER
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-smtp-vars
+        key: SMTP_HOST_USERNAME
+  - name: ZITADEL_DEFAULTINSTANCE_SMTPCONFIGURATION_SMTP_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-smtp-vars
+        key: SMTP_HOST_PASSWORD
   - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
     valueFrom:
       secretKeyRef:
