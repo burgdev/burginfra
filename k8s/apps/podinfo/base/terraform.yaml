@@ -1,0 +1,47 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: podinfo-zitadel
+  namespace: ${NAMESPACE}
+spec:
+  approvePlan: auto
+  interval: 1h
+  path: ./k8s/apps/podinfo/terraform
+  sourceRef:
+    kind: GitRepository
+    name: burgdev-burginfra
+    namespace: flux-system
+  
+  # Variables from cluster-settings ConfigMap
+  varsFrom:
+    - kind: ConfigMap
+      name: cluster-settings
+      varsKeys:
+        - BURGDEV_HOST
+  
+  # Additional inline variables
+  vars:
+    - name: environment
+      value: ${ENVIRONMENT}
+    - name: zitadel_domain
+      value: auth.${ENVIRONMENT}.${BURGDEV_HOST}
+    - name: podinfo_domain
+      value: podinfo.${ENVIRONMENT}.${BURGDEV_HOST}
+  
+  # JWT profile for Zitadel authentication (from Secret)
+  varsFrom:
+    - kind: Secret
+      name: zitadel-terraform-credentials
+      varsKeys:
+        - zitadel_jwt_profile
+  
+  # Write outputs to a Secret for use by podinfo
+  writeOutputsToSecret:
+    name: podinfo-oidc-credentials
+    outputs:
+      - client_id
+      - client_secret
+      - issuer_url
+      - authorization_endpoint
+      - token_endpoint
+      - userinfo_endpoint

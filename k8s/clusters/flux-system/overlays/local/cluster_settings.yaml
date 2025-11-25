@@ -11,3 +11,4 @@ data:
   BURGDEV_EMAIL: "tobias@burgdev.ch"
   BURGINFRA_HOST: "infra.local.gd"
   CLUSTER: "local"
+

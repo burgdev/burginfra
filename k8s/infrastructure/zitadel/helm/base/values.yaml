@@ -27,8 +27,17 @@ zitadel:
           SSL:
             Mode: disable
 
-    #FirstInstance:
-    #  Org:
+    FirstInstance:
+      Org:
+        Machine:
+          Machine:
+            Username: terraform-admin
+            Name: "Terraform Service Account"
+          MachineKey:
+            # Machine key will expire in ~1 year, adjust as needed
+            ExpirationDate: "2026-11-24T00:00:00Z"
+            # Type 1 = JSON key for service account authentication
+            Type: 1
     #    Human:
     #      # use the loginname zitadel-admin@pg-insecure.127.0.0.1.sslip.io
     #      UserName: "zitadel-admin"

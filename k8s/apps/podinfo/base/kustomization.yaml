@@ -17,4 +17,5 @@ resources:
   - service.yaml
   - ingress.yaml
   - backup.yaml
+  - terraform.yaml
 
