@@ -10,4 +10,5 @@ commonLabels:
 resources:
   - secrets.yaml
   - postgres.yaml
+  - rbac.yaml
   - sync-to-openbao-job.yaml

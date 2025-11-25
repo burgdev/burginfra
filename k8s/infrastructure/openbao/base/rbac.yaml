@@ -25,3 +25,31 @@ subjects:
   - kind: ServiceAccount
     name: openbao
     namespace: burginfra-system
+---
+# Role to allow openbao-secrets-manager to exec into OpenBao pods
+# This is needed by sync jobs to run vault commands
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openbao-pod-exec
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+# Bind the role to the openbao-secrets-manager ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openbao-pod-exec
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: openbao-pod-exec
+subjects:
+  - kind: ServiceAccount
+    name: openbao-secrets-manager
+    namespace: ${NAMESPACE}
