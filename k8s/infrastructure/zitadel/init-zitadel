@@ -6,9 +6,9 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
 cd "$SCRIPT_DIR"
 
 # Default values
-NAMESPACE="burginfra-staging"
+NAMESPACE="burginfra-system"
 CLUSTER=""
-ENVIRONMENT="staging"
+ENVIRONMENT="system"
 FORCE=false
 
 usage() {
