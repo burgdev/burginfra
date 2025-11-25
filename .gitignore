@@ -38,8 +38,8 @@ yarn-error.log*
 .netlify
 
 # Kubernetes files with sensitive data
-*-secret.yaml
-*-credentials.yaml
+#*-secret.yaml
+#*-credentials.yaml
 
 # Terraform
 .terraform/
