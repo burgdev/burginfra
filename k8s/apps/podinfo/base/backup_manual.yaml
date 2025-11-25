@@ -4,12 +4,12 @@ apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
   name: podinfo-data-manual # 'username' for kopia
-  namespace: development
+  namespace: staging
 spec:
-  sourcePVC: fast-data-pvc-v1
+  sourcePVC: podinfo-fast-data-pvc-v1
   trigger:
     #schedule: "*/2 * * * *"
-    manual: backup-0
+    manual: backup-2
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
@@ -34,6 +34,5 @@ spec:
 
     # Use snapshot for point-in-time consistency
     # Snapshot is not supported yet https://github.com/openebs/openebs/issues/4071
-    # copyMethod: Snapshot
-    copyMethod: Direct
-
+    copyMethod: Snapshot
+    # copyMethod: Direct

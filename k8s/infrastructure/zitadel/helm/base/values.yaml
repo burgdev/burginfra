@@ -27,8 +27,8 @@ zitadel:
           SSL:
             Mode: disable
 
-    #FirstInstance:
-    DefaultInstance:
+      #DefaultInstance:
+    FirstInstance:
       InstanceName: BURGINFRA
       Org:
         Name: BurgInfra
@@ -56,9 +56,14 @@ zitadel:
           Machine:
             Username: zitadel-service-login
             Name: "Service Login Account"
-    SMTPConfiguration:
-      From: no-reply@{BURGDEV_HOST}
-      FromName: "No Reply"
+
+    DefaultInstance:
+      SMTPConfiguration:
+        From: no-reply@{BURGDEV_HOST}
+        FromName: "No Reply"
+
+      Features:
+        UserScheam: true
 
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
