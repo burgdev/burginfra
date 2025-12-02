@@ -7,7 +7,7 @@ zitadel:
     # login with
     # ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_USERNAME@ZITADEL_DEFAULTINSTANCE_ORG_NAME.ExternalDomain
     # e.g. root@burginfra.auth.DOMAIN
-    ExternalDomain: auth.staging.${BURGDEV_HOST}
+    ExternalDomain: auth.${BURGDEV_HOST}
     ExternalPort: 443
     ExternalSecure: true
 

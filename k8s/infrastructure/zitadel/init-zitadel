@@ -18,7 +18,7 @@ Usage: $0 -c CLUSTER [-n NAMESPACE] [-e ENVIRONMENT] [-f]
 This script initializes Zitadel secrets in OpenBao:
   1. Checks if secrets already exist
   2. Generates secure random secrets for Zitadel
-  3. Stores them in OpenBao at the correct path using Kubernetes authentication
+  3. Stores it in OpenBao at kv/infrastructure/zitadel/\$NAMESPACE
   4. Creates all required secrets for Zitadel operation
 
 This should be run ONCE when setting up Zitadel in a new environment.
