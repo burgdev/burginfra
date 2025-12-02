@@ -4,7 +4,7 @@
 # !! make sure it is added to 'kustomization.yaml' !!
 #
 # OPENBAO_ACCESS: kubernetes
-# KUBERNETES_NAMESPACES: burginfra-system
+# KUBERNETES_NAMESPACES: burginfra-system,production,staging
 
 path "kv/data/infrastructure/+/burginfra-system" {
   capabilities = ["read", "list"]
