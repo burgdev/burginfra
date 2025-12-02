@@ -29,9 +29,9 @@ spec:
     - name: environment
       value: ${ENVIRONMENT}
     - name: zitadel_domain
-      value: auth.${ENVIRONMENT}.${BURGDEV_HOST}
+      value: auth.${BURGDEV_HOST}
     - name: podinfo_domain
-      value: podinfo.${ENVIRONMENT}.${BURGDEV_HOST}
+      value: podinfo.${BURGDEV_HOST}
 
   # Write outputs to a Secret for use by podinfo
   writeOutputsToSecret:
