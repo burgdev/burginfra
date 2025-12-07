@@ -17,7 +17,7 @@ fi
 if [ -z "${NAMESPACES+x}" ] || [ "${#NAMESPACES[@]}" -eq 0 ]; then
 	NAMESPACES=("staging" "production" "burginfra-staging" "burginfra-system")
 fi
-TEMPLATE_FILE=${TEMPLATE_FILE:-"configs/restore.template.yaml"}
+TEMPLATE_FILE=${TEMPLATE_FILE:-"configs/restore_volsync.template.yaml"}
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 # --- Single-key yes/no ---

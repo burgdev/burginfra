@@ -10,8 +10,8 @@ spec:
   # This VolSync backup (3 AM) provides offsite safety net
   sourcePVC: zitadel-postgres-1
   trigger:
-    schedule: "0 3 * * *" # Daily at 3 AM (low activity period)
-    #manual: backup-01
+    #schedule: "0 3 * * *" # Daily at 3 AM (low activity period)
+    manual: backup-02
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:

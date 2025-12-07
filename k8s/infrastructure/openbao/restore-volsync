@@ -9,7 +9,7 @@ cd "$SCRIPT_DIR"
 NAMESPACES=("burginfra-staging" "burginfra-system")
 
 # Source the helper: sets RESTORE_YAML and provides wait_for_restore()
-source "${ROOT_DIR}/scripts/k8s/_restore.sh"
+source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
 
 # --- Scenario-specific steps ---
 echo -e "${YELLOW}Scaling down StatefulSet openbao...${RESET}"
