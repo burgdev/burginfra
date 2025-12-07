@@ -31,5 +31,5 @@ spec:
 
     # Use snapshot for point-in-time consistency
     # Snapshot is not supported yet https://github.com/openebs/openebs/issues/4071
-    # copyMethod: Snapshot
-    copyMethod: Direct
+    copyMethod: Snapshot
+    # copyMethod: Direct
