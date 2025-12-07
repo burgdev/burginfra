@@ -6,7 +6,7 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
 . "$ROOT_DIR/scripts/_base.sh"
 cd "$SCRIPT_DIR"
 
-NAMESPACES=("burginfra-staging" "burginfra-system")
+NAMESPACES=("burginfra-system" "burginfra-staging")
 
 # Source the helper: sets RESTORE_YAML and provides wait_for_restore()
 source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
