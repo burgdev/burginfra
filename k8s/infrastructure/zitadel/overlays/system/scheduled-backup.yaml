@@ -1,0 +1,21 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: zitadel-postgres-daily-snapshot
+  namespace: ${NAMESPACE}
+spec:
+  cluster:
+    name: zitadel-postgres
+  
+  # Daily backups at 2 AM
+  schedule: "0 2 * * *"
+  backupOwnerReference: self
+  
+  # Use volume snapshots
+  method: volumeSnapshot
+  
+  # Take immediate backup on creation
+  immediate: true
+  
+  # Optional: Suspend if needed
+  suspend: false

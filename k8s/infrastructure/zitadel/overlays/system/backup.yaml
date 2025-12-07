@@ -1,0 +1,43 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: ${CLUSTER}-zitadel-postgres # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  # Backup the live database PVC (not the CNPG snapshot)
+  # This provides offsite disaster recovery via WebDAV
+  # CNPG snapshots (2 AM) provide fast, consistent local recovery
+  # This VolSync backup (3 AM) provides offsite safety net
+  sourcePVC: zitadel-postgres-1
+  trigger:
+    schedule: "0 3 * * *" # Daily at 3 AM (low activity period)
+    #manual: backup-01
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    policyConfig:
+      configMapName: kopia-policies
+
+    # Updated retention policy for daily backups
+    retain:
+      hourly: 0 # No hourly backups
+      daily: 14 # Keep 2 weeks of daily backups
+      weekly: 4 # Keep 4 weeks
+      monthly: 3 # Keep 3 months
+      yearly: 1
+
+    #actions:
+    #  beforeSnapshot: |
+    #    echo "[Auto] Start at $(date)" >> /data/backup.log
+
+    #  afterSnapshot: |
+    #    echo "[Auto] Finished at $(date)" >> /data/backup.log
+
+    # Use Direct copy method
+    # Note: Snapshot is now handled by CloudNativePG volume snapshots
+    # This VolSync backup serves as an additional disaster recovery layer
+    copyMethod: Direct
+
+    moverSecurityContext:
+      runAsUser: 26
+      runAsGroup: 26
+      fsGroup: 26

@@ -63,19 +63,15 @@ spec:
   minSyncReplicas: 0
   maxSyncReplicas: 0
 
-  # Backup configuration (optional, can be added later)
-  # backup:
-  #   barmanObjectStore:
-  #     destinationPath: s3://your-bucket/zitadel-postgres
-  #     s3Credentials:
-  #       accessKeyId:
-  #         name: backup-credentials
-  #         key: ACCESS_KEY_ID
-  #       secretAccessKey:
-  #         name: backup-credentials
-  #         key: SECRET_ACCESS_KEY
-  #     wal:
-  #       compression: gzip
-  #     data:
-  #       compression: gzip
-  #   retentionPolicy: "30d"
+  # Backup configuration using volume snapshots
+  backup:
+    volumeSnapshot:
+      className: lvmpv-snapclass  # OpenEBS LVM snapshot class
+      online: true  # Online/hot backup (PostgreSQL handles consistency)
+      snapshotOwnerReference: cluster
+      
+      # Optional: Archive WAL to separate PVC for Point-in-Time Recovery (PITR)
+      # Uncomment if you need PITR capability
+      # walStorage:
+      #   storageClass: fast-local-data-v1
+      #   size: 2Gi
