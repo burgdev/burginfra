@@ -5,7 +5,7 @@ metadata:
 spec:
   instances: 1
   storage:
-    storageClass: fast-local-data-v1
+    storageClass: fast-local-data-v2 # Use thin-provisioned storage for snapshot support
     size: 5Gi
 
   # Bootstrap with database and users
@@ -66,10 +66,10 @@ spec:
   # Backup configuration using volume snapshots
   backup:
     volumeSnapshot:
-      className: lvmpv-snapclass  # OpenEBS LVM snapshot class
-      online: true  # Online/hot backup (PostgreSQL handles consistency)
+      className: lvmpv-snapclass # OpenEBS LVM snapshot class
+      online: true # Online/hot backup (PostgreSQL handles consistency)
       snapshotOwnerReference: cluster
-      
+
       # Optional: Archive WAL to separate PVC for Point-in-Time Recovery (PITR)
       # Uncomment if you need PITR capability
       # walStorage:

@@ -13,4 +13,5 @@ resources:
   - storageclass_fast_local_media_v0.yaml
   - storageclass_fast_local_data_v1.yaml
   - storageclass_fast_local_media_v1.yaml
-
+  - storageclass_fast_local_data_v2.yaml
+  - storageclass_fast_local_media_v2.yaml
