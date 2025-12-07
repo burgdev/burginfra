@@ -20,7 +20,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: openbao
-      version: "0.19.*"
+      version: "0.21.x"
   install:
     createNamespace: false
   valuesFrom:
