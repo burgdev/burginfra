@@ -12,7 +12,7 @@ NAMESPACES=("burginfra-system")
 source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
 
 # --- Scenario-specific steps ---
-echo -e "${YELLOW}Scaling down StatefulSet openbao...${RESET}"
+echo -e "${YELLOW}Scaling down deployment zitadel...${RESET}"
 kubectl scale deployment zitadel -n "$NAMESPACE" --replicas=0 2>/dev/null || echo "Note: Zitadel deployment not found"
 
 echo -e "${YELLOW}Applying restore manifest...${RESET}"
@@ -20,7 +20,7 @@ echo "$RESTORE_YAML" | kubectl apply -f -
 
 wait_for_restore
 
-echo -e "${YELLOW}Scaling StatefulSet openbao back up...${RESET}"
+echo -e "${YELLOW}Scaling deployment zitadel back up...${RESET}"
 kubectl scale deployment zitadel -n "$NAMESPACE" --replicas=1 2>/dev/null || echo "Note: Zitadel deployment not found"
 
 sleep 5 # wait until ready

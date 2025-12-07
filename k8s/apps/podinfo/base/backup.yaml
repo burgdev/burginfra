@@ -5,9 +5,9 @@ metadata:
   name: ${CLUSTER}-podinfo-data # 'username' for kopia
   namespace: ${NAMESPACE}
 spec:
-  sourcePVC: podinfo-fast-data-pvc-v1
+  sourcePVC: podinfo-fast-data-pvc-v2
   trigger:
-    schedule: "*/10 * * * *" # every 2 minutes
+    schedule: "*/2 * * * *" # every 2 minutes
     #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
