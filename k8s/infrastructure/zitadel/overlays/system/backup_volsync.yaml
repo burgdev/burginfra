@@ -10,8 +10,8 @@ spec:
   # This VolSync backup (3 AM) provides offsite safety net
   sourcePVC: zitadel-postgres-1
   trigger:
-    #schedule: "0 3 * * *" # Daily at 3 AM (low activity period)
-    manual: backup-02
+    schedule: "0 3 * * *" # Daily at 3 AM (low activity period)
+    # manual: backup-02
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
@@ -32,10 +32,7 @@ spec:
     #  afterSnapshot: |
     #    echo "[Auto] Finished at $(date)" >> /data/backup.log
 
-    # Use Direct copy method
-    # Note: Snapshot is now handled by CloudNativePG volume snapshots
-    # This VolSync backup serves as an additional disaster recovery layer
-    copyMethod: Direct
+    copyMethod: Snapshot
 
     moverSecurityContext:
       runAsUser: 26
