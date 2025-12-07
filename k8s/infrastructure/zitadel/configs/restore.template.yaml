@@ -1,0 +1,22 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationDestination
+metadata:
+  name: ${CLUSTER}-zitadel-postgres # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  trigger:
+    manual: restore-${TIMESTAMP}
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    destinationPVC: zitadel-postgres-1
+    copyMethod: Direct
+    enableFileDeletion: true
+
+    sourceIdentity:
+      sourceName: ${SRC_CLUSTER}-zitadel-postgres
+      sourceNamespace: ${SRC_NAMESPACE}
+
+    moverSecurityContext:
+      runAsUser: 26
+      runAsGroup: 26
+      fsGroup: 26

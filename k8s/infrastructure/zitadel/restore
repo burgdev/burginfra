@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("burginfra-system")
+
+# Source the helper: sets RESTORE_YAML and provides wait_for_restore()
+source "${ROOT_DIR}/scripts/k8s/_restore.sh"
+
+# --- Scenario-specific steps ---
+echo -e "${YELLOW}Scaling down StatefulSet openbao...${RESET}"
+kubectl scale deployment zitadel -n "$NAMESPACE" --replicas=0 2>/dev/null || echo "Note: Zitadel deployment not found"
+
+echo -e "${YELLOW}Applying restore manifest...${RESET}"
+echo "$RESTORE_YAML" | kubectl apply -f -
+
+wait_for_restore
+
+echo -e "${YELLOW}Scaling StatefulSet openbao back up...${RESET}"
+kubectl scale deployment zitadel -n "$NAMESPACE" --replicas=1 2>/dev/null || echo "Note: Zitadel deployment not found"
+
+sleep 5 # wait until ready
+
+echo -e "${GREEN}Restore scenario completed successfully.${RESET}"
