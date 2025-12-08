@@ -1,0 +1,22 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationDestination
+metadata:
+  name: ${CLUSTER}-immich-library # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  trigger:
+    manual: restore-immich-library-${TIMESTAMP}
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    destinationPVC: immich-library-pvc-v0
+    copyMethod: Direct
+    enableFileDeletion: true
+
+    sourceIdentity:
+      sourceName: ${SRC_CLUSTER}-immich-library
+      sourceNamespace: ${SRC_NAMESPACE}
+
+    moverSecurityContext:
+      runAsUser: 100
+      runAsGroup: 1000
+      fsGroup: 1000

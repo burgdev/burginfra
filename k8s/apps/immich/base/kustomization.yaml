@@ -4,6 +4,7 @@ resources:
   - postgres.yaml
   - pvcs.yaml
   - helmrelease.yaml
+  - backups.yaml
 
 configMapGenerator:
   - name: immich-values

@@ -35,6 +35,6 @@ spec:
     copyMethod: Snapshot
 
     moverSecurityContext:
-      runAsUser: 26
-      runAsGroup: 26
+      runAsUser: 26 # postgres
+      runAsGroup: 26 # tape
       fsGroup: 26
