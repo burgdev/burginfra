@@ -28,14 +28,14 @@ spec:
   #      - CREATE EXTENSION vchord CASCADE;
   #      - CREATE EXTENSION earthdistance CASCADE;
 
-  # Resource limits - optimized for single node
-  #resources:
-  #  requests:
-  #    memory: "256Mi"
-  #    cpu: "250m"
-  #  limits:
-  #    memory: "512Mi"
-  #    cpu: "500m"
+  # Resource limits - optimized for single node with few users
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
 
   # PostgreSQL Configuration - optimized for small deployments
   postgresql:

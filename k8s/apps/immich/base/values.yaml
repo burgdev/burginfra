@@ -4,6 +4,13 @@ controllers:
       main:
         image:
           tag: v2.3.1
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
         env:
           DB_HOSTNAME:
             valueFrom:
@@ -33,6 +40,13 @@ valkey:
       storageClassName: fast-local-data-v2
 
 machine-learning:
+  resources:
+    requests:
+      memory: "1.5Gi"
+      cpu: "500m"
+    limits:
+      memory: "3Gi"
+      cpu: "2000m"
   persistence:
     cache:
       type: persistentVolumeClaim
