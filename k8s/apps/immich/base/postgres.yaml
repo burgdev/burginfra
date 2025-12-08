@@ -10,8 +10,8 @@ spec:
     size: ${IMMICH_DB_STORAGE_SIZE:-2Gi}
 
   # https://github.com/tensorchord/cloudnative-vectorchord/pkgs/container/cloudnative-vectorchord
-  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18.1-1.0.0 # maybe vchord 0.5.3 is needed?
-  #imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18.0-0.5.3
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18.0-0.5.3
+  #imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18.1-1.0.0 # vectorcord 1.0.0 not supported by immich yet
 
   enableSuperuserAccess: true
 
@@ -19,7 +19,6 @@ spec:
   bootstrap:
     initdb:
       database: immich
-      owner: postgres
 
   #bootstrap: # should not be needed with superuser
   #  initdb:
