@@ -4,3 +4,10 @@ resources:
   - postgres.yaml
   - pvcs.yaml
   - helmrelease.yaml
+
+configMapGenerator:
+  - name: immich-values
+    files:
+      - values.yaml=values.yaml
+    options:
+      disableNameSuffixHash: true
