@@ -29,13 +29,13 @@ spec:
   #      - CREATE EXTENSION earthdistance CASCADE;
 
   # Resource limits - optimized for single node
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "250m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
+  #resources:
+  #  requests:
+  #    memory: "256Mi"
+  #    cpu: "250m"
+  #  limits:
+  #    memory: "512Mi"
+  #    cpu: "500m"
 
   # PostgreSQL Configuration - optimized for small deployments
   postgresql:
