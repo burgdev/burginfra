@@ -16,6 +16,7 @@ spec:
     substitute:
       NAMESPACE: "production"
       ENVIRONMENT: "prod"
+      ENV_SUBDOMAIN: ""
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings

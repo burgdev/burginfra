@@ -32,6 +32,7 @@ spec:
     substitute:
       NAMESPACE: "staging"
       ENVIRONMENT: "staging"
+      ENV_SUBDOMAIN: "staging."
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
