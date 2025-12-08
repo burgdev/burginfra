@@ -9,7 +9,7 @@ spec:
   resources:
     requests:
       storage: ${IMMICH_LIBRARY_STORAGE_SIZE:-5Gi}
-  storageClassName: fast-local-media-retain-v2
+  storageClassName: fast-local-media-v2
 ---
 # PRESISTEND VOLUME CLAIM EXTERNAL ====
 apiVersion: v1
@@ -22,4 +22,4 @@ spec:
   resources:
     requests:
       storage: ${IMMICH_EXTERNAL_STORAGE_SIZE:-5Gi}
-  storageClassName: fast-local-media-retain-v2
+  storageClassName: fast-local-media-v2
