@@ -8,8 +8,7 @@ metadata:
 spec:
   sourcePVC: immich-library-pvc-v1
   trigger:
-    #schedule: "*/2 * * * *"
-    schedule: "0 3 * * *" # Daily at 3 AM (low activity period)
+    schedule: "20 */1 * * *" # every hour
     #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
@@ -47,7 +46,7 @@ metadata:
 spec:
   sourcePVC: immich-external-pvc-v1
   trigger:
-    schedule: "*/3 * * * *"
+    schedule: "30 */4 * * *" # every 4 hour
     #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
@@ -85,7 +84,7 @@ metadata:
 spec:
   sourcePVC: immich-postgres-1
   trigger:
-    schedule: "*/4 * * * *"
+    schedule: "25 */1 * * *" # every 1 hour
     #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
