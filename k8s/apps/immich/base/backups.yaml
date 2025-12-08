@@ -84,7 +84,7 @@ metadata:
 spec:
   sourcePVC: immich-postgres-1
   trigger:
-    schedule: "25 */1 * * *" # every 1 hour
+    schedule: "25 */1 * * *" # every hour
     #manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
