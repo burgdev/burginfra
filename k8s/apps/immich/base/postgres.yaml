@@ -1,0 +1,86 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-postgres
+spec:
+  instances: 1
+
+  storage:
+    storageClass: fast-local-data-v2
+    size: ${IMMICH_DB_STORAGE_SIZE:-2Gi}
+
+  # https://github.com/tensorchord/cloudnative-vectorchord/pkgs/container/cloudnative-vectorchord
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18.1-1.0.0 # maybe vchord 0.5.3 is needed?
+  #imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18.0-0.5.3
+
+  enableSuperuserAccess: true
+
+  #bootstrap: # should not be needed with superuser
+  #  initdb:
+  #    # TODO: Use managed extensions (pg 18)
+  #    postInitApplicationSQL:
+  #      # Commands based on: https://immich.app/docs/administration/postgres-standalone/#without-superuser-permission
+  #      - CREATE EXTENSION vchord CASCADE;
+  #      - CREATE EXTENSION earthdistance CASCADE;
+
+  # Resource limits - optimized for single node
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # PostgreSQL Configuration - optimized for small deployments
+  postgresql:
+    shared_preload_libraries:
+      - "vchord.so"
+    parameters:
+      # Connection settings
+      max_connections: "50"
+
+      # Memory settings (conservative for 512Mi limit)
+      shared_buffers: "128MB"
+      effective_cache_size: "256MB"
+      maintenance_work_mem: "32MB"
+      work_mem: "2MB"
+
+      # WAL settings
+      wal_buffers: "4MB"
+      min_wal_size: "256MB"
+      max_wal_size: "1GB"
+      checkpoint_completion_target: "0.9"
+
+      # Query planner
+      default_statistics_target: "100"
+      random_page_cost: "1.1" # SSD optimized
+      effective_io_concurrency: "200"
+
+      # Logging (minimal for performance)
+      log_checkpoints: "on"
+      log_connections: "off"
+      log_disconnections: "off"
+      log_lock_waits: "on"
+
+  # Start delay to ensure proper initialization
+  startDelay: 30
+  stopDelay: 30
+  switchoverDelay: 60
+
+  # Ensure proper readiness before marking as ready
+  minSyncReplicas: 0
+  maxSyncReplicas: 0
+
+  ## # Backup configuration using volume snapshots
+  ## backup:
+  ##   volumeSnapshot:
+  ##     className: lvmpv-snapclass # OpenEBS LVM snapshot class
+  ##     online: true # Online/hot backup (PostgreSQL handles consistency)
+  ##     snapshotOwnerReference: cluster
+
+  ##     # Optional: Archive WAL to separate PVC for Point-in-Time Recovery (PITR)
+  ##     # Uncomment if you need PITR capability
+  ##     # walStorage:
+  ##     #   storageClass: fast-local-data-v1
+  ##     #   size: 2Gi

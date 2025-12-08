@@ -11,3 +11,6 @@ data:
   BURGDEV_EMAIL: "tobias@burgdev.ch"
   BURGINFRA_HOST: "infra.burgdev.ch"
   CLUSTER: "burginfra"
+  IMMICH_LIBRARY_STORAGE_SIZE: "400Gi"
+  IMMICH_EXTERNAL_STORAGE_SIZE: "200Gi"
+  IMMICH_DB_STORAGE_SIZE: "10Gi"

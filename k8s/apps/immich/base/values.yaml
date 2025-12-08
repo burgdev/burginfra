@@ -3,23 +3,41 @@ controllers:
     containers:
       main:
         image:
-          tag: v2.2.1
+          tag: v2.3.1
         env:
-          # IMMICH_MEDIA_LOCATION: /usr/src/app/upload
-          DB_HOSTNAME: $ENV-immich-database.immich.svc.cluster.local
+          DB_HOSTNAME:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-superuser
+                key: host
           DB_USERNAME:
             valueFrom:
               secretKeyRef:
-                name: $ENV-immich-secrets
-                key: username
+                name: immich-postgres-superuser
+                key: user
           DB_PASSWORD:
             valueFrom:
               secretKeyRef:
-                name: $ENV-immich-secrets
+                name: immich-postgres-superuser
                 key: password
-          REDIS_HOSTNAME: $ENV-immich-cache.immich.svc.cluster.local
-          REDIS_PORT: 6379
-          REDIS_DBINDEX: 0
+          #DB_DATABASE_NAME:
+          #  valueFrom:
+          #    secretKeyRef:
+          #      name: immich-postgres-superuser
+          #      key: dbname
+valkey:
+  enabled: true
+  persistence:
+    data:
+      type: persistentVolumeClaim
+      storageClassName: fast-local-data-v2
+
+machine-learning:
+  persistence:
+    cache:
+      type: persistentVolumeClaim
+      storageClassName: fast-local-data-v2
+
 server:
   persistence:
     external:
@@ -27,11 +45,24 @@ server:
       type: persistentVolumeClaim
       mountPath: /mnt/external
       readOnly: true
-      existingClaim: $ENV-immich-external-pvc
+      existingClaim: immich-external-pvc-v0
+  ingress:
+    main:
+      enabled: true
+      tls:
+        - hosts:
+            - pix.${ENV_SUBDOMAIN}${CRUXLI_HOST}
+      hosts:
+        - host: pix.${ENV_SUBDOMAIN}${CRUXLI_HOST}
+          paths:
+            - path: "/"
+              service:
+                identifier: main
+
 immich:
   persistence:
     library:
-      existingClaim: $ENV-immich-data-pvc
+      existingClaim: immich-library-pvc-v0
   configuration:
     image:
       colorspace: p3
@@ -73,13 +104,13 @@ immich:
         minScore: 0.7
         modelName: "buffalo_l"
     server:
-      externalDomain: $EXTERNAL_DOMAIN
-      loginPageMessage: <div>$WELCOME_TEXT_HTML</div>
+      externalDomain: pix.${CRUXLI_HOST}
+      loginPageMessage: <div>${WELCOME_TEXT_HTML}</div>
       publicUsers: true
     map:
       enabled: true
-      darkStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=$MAPTILER_KEY
-      lightStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=$MAPTILER_KEY
+      darkStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=${MAPTILER_KEY}
+      lightStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=${MAPTILER_KEY}
     metadata:
       faces:
         import: true
@@ -92,17 +123,17 @@ immich:
       missingThumbnails: true
       startTime: "02:30"
       syncQuotaUsage: true
-    notifications:
-      smtp:
-        enabled: $EMAIL_ENABLED
-        from: $EMAIL_FROM
-        replyTo: ""
-        transport:
-          host: $EMAIL_HOST
-          ignoreCert: false
-          password: $EMAIL_HOST_PASSWORD
-          port: $EMAIL_HOST_PORT
-          username: $EMAIL_HOST_USER
+      #notifications:
+      #  smtp:
+      #    enabled: $EMAIL_ENABLED
+      #    from: $EMAIL_FROM
+      #    replyTo: ""
+      #    transport:
+      #      host: $EMAIL_HOST
+      #      ignoreCert: false
+      #      password: $EMAIL_HOST_PASSWORD
+      #      port: $EMAIL_HOST_PORT
+      #      username: $EMAIL_HOST_USER
     storageTemplate:
       enabled: true
       hashVerificationEnabled: true

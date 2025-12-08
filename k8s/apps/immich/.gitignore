@@ -8,4 +8,4 @@ certs
 #kustomization.yaml
 
 # Sensitive files
-secrets.yaml
+#secrets.yaml

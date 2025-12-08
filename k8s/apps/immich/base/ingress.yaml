@@ -1,0 +1,21 @@
+## NOT USED YET, is it needed?
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  tls:
+    - hosts:
+        - pix.${CRUXLI_HOST}
+  rules:
+    - host: pix.${CRUXLI_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ENV-immich-server # use correct name in kustomization
+                port:
+                  number: 2283
