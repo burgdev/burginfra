@@ -13,5 +13,5 @@ resources:
   - ../../reloader/flux/system/
   - ../../cloudnative-pg/flux/system/
   - ../../zitadel/flux/system/
-  - ../../tofu-controller/flux/system/
+  #- ../../tofu-controller/flux/system/ # not used currently
   #- ../../zitadel/flux/system/
