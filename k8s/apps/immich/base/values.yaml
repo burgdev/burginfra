@@ -36,6 +36,7 @@ machine-learning:
   persistence:
     cache:
       type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
       storageClassName: fast-local-data-v2
 
 server:
