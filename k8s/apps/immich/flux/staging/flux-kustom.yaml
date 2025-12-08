@@ -6,8 +6,7 @@ metadata:
 spec:
   type: kv-v2
   mount: kv
-  vaultAuthRef: apps-kv-staging # either default or staging
-  #vaultAuthRef: apps-kv-all # either default or staging
+  vaultAuthRef: apps-kv-flux
   destination:
     name: immich-staging-config-secret # the name of the K8s Secret
     create: true

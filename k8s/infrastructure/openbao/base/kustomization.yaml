@@ -34,6 +34,7 @@ configMapGenerator:
       - policies/apps-kv-staging.hcl
       - policies/apps-kv-production.hcl
       - policies/apps-kv-all.hcl
+      - policies/apps-kv-flux.hcl
       - policies/infra-kv-staging.hcl
       - policies/infra-kv-system.hcl
       - policies/infra-kv-all.hcl
