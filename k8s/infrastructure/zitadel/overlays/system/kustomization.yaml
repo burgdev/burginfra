@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - ../../base
   - backup_volsync.yaml
-  - backup_cnpg.yaml
+  # - backup_cnpg.yaml

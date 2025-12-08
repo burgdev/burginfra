@@ -70,6 +70,10 @@ spec:
       online: true # Online/hot backup (PostgreSQL handles consistency)
       snapshotOwnerReference: cluster
 
+    retentionPolicy:
+      "7d" # Keep snapshots for 7 days
+
+
       # Optional: Archive WAL to separate PVC for Point-in-Time Recovery (PITR)
       # Uncomment if you need PITR capability
       # walStorage:
