@@ -15,6 +15,12 @@ spec:
 
   enableSuperuserAccess: true
 
+  # Bootstrap with database and users
+  bootstrap:
+    initdb:
+      database: immich
+      owner: postgres
+
   #bootstrap: # should not be needed with superuser
   #  initdb:
   #    # TODO: Use managed extensions (pg 18)
