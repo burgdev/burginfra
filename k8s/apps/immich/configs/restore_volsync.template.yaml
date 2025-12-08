@@ -1,3 +1,4 @@
+# IMMICH LIBRARY - volsync
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationDestination
 metadata:
@@ -17,6 +18,56 @@ spec:
       sourceNamespace: ${SRC_NAMESPACE}
 
     moverSecurityContext:
-      runAsUser: 100
-      runAsGroup: 1000
-      fsGroup: 1000
+      runAsUser: 0 # root
+      runAsGroup: 0 # root
+      fsGroup: 0
+---
+# IMMICH LIBRARY - volsync
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationDestination
+metadata:
+  name: ${CLUSTER}-immich-external # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  trigger:
+    manual: restore-immich-external-${TIMESTAMP}
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    destinationPVC: immich-external-pvc-v0
+    copyMethod: Direct
+    enableFileDeletion: true
+
+    sourceIdentity:
+      sourceName: ${SRC_CLUSTER}-immich-external
+      sourceNamespace: ${SRC_NAMESPACE}
+
+    moverSecurityContext:
+      runAsUser: 0 # root
+      runAsGroup: 0 # root
+      fsGroup: 0
+---
+# DATABASE - volsync
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationDestination
+metadata:
+  name: ${CLUSTER}-immich-postgres # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  trigger:
+    manual: restore-immich-postgres-${TIMESTAMP}
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    destinationPVC: immich-postgres-1
+    copyMethod: Direct
+    enableFileDeletion: true
+
+    sourceIdentity:
+      sourceName: ${SRC_CLUSTER}-immich-postgres
+      sourceNamespace: ${SRC_NAMESPACE}
+
+    moverSecurityContext:
+      runAsUser: 26 # postgres
+      runAsGroup: 26 # tape
+      fsGroup: 26
+---
+

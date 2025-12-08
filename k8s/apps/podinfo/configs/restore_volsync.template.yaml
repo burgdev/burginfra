@@ -1,0 +1,22 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationDestination
+metadata:
+  name: ${CLUSTER}-podinfo-data # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  trigger:
+    manual: restore-podinfo-data-${TIMESTAMP}
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    destinationPVC: podinfo-fast-data-pvc-v2
+    copyMethod: Direct
+    enableFileDeletion: true
+
+    sourceIdentity:
+      sourceName: ${SRC_CLUSTER}-podinfo-data
+      sourceNamespace: ${SRC_NAMESPACE}
+
+    moverSecurityContext:
+      runAsUser: 100
+      runAsGroup: 1000
+      fsGroup: 1000
