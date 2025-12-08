@@ -4,7 +4,7 @@
 # !! make sure it is added to 'kustomization.yaml' !!
 #
 # OPENBAO_ACCESS: kubernetes
-# KUBERNETES_NAMESPACES: system-flux
+# KUBERNETES_NAMESPACES: flux-system
 
 path "kv/data/apps/*" {
   capabilities = ["read", "list"]
