@@ -1,0 +1,24 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app-wodore-staging
+  namespace: flux-system # do not change!
+spec:
+  interval: 3h0s
+  path: "./k8s/apps/wodore/overlays/staging"
+  prune: false
+  dependsOn:
+    - name: apps-sync-all-staging
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAMESPACE: "staging"
+      ENVIRONMENT: "staging"
+      ENV_SUBDOMAIN: "staging."
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
+        #- kind: Secret
+        #  name: wodore-staging-config-secret

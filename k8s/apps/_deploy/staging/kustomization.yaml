@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - ../../podinfo/overlays/staging
   - ../../immich/flux/staging
+  #- ../../imagor/overlays/staging

@@ -1,3 +1,19 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: immich-production-config-secret
+  namespace: flux-system
+spec:
+  type: kv-v2
+  mount: kv
+  vaultAuthRef: apps-kv-flux
+  destination:
+    name: immich-production-config-secret # the name of the K8s Secret
+    create: true
+    transformation:
+      excludeRaw: true # exclue _raw field
+  path: apps/immich/production # OpenBao KV path
+---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:

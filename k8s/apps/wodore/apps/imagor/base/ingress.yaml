@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wd-imagor
+spec:
+  rules:
+    - host: img.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-imagor
+                port:
+                  number: 8000
+  tls:
+    - hosts:
+        - img.${ENV_SUBDOMAIN}${WODORE_HOST}
