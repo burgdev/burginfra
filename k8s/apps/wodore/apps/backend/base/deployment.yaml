@@ -32,7 +32,7 @@ spec:
             - sh
             - -c
             - |
-              until nc -z wodore-postgres-rw 5432; do
+              until nc -z wd-postgres-rw 5432; do
                 echo "Waiting for PostgreSQL..."
                 sleep 2
               done
@@ -60,33 +60,33 @@ spec:
             - name: DJANGO_DATABASE_HOST
               valueFrom:
                 secretKeyRef:
-                  name: wodore-postgres-app
+                  name: wd-backend-postgres-app
                   key: host
             - name: DJANGO_DATABASE_PORT
               valueFrom:
                 secretKeyRef:
-                  name: wodore-postgres-app
+                  name: wd-backend-postgres-app
                   key: port
             - name: DJANGO_DATABASE_NAME
               valueFrom:
                 secretKeyRef:
-                  name: wodore-postgres-app
+                  name: wd-backend-postgres-app
                   key: dbname
             - name: DJANGO_DATABASE_USER
               valueFrom:
                 secretKeyRef:
-                  name: wodore-postgres-app
+                  name: wd-backend-postgres-app
                   key: username
             - name: DJANGO_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: wodore-postgres-app
+                  name: wd-backend-postgres-app
                   key: password
           envFrom:
             - secretRef:
-                name: "wodore-backend-envvars"
+                name: "wd-backend-envvars"
             - secretRef:
-                name: "wodore-backend-smtp-envvars"
+                name: "wd-backend-smtp-envvars"
           volumeMounts:
             - name: media
               mountPath: /code/media
