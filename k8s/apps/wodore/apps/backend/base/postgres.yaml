@@ -1,0 +1,79 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: wd-backend-postgres
+spec:
+  instances: 1
+
+  storage:
+    storageClass: fast-local-data-v2
+    size: ${WODORE_DB_STORAGE_SIZE:-2Gi}
+
+  # PostGIS-enabled PostgreSQL 17
+  imageName: ghcr.io/cloudnative-pg/postgis:18.1-3.6-minimal-trixie
+
+  enableSuperuserAccess: false
+
+  # Bootstrap with database and users
+  bootstrap:
+    initdb:
+      database: wodore
+      owner: wodore
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS postgis;
+        - CREATE EXTENSION IF NOT EXISTS postgis_topology;
+        - CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+        - CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+
+  # Resource limits - optimized for Django application
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+
+  # PostgreSQL Configuration - optimized for Django workloads
+  postgresql:
+    parameters:
+      # Connection settings
+      max_connections: "100"
+
+      # Memory settings
+      shared_buffers: "256MB"
+      effective_cache_size: "512MB"
+      maintenance_work_mem: "64MB"
+      work_mem: "4MB"
+
+      # WAL settings
+      wal_buffers: "8MB"
+      min_wal_size: "512MB"
+      max_wal_size: "2GB"
+      checkpoint_completion_target: "0.9"
+
+      # Query planner
+      default_statistics_target: "100"
+      random_page_cost: "1.1" # SSD optimized
+      effective_io_concurrency: "200"
+
+      # Logging
+      log_checkpoints: "on"
+      log_connections: "off"
+      log_disconnections: "off"
+      log_lock_waits: "on"
+      log_min_duration_statement: "1000" # Log queries > 1s
+
+      # Autovacuum (important for Django)
+      autovacuum: "on"
+      autovacuum_max_workers: "3"
+      autovacuum_naptime: "1min"
+
+  # Start delay to ensure proper initialization
+  startDelay: 30
+  stopDelay: 30
+  switchoverDelay: 60
+
+  # Single instance, no replication
+  minSyncReplicas: 0
+  maxSyncReplicas: 0

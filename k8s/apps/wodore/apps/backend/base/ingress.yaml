@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wd-backend
+spec:
+  rules:
+    - host: api.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          # Media files served by nginx (higher priority)
+          - path: /media
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-backend-media-v0
+                port:
+                  number: 80
+          # Django backend (catch-all)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-backend
+                port:
+                  number: 8008
+  tls:
+    - hosts:
+        - api.${ENV_SUBDOMAIN}${WODORE_HOST}

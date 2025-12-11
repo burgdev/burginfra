@@ -69,7 +69,7 @@ spec:
             - name: IMAGOR_RESULT_STORAGE_PATH_STYLE
               value: "size"
           volumeMounts:
-            - name: wd-backend-media
+            - name: backend-media
               mountPath: /mnt/data/source/wd
             - name: imagor-storage
               mountPath: /mnt/data/storage
@@ -97,12 +97,13 @@ spec:
               cpu: 100m
               memory: 256Mi
       volumes:
-        - name: wd-backend-media
+        # Shared PVC with backend - defined in backend/base/pvcs.yaml
+        - name: backend-media
           persistentVolumeClaim:
-            claimName: wd-backend-media-pvc-v1
+            claimName: wd-backend-media-v0
         - name: imagor-storage
           persistentVolumeClaim:
-            claimName: wd-imagor-storage-pvc-v1
+            claimName: wd-imagor-storage-v0
         - name: imagor-result
           persistentVolumeClaim:
-            claimName: wd-imagor-result-pvc-v1
+            claimName: wd-imagor-result-v0
