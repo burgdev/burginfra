@@ -39,12 +39,42 @@ spec:
               value: "8000"
             - name: DEBUG
               value: "0"
+            - name: IMAGOR_UNSAFE
+              value: "0"
+            - name: IMAGOR_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: wd-imagor-config-secret
+                  key: IMAGOR_SECRET
             - name: IMAGOR_AUTO_WEBP
               value: "1"
             - name: IMAGOR_AUTO_ACIF
               value: "1"
             - name: IMAGOR_SIGNER_TYPE
               value: "sha256"
+            - name: FILE_LOADER_BASE_DIR
+              value: "/mnt/data/source"
+            - name: FILE_STORAGE_BASE_DIR
+              value: "/mnt/data/storage"
+            - name: FILE_RESULT_STORAGE_BASE_DIR
+              value: "/mnt/data/result"
+            - name: FILE_STORAGE_MKDIR_PERMISSION
+              value: "0755"
+            - name: FILE_STORAGE_WRITE_PERMISSION
+              value: "0666"
+            - name: FILE_RESULT_STORAGE_MKDIR_PERMISSION
+              value: "0755"
+            - name: FILE_RESULT_STORAGE_WRITE_PERMISSION
+              value: "0666"
+            - name: IMAGOR_RESULT_STORAGE_PATH_STYLE
+              value: "size"
+          volumeMounts:
+            - name: wd-backend-media
+              mountPath: /mnt/data/source/wd
+            - name: imagor-storage
+              mountPath: /mnt/data/storage
+            - name: imagor-result
+              mountPath: /mnt/data/result
           livenessProbe:
             httpGet:
               path: /
@@ -66,3 +96,13 @@ spec:
             requests:
               cpu: 100m
               memory: 256Mi
+      volumes:
+        - name: wd-backend-media
+          persistentVolumeClaim:
+            claimName: wd-backend-media-pvc-v1
+        - name: imagor-storage
+          persistentVolumeClaim:
+            claimName: wd-imagor-storage-pvc-v1
+        - name: imagor-result
+          persistentVolumeClaim:
+            claimName: wd-imagor-result-pvc-v1
