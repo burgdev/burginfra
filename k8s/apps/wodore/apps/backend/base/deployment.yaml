@@ -24,58 +24,6 @@ spec:
         runAsGroup: 1001
         fsGroup: 1001
         fsGroupChangePolicy: "OnRootMismatch"
-      initContainers:
-        # Check migrations are applied
-        - name: check-migrations
-          image: ghcr.io/wodore/wodore-backend:edge-alpine
-          imagePullPolicy: Always
-          command:
-            - python
-            - manage.py
-            - migrate
-            - --check
-            - --noinput
-          env:
-            - name: DJANGO_ENV
-              value: "production"
-            # Database connection (CNPG service)
-            - name: DJANGO_DATABASE_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: wd-backend-postgres-app
-                  key: host
-            - name: DJANGO_DATABASE_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: wd-backend-postgres-app
-                  key: port
-            - name: DJANGO_DATABASE_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: wd-backend-postgres-app
-                  key: dbname
-            - name: DJANGO_DATABASE_USER
-              valueFrom:
-                secretKeyRef:
-                  name: wd-backend-postgres-app
-                  key: username
-            - name: DJANGO_DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: wd-backend-postgres-app
-                  key: password
-          envFrom:
-            - secretRef:
-                name: "wd-backend-envvars"
-            - secretRef:
-                name: "wd-backend-smtp-envvars"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 200m
-              memory: 512Mi
       containers:
         # Django backend container
         - name: backend
