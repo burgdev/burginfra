@@ -54,8 +54,29 @@ spec:
           env:
             - name: DJANGO_ENV
               value: "production"
-            - name: DJANGO_ADMIN_URLS
-              value: "https://api.${ENV_SUBDOMAIN}.${WODORE_HOST}"
+            - name: DJANGO_ADMIN_URL
+              value: "https://api.${ENV_SUBDOMAIN}.${WODORE_HOST}/admin"
+            - name: DJANGO_TRUSTED_DOMAINS
+              value: "api.${ENV_SUBDOMAIN}.${WODORE_HOST},${ENV_SUBDOMAIN}.${WODORE_HOST},api.${ENV_SUBDOMAIN}.${WODO_HOST},${ENV_SUBDOMAIN}.${WODO_HOST}"
+            - name: FRONTEND_DOMAIN
+              value: "https://${ENV_SUBDOMAIN}.${WODORE_HOST}"
+            # Imagor settings
+            - name: IMAGOR_URL
+              value: "https://img.${ENV_SUBDOMAIN}.${WODORE_HOST}"
+            - name: IMAGOR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wd-imagor-config-secret
+                  key: IMAGOR_SECRET
+            # E-Mail (smtp settings in secrets.yaml)
+            - name: DEFAULT_FROM_EMAIL
+              value: "${WODORE_HOST} <no-reply@${WODORE_HOST}>"
+            - name: DJANGO_ADMIN_EMAILS
+              value: "${WODORE_EMAIL}>"
+            - name: EMAIL_ADMIN_FROM_EMAIL
+              value: "${WODORE_HOST} internal <no-reply@${WODORE_HOST}>"
+            - name: EMAIL_DEFAULT_FROM_EMAIL
+              value: "${WODORE_HOST} <no-reply@${WODORE_HOST}>"
             # Database connection (CNPG service)
             - name: DJANGO_DATABASE_HOST
               valueFrom:
@@ -67,17 +88,17 @@ spec:
                 secretKeyRef:
                   name: wd-backend-postgres-app
                   key: port
-            - name: DJANGO_DATABASE_NAME
+            - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
                   name: wd-backend-postgres-app
                   key: dbname
-            - name: DJANGO_DATABASE_USER
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: wd-backend-postgres-app
                   key: username
-            - name: DJANGO_DATABASE_PASSWORD
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: wd-backend-postgres-app
