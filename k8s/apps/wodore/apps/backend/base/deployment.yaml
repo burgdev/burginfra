@@ -45,14 +45,14 @@ spec:
               containerPort: 8008
               protocol: TCP
           env:
-            - name: DJANGO_ENV
-              value: "production"
-            - name: DJANGO_ADMIN_URL
-              value: "https://api.${ENV_SUBDOMAIN}.${WODORE_HOST}/admin"
-            - name: DJANGO_TRUSTED_DOMAINS
-              value: "api.${ENV_SUBDOMAIN}.${WODORE_HOST},${ENV_SUBDOMAIN}.${WODORE_HOST},api.${ENV_SUBDOMAIN}.${WODO_HOST},${ENV_SUBDOMAIN}.${WODO_HOST}"
-            - name: FRONTEND_DOMAIN
-              value: "https://${ENV_SUBDOMAIN}.${WODORE_HOST}"
+            # - name: DJANGO_ENV
+            #   value: "production"
+            # - name: DJANGO_ADMIN_URL
+            #   value: "https://api.${ENV_SUBDOMAIN}.${WODORE_HOST}/admin"
+            # - name: DJANGO_TRUSTED_DOMAINS
+            #   value: "api.${ENV_SUBDOMAIN}.${WODORE_HOST},${ENV_SUBDOMAIN}.${WODORE_HOST},api.${ENV_SUBDOMAIN}.${WODO_HOST},${ENV_SUBDOMAIN}.${WODO_HOST}"
+            # - name: FRONTEND_DOMAIN
+            #   value: "https://${ENV_SUBDOMAIN}.${WODORE_HOST}"
             # Imagor settings
             - name: IMAGOR_URL
               value: "https://img.${ENV_SUBDOMAIN}.${WODORE_HOST}"
