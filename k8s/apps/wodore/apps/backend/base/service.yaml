@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: wd-backend
+  name: wd-backend-api
 spec:
   type: ClusterIP
   ports:
@@ -15,7 +15,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: wd-backend-media-v0
+  name: wd-backend-media
 spec:
   type: ClusterIP
   ports:

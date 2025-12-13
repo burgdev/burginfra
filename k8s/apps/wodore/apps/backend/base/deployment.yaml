@@ -144,20 +144,6 @@ spec:
             - name: media
               mountPath: /static
               readOnly: true
-          livenessProbe:
-            httpGet:
-              path: /
-              port: media
-            initialDelaySeconds: 10
-            timeoutSeconds: 5
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /
-              port: media
-            initialDelaySeconds: 5
-            timeoutSeconds: 5
-            periodSeconds: 10
           resources:
             limits:
               cpu: 500m

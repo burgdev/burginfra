@@ -12,7 +12,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: wd-backend-media-v0
+                name: wd-backend-media
                 port:
                   number: 80
           # Django backend (catch-all)
@@ -20,7 +20,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: wd-backend
+                name: wd-backend-api
                 port:
                   number: 8008
   tls:
