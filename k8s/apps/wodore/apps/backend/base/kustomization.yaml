@@ -11,6 +11,7 @@ resources:
   - secrets.yaml
   - pvcs.yaml
   - postgres.yaml
+  - job-migrate.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
