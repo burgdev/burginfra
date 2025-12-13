@@ -9,8 +9,8 @@ spec:
     storageClass: fast-local-data-v2
     size: ${WODORE_DB_STORAGE_SIZE:-2Gi}
 
-  # PostGIS-enabled PostgreSQL 17
-  imageName: ghcr.io/cloudnative-pg/postgis:18.1-3.6-minimal-trixie
+  # PostGIS-enabled PostgreSQL 18 (system variant includes Barman Cloud for backups)
+  imageName: ghcr.io/cloudnative-pg/postgis:18-3.6-system-trixie
 
   enableSuperuserAccess: false
 
@@ -19,7 +19,8 @@ spec:
     initdb:
       database: wodore
       owner: wodore
-      postInitApplicationSQL:
+      # Install PostGIS extensions in template1 (inherited by all databases)
+      postInitTemplateSQL:
         - CREATE EXTENSION IF NOT EXISTS postgis;
         - CREATE EXTENSION IF NOT EXISTS postgis_topology;
         - CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
