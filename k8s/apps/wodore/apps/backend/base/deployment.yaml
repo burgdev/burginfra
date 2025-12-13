@@ -142,9 +142,9 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false
-            runAsUser: 1000
-            runAsGroup: 1000
+            #readOnlyRootFilesystem: false
+            #runAsUser: 1000
+            #runAsGroup: 1000
           ports:
             - name: media
               containerPort: 80
