@@ -61,6 +61,9 @@ spec:
                 name: "wd-backend-envvars"
             - secretRef:
                 name: "wd-backend-smtp-envvars"
+          volumeMounts:
+            - name: media
+              mountPath: /code/media
           resources:
             requests:
               cpu: 100m
@@ -68,3 +71,7 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: wd-backend-media-v0
