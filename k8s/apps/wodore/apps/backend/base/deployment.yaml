@@ -32,7 +32,7 @@ spec:
             - sh
             - -c
             - |
-              until nc -z wd-postgres-rw 5432; do
+              until nc -z wd-backend-postgres-rw 5432; do
                 echo "Waiting for PostgreSQL..."
                 sleep 2
               done

@@ -71,6 +71,7 @@ spec:
           volumeMounts:
             - name: backend-media
               mountPath: /mnt/data/source/wd
+              readOnly: true
             - name: imagor-storage
               mountPath: /mnt/data/storage
             - name: imagor-result
