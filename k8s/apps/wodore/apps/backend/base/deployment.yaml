@@ -105,7 +105,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: api.${ENV_SUBDOMAIN}{$WODORE_HOST}
+                  value: api.${ENV_SUBDOMAIN}${WODORE_HOST}
             initialDelaySeconds: 60
             timeoutSeconds: 5
             periodSeconds: 30
@@ -116,7 +116,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: api.${ENV_SUBDOMAIN}{$WODORE_HOST}
+                  value: api.${ENV_SUBDOMAIN}${WODORE_HOST}
             initialDelaySeconds: 30
             timeoutSeconds: 5
             periodSeconds: 10
