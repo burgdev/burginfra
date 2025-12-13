@@ -24,24 +24,19 @@ spec:
         runAsGroup: 1001
         fsGroup: 1001
         fsGroupChangePolicy: "OnRootMismatch"
-      initContainers:
-        # Wait for database to be ready
-        - name: wait-for-db
-          image: busybox:1.36
-          command:
-            - sh
-            - -c
-            - |
-              until nc -z wd-backend-postgres-rw 5432; do
-                echo "Waiting for PostgreSQL..."
-                sleep 2
-              done
-              echo "PostgreSQL is ready!"
       containers:
         # Django backend container
         - name: backend
           image: ghcr.io/wodore/wodore-backend:edge-alpine
           imagePullPolicy: Always
+          command:
+            - gunicorn
+            - -b
+            - 0.0.0.0:8008
+            - -w
+            - "3"
+            - --preload
+            - server.wsgi:application
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
