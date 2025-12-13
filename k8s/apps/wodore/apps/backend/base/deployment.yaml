@@ -142,7 +142,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: media
-              mountPath: /static
+              mountPath: /static/media
               readOnly: true
           resources:
             limits:
