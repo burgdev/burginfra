@@ -103,6 +103,9 @@ spec:
             httpGet:
               path: /health/
               port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
             initialDelaySeconds: 60
             timeoutSeconds: 5
             periodSeconds: 30
@@ -111,6 +114,9 @@ spec:
             httpGet:
               path: /health/
               port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
             initialDelaySeconds: 30
             timeoutSeconds: 5
             periodSeconds: 10
