@@ -22,7 +22,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: migrate
-          image: ghcr.io/wodore/wodore-backend:edge-alpine
+          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
           imagePullPolicy: Always
           command:
             - python
@@ -30,14 +30,6 @@ spec:
             - migrate
             - --noinput
           env:
-            #- name: DJANGO_ENV
-            #  value: "production"
-            #- name: DJANGO_ADMIN_URL
-            #  value: "https://api.${ENV_SUBDOMAIN}.${WODORE_HOST}/admin"
-            #- name: DJANGO_TRUSTED_DOMAINS
-            #  value: "api.${ENV_SUBDOMAIN}.${WODORE_HOST},${ENV_SUBDOMAIN}.${WODORE_HOST},api.${ENV_SUBDOMAIN}.${WODO_HOST},${ENV_SUBDOMAIN}.${WODO_HOST}"
-            #- name: FRONTEND_DOMAIN
-            #  value: "https://${ENV_SUBDOMAIN}.${WODORE_HOST}"
             # Database connection (CNPG service)
             - name: DJANGO_DATABASE_HOST
               valueFrom:
@@ -49,17 +41,17 @@ spec:
                 secretKeyRef:
                   name: wd-backend-postgres-app
                   key: port
-            - name: DJANGO_DATABASE_NAME
+            - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
                   name: wd-backend-postgres-app
                   key: dbname
-            - name: DJANGO_DATABASE_USER
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: wd-backend-postgres-app
                   key: username
-            - name: DJANGO_DATABASE_PASSWORD
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: wd-backend-postgres-app
