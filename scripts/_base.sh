@@ -79,7 +79,7 @@ cluster_check() {
 	fi
 	current_cluster=$(kubectl config current-context)
 	if [ "$current_cluster" != "$cluster_name" ]; then
-		warn "Current cluster is not set to '$cluster_name'"
+		warn "Current cluster ($current_cluster) is not set to '$cluster_name'"
 		read -p $'\e[1;31mAre you sure to continue? [y/N]\e[0m ' -n 1 -r
 		echo
 		if [[ ! $REPLY =~ ^[Yy]$ ]]; then

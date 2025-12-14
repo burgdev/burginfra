@@ -43,10 +43,9 @@ deploy cluster="local" dry="dry":
             error "Your branch is not up to date with the remote. Please push to sync."
             exit 1
         fi
-        kubectl apply -k $cluster_path && success "Deploy to {{cluster}} successful." || error "Failed"
+        kubectl apply -k $cluster_path && success "Deploy to {{cluster}} successful." || error "Deploy to {{cluster}} failed."
     else
-        kubectl apply -k $cluster_path --dry-run=client
-        success $'\e[1;33mDRY RUN\e[0m to {{cluster}} successful.'
+        kubectl apply -k $cluster_path --dry-run=client && success $'\e[1;33mDRY RUN\e[0m to {{cluster}} successful.' || error $'\e[1;33mDRY RUN\e[0m to {{cluster}} failed.'
         info $'Run \'\e[34mjust flux deploy {{cluster}} no-dry\e[0m\' to deploy.'
     fi
 
