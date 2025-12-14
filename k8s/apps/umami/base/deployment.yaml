@@ -53,24 +53,18 @@ spec:
             httpGet:
               path: /api/heartbeat
               port: http
-              httpHeaders:
-                - name: Host
-                  value: stats.${ENV_SUBDOMAIN}${BURGDEV_HOST}
             initialDelaySeconds: 60
             timeoutSeconds: 5
             periodSeconds: 30
-            failureThreshold: 3
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /api/heartbeat
               port: http
-              httpHeaders:
-                - name: Host
-                  value: stats.${ENV_SUBDOMAIN}${BURGDEV_HOST}
             initialDelaySeconds: 30
             timeoutSeconds: 5
-            periodSeconds: 10
-            failureThreshold: 3
+            periodSeconds: 5
+            failureThreshold: 5
           resources:
             limits:
               cpu: 1000m
