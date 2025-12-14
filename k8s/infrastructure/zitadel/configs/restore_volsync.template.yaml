@@ -11,6 +11,12 @@ spec:
     destinationPVC: zitadel-postgres-1
     copyMethod: Direct
     enableFileDeletion: true
+    # Non-negative integer that specifies how many snapshots to skip before selecting one to restore from.
+    # When set to 0 (the default), the latest snapshot is used.
+    # When set to 1, the second newest snapshot is used (skipping 1 snapshot), and so on.
+    # This parameter can be combined with restoreAsOf to skip snapshots from a specific point in time.
+    previous: 0
+    restoreAsOf: ${RESTORE_AS_OF}
 
     sourceIdentity:
       sourceName: ${SRC_CLUSTER}-zitadel-postgres

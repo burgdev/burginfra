@@ -36,7 +36,7 @@ ask_yes_no() {
 	printf "${YELLOW}%s (${def_upper}/${def_lower}): ${RESET}" "$prompt" >&2
 	local answer
 	IFS= read -r -n1 answer </dev/tty || true
-	echo
+	echo >&2
 	if [[ -z "$answer" ]]; then
 		echo "$default"
 	elif [[ "$answer" =~ [Yy] ]]; then
@@ -88,8 +88,35 @@ if [[ -z "${SRC_CLUSTER:-}" || -z "${SRC_NAMESPACE:-}" ]]; then
 	fi
 fi
 
+# --- Restore as of date ---
+if [[ -z "${RESTORE_AS_OF:-}" ]]; then
+	# Get current date and time as default
+	current_datetime=$(date +"%Y-%m-%d %H:%M")
+	current_tz=$(date +"%z" | sed 's/^\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+
+	printf "${YELLOW}Enter restore date and time (default: %s):${RESET} " "$current_datetime" >&2
+	read -r input_datetime </dev/tty
+
+	# Use current datetime if empty
+	if [[ -z "$input_datetime" ]]; then
+		input_datetime="$current_datetime"
+	fi
+
+	# Validate format
+	if [[ ! "$input_datetime" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{2}:[0-9]{2}$ ]]; then
+		echo -e "${RED}Invalid format. Expected YYYY-MM-DD HH:MM${RESET}" >&2
+		exit 1
+	fi
+
+	# Convert to RFC-3339 format with timezone
+	# Replace space with T, add :00 for seconds, and append timezone
+	RESTORE_AS_OF=$(echo "$input_datetime" | sed 's/ /T/')":00${current_tz}"
+
+	echo -e "${GREEN}Restore as of: ${RESTORE_AS_OF}${RESET}" >&2
+fi
+
 # --- Export vars ---
-export CLUSTER NAMESPACE SRC_CLUSTER SRC_NAMESPACE TIMESTAMP
+export CLUSTER NAMESPACE SRC_CLUSTER SRC_NAMESPACE TIMESTAMP RESTORE_AS_OF
 
 # --- Generate YAML into variable ---
 RESTORE_YAML=$(envsubst <"$TEMPLATE_FILE")
