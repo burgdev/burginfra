@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: umami
+spec:
+  rules:
+    - host: stats.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: umami
+                port:
+                  number: 3000
+    - host: stats.${ENV_SUBDOMAIN}${BURGDEV_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: umami
+                port:
+                  number: 3000
+  tls:
+    - hosts:
+        - stats.${ENV_SUBDOMAIN}${WODORE_HOST}
+        - stats.${ENV_SUBDOMAIN}${BURGDEV_HOST}

@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umami
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 120
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: umami
+  template:
+    metadata:
+      labels:
+        app: umami
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsNonRoot: true
+      containers:
+        - name: umami
+          # https://github.com/umami-software/umami/pkgs/container/umami
+          image: ghcr.io/umami-software/umami:3.0.3
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 1001
+            runAsGroup: 1001
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            # Database connection (CNPG service)
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: umami-postgres-app
+                  key: uri
+          envFrom:
+            - secretRef:
+                name: "umami-envvars"
+          livenessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: stats.${ENV_SUBDOMAIN}${BURGDEV_HOST}
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: stats.${ENV_SUBDOMAIN}${BURGDEV_HOST}
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nextjs-cache
+              mountPath: /app/.next
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nextjs-cache
+          emptyDir: {}
