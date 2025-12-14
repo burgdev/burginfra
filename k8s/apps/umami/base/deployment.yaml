@@ -32,7 +32,7 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
             runAsUser: 1001
             runAsGroup: 1001
           ports:
@@ -75,10 +75,6 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-            - name: nextjs-cache
-              mountPath: /app/.next
       volumes:
         - name: tmp
-          emptyDir: {}
-        - name: nextjs-cache
           emptyDir: {}
