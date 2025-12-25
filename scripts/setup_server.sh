@@ -19,7 +19,7 @@ K3S_MOUNT_PATH="${K3S_MOUNT_PATH:-/var/lib/rancher}"
 
 OPENEBS_PARTITION_SIZE="${OPENEBS_PARTITION_SIZE:-500G}"
 OPENEBS_VG_NAME="${OPENEBS_VG_NAME:-openebs-vg}"
-OPENEBS_THINPOOL_NAME="${OPENEBS_THINPOOL_NAME:-openebs-thinpool}"
+OPENEBS_THINPOOL_NAME="${OPENEBS_THINPOOL_NAME:-openebs-vg_thinpool}"
 OPENEBS_METADATA_PERCENT="${OPENEBS_METADATA_PERCENT:-10}"
 
 KDRIVE_ID="${KDRIVE_ID:-}"
@@ -697,6 +697,30 @@ setup_openebs_storage() {
 		echo "Thin pool already exists"
 	fi
 
+	# Configure automatic extension for thin pool and metadata
+	section "Configuring thin pool auto-extension"
+	local lvm_conf="/etc/lvm/lvm.conf"
+
+	# Backup LVM config
+	if [ ! -f "${lvm_conf}.backup" ]; then
+		sudo cp "$lvm_conf" "${lvm_conf}.backup"
+	fi
+
+	# Enable thin pool autoextend if not already configured
+	if ! grep -q "thin_pool_autoextend_threshold" "$lvm_conf" || grep -q "^[[:space:]]*#.*thin_pool_autoextend_threshold" "$lvm_conf"; then
+		echo "Configuring thin pool auto-extension..."
+		sudo sed -i '/^[[:space:]]*activation[[:space:]]*{/a\
+\	# Auto-extend thin pools when they reach 80% capacity\
+\	thin_pool_autoextend_threshold = 80\
+\	# Extend by 20% when threshold is reached\
+\	thin_pool_autoextend_percent = 20\
+\	# Auto-extend metadata volumes\
+\	thin_pool_metadata_require_separate_pvs = 0
+' "$lvm_conf"
+	else
+		echo "Thin pool auto-extension already configured"
+	fi
+
 	# Display status
 	echo ""
 	echo "OpenEBS LVM Storage Status:"
@@ -705,6 +729,57 @@ setup_openebs_storage() {
 	echo ""
 	echo "$(s G "OpenEBS storage is ready for use by OpenEBS LVM provisioner")"
 	echo "StorageClass should reference VG: $(s B "$OPENEBS_VG_NAME")"
+}
+
+check_lvm_thinpool_help="Checks LVM thin pool usage and health for snapshots."
+check_lvm_thinpool() {
+	section "Checking LVM thin pool status"
+
+	if ! sudo vgs "$OPENEBS_VG_NAME" &>/dev/null; then
+		echo "$(s Y "Volume group $OPENEBS_VG_NAME not found. Run setup_openebs_storage first.")"
+		return 1
+	fi
+
+	if ! sudo lvs "$OPENEBS_VG_NAME/$OPENEBS_THINPOOL_NAME" &>/dev/null; then
+		echo "$(s Y "Thin pool $OPENEBS_THINPOOL_NAME not found. Run setup_openebs_storage first.")"
+		return 1
+	fi
+
+	echo ""
+	echo "$(s b "Volume Group Status:")"
+	sudo vgs "$OPENEBS_VG_NAME" -o vg_name,vg_size,vg_free
+
+	echo ""
+	echo "$(s b "Thin Pool Status:")"
+	sudo lvs "$OPENEBS_VG_NAME/$OPENEBS_THINPOOL_NAME" -o lv_name,lv_size,data_percent,metadata_percent,lv_attr
+
+	echo ""
+	echo "$(s b "All Logical Volumes:")"
+	sudo lvs "$OPENEBS_VG_NAME" -o lv_name,lv_size,data_percent,pool_lv,lv_attr
+
+	# Check for warnings
+	local data_usage=$(sudo lvs --noheadings "$OPENEBS_VG_NAME/$OPENEBS_THINPOOL_NAME" -o data_percent 2>/dev/null | tr -d ' ' | tr -d '%')
+	local metadata_usage=$(sudo lvs --noheadings "$OPENEBS_VG_NAME/$OPENEBS_THINPOOL_NAME" -o metadata_percent 2>/dev/null | tr -d ' ' | tr -d '%')
+
+	echo ""
+	if [ -n "$data_usage" ] && [ "$data_usage" != "" ]; then
+		# Use awk instead of bc for better compatibility
+		if awk -v usage="$data_usage" 'BEGIN { exit !(usage > 80) }'; then
+			echo "$(s R "WARNING: Thin pool data usage is at ${data_usage}%!")"
+			echo "$(s Y "Consider extending the volume group or cleaning up old snapshots.")"
+		else
+			echo "$(s G "Thin pool data usage: ${data_usage}% - OK")"
+		fi
+	fi
+
+	if [ -n "$metadata_usage" ] && [ "$metadata_usage" != "" ]; then
+		if awk -v usage="$metadata_usage" 'BEGIN { exit !(usage > 80) }'; then
+			echo "$(s R "WARNING: Thin pool metadata usage is at ${metadata_usage}%!")"
+			echo "$(s Y "Metadata pool may need extension.")"
+		else
+			echo "$(s G "Thin pool metadata usage: ${metadata_usage}% - OK")"
+		fi
+	fi
 }
 
 security_audit_help="Runs comprehensive security audit using Lynis and other tools."
@@ -859,6 +934,7 @@ $(s Y Commands:)
 
 $(s Y Optional Commands:)
   $(s b security_audit)          $(s d $security_audit_help)
+  $(s b check_lvm_thinpool)      $(s d $check_lvm_thinpool_help)
   $(s b mount_webdav)            $(s d $mount_webdav_help)
   $(s b configure_totp)          $(s d $configure_totp_help)
   $(s b setup_longhorn_storage)  $(s d $setup_longhorn_storage_help)

@@ -25,7 +25,7 @@ Very helpful is the `k9s` tool ([setup](/Management/Kubernetes/Installation/k9s_
 cluster=local
 just flux bootstrap
 kubectl get pods -n flux-system # wait until ready
-just flux create-deploy-key $cluster
+just flux create-deploy-key
 # add deploy key to github
 just flux deploy $cluster
 # make sure all needed secrets are created
@@ -65,6 +65,6 @@ kubectl get svc -A
 # Scale
 DP=deployment_name
 NS=namespace
-kubectl scale deployment $DP --replicas=0 -n $NS # stop 
-kubectl scale deployment $DP --replicas=1 -n $NS # start 
+kubectl scale deployment $DP --replicas=0 -n $NS # stop
+kubectl scale deployment $DP --replicas=1 -n $NS # start
 ```
