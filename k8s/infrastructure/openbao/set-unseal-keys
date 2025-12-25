@@ -73,7 +73,7 @@ fi
 # Get or generate the unseal key
 if [ "$GENERATE" = true ]; then
 	info "Generating random 32-character unseal key..."
-	UNSEAL_KEY=$(LC_ALL=C tr -dc '[:graph:]' </dev/urandom | head -c 32)
+	UNSEAL_KEY=$(head -c 1024 /dev/urandom | LC_ALL=C tr -dc '[:graph:]' | head -c 32)
 	success "Random key generated, store it savely:"
 	echo "$UNSEAL_KEY"
 else

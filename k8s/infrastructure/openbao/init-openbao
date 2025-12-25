@@ -105,6 +105,22 @@ if ! kubectl get serviceaccount "$SERVICE_ACCOUNT" -n "$NAMESPACE" &>/dev/null; 
 fi
 success "ServiceAccount '$SERVICE_ACCOUNT' exists"
 
+# Check if unseal key secret exists (required for OpenBao to start)
+UNSEAL_SECRET="openbao-unseal-1-key"
+if ! kubectl get secret "$UNSEAL_SECRET" -n "$NAMESPACE" &>/dev/null; then
+	error "Unseal key secret '$UNSEAL_SECRET' does not exist in namespace '$NAMESPACE'"
+	info "OpenBao requires this secret to start with static seal configuration"
+	echo ""
+	info "Please run the following command first:"
+	echo "  $SCRIPT_DIR/set-unseal-keys -n $NAMESPACE -c $CLUSTER"
+	echo ""
+	info "Options:"
+	echo "  • Use -g flag to generate a random key automatically"
+	echo "  • Or run without -g to enter your own 32-character key"
+	exit 1
+fi
+success "Unseal key secret '$UNSEAL_SECRET' exists"
+
 # Find OpenBao pod
 info "Looking for OpenBao pod in namespace '$NAMESPACE'..."
 OPENBAO_POD=$(kubectl get pod -n "$NAMESPACE" -l app.kubernetes.io/name=openbao -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
@@ -148,7 +164,7 @@ RECOVERY_THRESHOLD="$5"
 echo "==> Checking OpenBao status..."
 
 # Check if OpenBao is initialized
-if bao status 2>&1 | grep -q "Vault is not initialized"; then
+if bao status 2>&1 | grep -q "Initialized.*false"; then
     echo "OpenBao is not initialized. Initializing now..."
     echo "Recovery shares: $RECOVERY_SHARES, threshold: $RECOVERY_THRESHOLD"
     echo ""
@@ -159,9 +175,22 @@ if bao status 2>&1 | grep -q "Vault is not initialized"; then
         -recovery-threshold="$RECOVERY_THRESHOLD" \
         -format=json)
 
-    # Extract all recovery keys
-    RECOVERY_KEYS=$(echo "$INIT_OUTPUT" | grep -o '"recovery_keys_b64":\[[^]]*\]' | sed 's/"recovery_keys_b64":\[//;s/\]//' | tr ',' '\n' | tr -d '"')
-    ROOT_TOKEN=$(echo "$INIT_OUTPUT" | grep -o '"root_token":"[^"]*"' | cut -d'"' -f4)
+    # Extract root token - handle whitespace in JSON
+    ROOT_TOKEN=$(echo "$INIT_OUTPUT" | grep -o '"root_token"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')
+
+    # Fallback: try with sed
+    if [ -z "$ROOT_TOKEN" ]; then
+        ROOT_TOKEN=$(echo "$INIT_OUTPUT" | sed -n 's/.*"root_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+    fi
+
+    if [ -z "$ROOT_TOKEN" ]; then
+        echo "ERROR: Failed to extract root token from init output"
+        exit 1
+    fi
+
+    # Extract all recovery keys - handle multiline JSON (only base64 encoded)
+    # Base64 strings end with = and are ~44 chars, hex strings are exactly 64 hex chars
+    RECOVERY_KEYS=$(echo "$INIT_OUTPUT" | sed -n '/"recovery_keys_b64"/,/"recovery_keys_hex"/p' | grep -o '"[A-Za-z0-9+/]\+="*' | tr -d '"')
 
     # Save to output file for script to capture
     echo "ROOT_TOKEN=$ROOT_TOKEN" > /tmp/bao-init-output.txt
@@ -196,8 +225,17 @@ fi
 # Login with the token
 echo ""
 echo "==> Logging in to OpenBao..."
-bao login "$BAO_TOKEN" >/dev/null 2>&1
-echo "✓ Logged in successfully"
+if [ -z "$BAO_TOKEN" ]; then
+    echo "ERROR: BAO_TOKEN is not set"
+    exit 1
+fi
+if bao login "$BAO_TOKEN" >/dev/null 2>&1; then
+    echo "✓ Logged in successfully"
+else
+    echo "ERROR: Failed to login to OpenBao"
+    echo "Token length: ${#BAO_TOKEN}"
+    exit 1
+fi
 
 # Check if sealed
 if bao status 2>&1 | grep -q "Sealed.*true"; then
@@ -277,10 +315,10 @@ echo ""
 # Check if we need to provide a root token (for already initialized OpenBao)
 CHECK_INIT=$(kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- bao status 2>&1 || true)
 
-if echo "$CHECK_INIT" | grep -q "Vault is not initialized"; then
+if echo "$CHECK_INIT" | grep -q "Initialized.*false"; then
 	info "OpenBao is not initialized - will initialize now"
 	PROVIDE_TOKEN=false
-elif echo "$CHECK_INIT" | grep -q "Sealed.*false"; then
+elif echo "$CHECK_INIT" | grep -q "Initialized.*true"; then
 	warn "OpenBao is already initialized"
 	info "You need to provide the root token to continue"
 	echo ""
