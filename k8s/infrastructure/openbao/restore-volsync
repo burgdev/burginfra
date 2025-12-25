@@ -30,7 +30,16 @@ kubectl scale statefulset openbao --replicas=1 -n "$SRC_NAMESPACE"
 sleep 5 # wait until ready
 
 echo -e "${YELLOW}Update kubernetes config...${RESET}"
+# Prompt for root token if not set
+if [ -z "${BAO_TOKEN:-}" ]; then
+	read -rsp "Enter OpenBao root token: " BAO_TOKEN
+	echo
+	export BAO_TOKEN
+fi
+
 kubectl -n $SRC_NAMESPACE exec -it openbao-0 -- sh -c "
+export BAO_TOKEN='$BAO_TOKEN'
+bao login \"\$BAO_TOKEN\" >/dev/null 2>&1 || { echo 'Failed to login to OpenBao'; exit 1; }
 bao write auth/kubernetes/config \
   token_reviewer_jwt=\"\$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" \
   kubernetes_host=\"https://kubernetes.default.svc:443\" \
