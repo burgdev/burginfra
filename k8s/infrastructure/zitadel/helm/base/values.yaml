@@ -120,17 +120,17 @@ env:
 ingress:
   enabled: true
   className: traefik
-  #annotations:
-  #  cert-manager.io/cluster-issuer: letsencrypt-prod
-  #hosts:
-  #  - host: auth.staging.${BURGDEV_HOST}
-  #    paths:
-  #      - path: /
-  #        pathType: Prefix
-  #tls:
-  #  - secretName: zitadel-tls
-  #    hosts:
-  #      - auth.staging.${BURGDEV_HOST}
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+  hosts:
+    - host: auth.${BURGDEV_HOST}
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: zitadel-tls
+      hosts:
+        - auth.${BURGDEV_HOST}
 
 # Login UI ingress - Disabled as Zitadel v4+ has login built-in
 # The login UI is served by the main Zitadel application at /ui/v2/login/

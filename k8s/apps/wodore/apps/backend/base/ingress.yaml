@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: wd-backend
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 spec:
   rules:
     - host: api.${ENV_SUBDOMAIN}${WODORE_HOST}
@@ -26,3 +28,4 @@ spec:
   tls:
     - hosts:
         - api.${ENV_SUBDOMAIN}${WODORE_HOST}
+      secretName: wd-backend-tls

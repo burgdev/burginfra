@@ -2,9 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: podinfo
-  #annotations:
-  #  cert-manager.io/cluster-issuer: letsencrypt-prod
-  #  traefik.ingress.kubernetes.io/router.tls.certresolver: default
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 spec:
   rules:
     - host: podinfo.${BURGINFRA_HOST}
@@ -20,3 +19,4 @@ spec:
   tls:
     - hosts:
         - podinfo.${BURGINFRA_HOST}
+      secretName: podinfo-tls
