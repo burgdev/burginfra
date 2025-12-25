@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: openbao-ui
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 spec:
   rules:
     - host: kms.${BURGINFRA_HOST}

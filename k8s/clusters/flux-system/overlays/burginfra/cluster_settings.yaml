@@ -18,6 +18,8 @@ data:
   WODO_HOST: "dev.wodo.re"
   WODO_EMAIL: "tb@wodo.re"
   CLUSTER: "burginfra"
+  CERT_ISSUER_STAGING: "letsencrypt-staging"
+  CERT_ISSUER_PROD: "letsencrypt-prod"
   IMMICH_LIBRARY_STORAGE_SIZE: "200Gi"
   IMMICH_EXTERNAL_STORAGE_SIZE: "100Gi"
   IMMICH_DB_STORAGE_SIZE: "10Gi"

@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: openbao-ui
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_STAGING}
 spec:
   rules:
     - host: kms.staging.${BURGINFRA_HOST}
@@ -17,3 +19,4 @@ spec:
   tls:
     - hosts:
         - kms.staging.${BURGINFRA_HOST}
+      secretName: openbao-ui-tls

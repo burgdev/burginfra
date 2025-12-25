@@ -5,15 +5,6 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |-
-    additionalArguments:
-      - "--certificatesresolvers.default.acme.email=${BURGDEV_EMAIL}"
-      - "--certificatesresolvers.default.acme.storage=/data/acme.json"
-      - "--certificatesresolvers.default.acme.httpchallenge.entrypoint=web"
-    tls:
-      stores:
-        default:
-          defaultCertificate:
-            secretName: traefik-local-tls
     ports:
       web:
         redirections:

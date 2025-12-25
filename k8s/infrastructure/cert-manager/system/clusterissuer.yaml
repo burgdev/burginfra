@@ -12,7 +12,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: admin@burgdev.ch
+    email: ${BURGDEV_EMAIL}
     privateKeySecretRef:
       name: letsencrypt-staging
     solvers:
@@ -27,7 +27,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@burgdev.ch
+    email: ${BURGDEV_EMAIL}
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
