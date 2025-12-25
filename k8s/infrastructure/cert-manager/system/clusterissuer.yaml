@@ -4,7 +4,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: local-root-ca
-  namespace: cert-manager
+  namespace: burginfra-system
 spec:
   isCA: true
   commonName: BurgInfra Local Root CA

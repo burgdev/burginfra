@@ -11,7 +11,7 @@ set -euo pipefail
 KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config-localhost}"
 CA_DIR="/usr/local/share/ca-certificates/k8s-local"
 WATCH_MODE=false
-ROOT_CA_NAMESPACE="cert-manager"
+ROOT_CA_NAMESPACE="burginfra-system"
 ROOT_CA_SECRET="local-root-ca-secret"
 
 # Helper function to run kubectl with proper TLS handling
