@@ -1,6 +1,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  # BURGDEV
   - ../../podinfo/overlays/production/
+  # CRUXLI
+  - ../../immich/flux/staging
+  # WODORE
   - ../../umami/overlays/production/
   - ../../wodore/flux/production
