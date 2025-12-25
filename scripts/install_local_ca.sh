@@ -3,8 +3,7 @@
 # This eliminates browser warnings for self-signed certificates
 #
 # Usage:
-#   ./install_local_ca.sh              - Install from all namespaces
-#   ./install_local_ca.sh production   - Install from specific namespace only
+#   ./install_local_ca.sh              - Install root CA
 #   ./install_local_ca.sh --watch      - Watch for changes and auto-update
 
 set -euo pipefail
@@ -12,25 +11,24 @@ set -euo pipefail
 KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config-localhost}"
 CA_DIR="/usr/local/share/ca-certificates/k8s-local"
 WATCH_MODE=false
-SPECIFIC_NAMESPACE=""
+ROOT_CA_NAMESPACE="cert-manager"
+ROOT_CA_SECRET="local-root-ca-secret"
 
 # Helper function to run kubectl with proper TLS handling
 # For clusters with self-signed certs we may need to skip verification
 kubectl_cmd() {
 	# First try normal kubectl
-	if kubectl_cmd "$@" 2>/dev/null; then
+	if kubectl --kubeconfig="$KUBECONFIG" "$@" 2>/dev/null; then
 		return 0
 	fi
 
 	# If that fails due to cert issues, try with insecure-skip-tls-verify
-	kubectl_cmd --insecure-skip-tls-verify "$@"
+	kubectl --kubeconfig="$KUBECONFIG" --insecure-skip-tls-verify "$@"
 }
 
 # Parse arguments
 if [ "${1:-}" = "--watch" ]; then
 	WATCH_MODE=true
-elif [ -n "${1:-}" ]; then
-	SPECIFIC_NAMESPACE="$1"
 fi
 
 # Color output
@@ -51,92 +49,59 @@ log_error() {
 	echo -e "${RED}✗${NC} $1"
 }
 
-install_certificates() {
-	echo "Installing CA certificates from Kubernetes cluster..."
+install_root_ca() {
+	echo "Installing root CA certificate from Kubernetes cluster..."
 
 	# Create CA directory
 	sudo mkdir -p "$CA_DIR"
 
-	# Track installed certificates
-	declare -A installed_certs
-
-	# Get namespaces to process
-	if [ -n "$SPECIFIC_NAMESPACE" ]; then
-		namespaces=("$SPECIFIC_NAMESPACE")
-	else
-		mapfile -t namespaces < <(kubectl_cmd get certificates --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"\n"}{end}' | sort -u)
+	# Check if root CA secret exists
+	if ! kubectl_cmd get secret "$ROOT_CA_SECRET" -n "$ROOT_CA_NAMESPACE" &>/dev/null; then
+		log_error "Root CA secret '$ROOT_CA_SECRET' not found in namespace '$ROOT_CA_NAMESPACE'"
+		log_warn "Please ensure the cert-manager configuration has been applied"
+		return 1
 	fi
 
-	if [ ${#namespaces[@]} -eq 0 ]; then
-		log_warn "No certificates found in the cluster"
-		return 0
+	# Extract root CA certificate
+	cert_file="$CA_DIR/burginfra-local-root-ca.crt"
+	
+	echo "Extracting root CA certificate..."
+	ca_data=$(kubectl_cmd get secret "$ROOT_CA_SECRET" -n "$ROOT_CA_NAMESPACE" -o jsonpath='{.data.tls\.crt}' 2>/dev/null || echo "")
+
+	if [ -z "$ca_data" ]; then
+		log_error "Could not extract CA certificate from secret"
+		return 1
 	fi
 
-	# Process each namespace
-	for namespace in "${namespaces[@]}"; do
-		echo ""
-		echo "Processing namespace: $namespace"
+	# Decode and save certificate
+	echo "$ca_data" | base64 -d | sudo tee "$cert_file" >/dev/null
 
-		# Get all certificates in the namespace
-		mapfile -t certificates < <(kubectl_cmd get certificates -n "$namespace" -o name 2>/dev/null || true)
+	# Verify it's a CA certificate
+	if ! openssl x509 -in "$cert_file" -noout -text | grep -q "CA:TRUE"; then
+		log_error "Certificate is not a CA certificate (CA:TRUE not found)"
+		log_warn "The root CA may not have been created yet. Waiting for cert-manager to create it..."
+		return 1
+	fi
 
-		if [ ${#certificates[@]} -eq 0 ]; then
-			log_warn "No certificates found in $namespace"
-			continue
-		fi
+	# Get certificate details
+	subject=$(openssl x509 -in "$cert_file" -noout -subject 2>/dev/null | sed 's/subject=//' || echo "Unknown")
+	not_after=$(openssl x509 -in "$cert_file" -noout -enddate 2>/dev/null | cut -d= -f2 || echo "Unknown")
+	fingerprint=$(openssl x509 -in "$cert_file" -noout -fingerprint -sha256 2>/dev/null | cut -d= -f2 || echo "Unknown")
 
-		# Extract and install each CA certificate
-		for cert in "${certificates[@]}"; do
-			cert_name=$(echo "$cert" | cut -d/ -f2)
-			secret_name=$(kubectl_cmd get "$cert" -n "$namespace" -o jsonpath='{.spec.secretName}' 2>/dev/null || echo "")
+	log_info "Root CA certificate installed: $cert_file"
+	echo "  Subject: $subject"
+	echo "  Expires: $not_after"
+	echo "  SHA256: $fingerprint"
 
-			if [ -z "$secret_name" ]; then
-				log_warn "Could not find secret for certificate: $cert_name"
-				continue
-			fi
-
-			echo "  Processing: $cert_name (secret: $secret_name)"
-
-			# Create unique filename with namespace prefix
-			cert_file="$CA_DIR/${namespace}_${cert_name}.crt"
-			installed_certs["$cert_file"]=1
-
-			# Extract CA certificate (or the cert itself for self-signed)
-			ca_data=""
-			if ca_data=$(kubectl_cmd get secret "$secret_name" -n "$namespace" -o jsonpath='{.data.ca\.crt}' 2>/dev/null) && [ -n "$ca_data" ]; then
-				: # ca.crt exists
-			else
-				# For self-signed certs without a separate CA, use the cert itself
-				ca_data=$(kubectl_cmd get secret "$secret_name" -n "$namespace" -o jsonpath='{.data.tls\.crt}' 2>/dev/null || echo "")
-			fi
-
-			if [ -n "$ca_data" ]; then
-				# Decode and save certificate
-				echo "$ca_data" | base64 -d | sudo tee "$cert_file" >/dev/null
-
-				# Get certificate details
-				not_after=$(openssl x509 -in "$cert_file" -noout -enddate 2>/dev/null | cut -d= -f2 || echo "Unknown")
-
-				log_info "Installed $cert_file (expires: $not_after)"
-			else
-				log_error "No CA data found for $cert_name"
-			fi
-		done
-	done
-
-	# Clean up certificates that no longer exist in the cluster
+	# Clean up old certificates
 	echo ""
 	echo "Cleaning up old certificates..."
-	if [ -d "$CA_DIR" ]; then
-		for cert_file in "$CA_DIR"/*.crt; do
-			if [ -f "$cert_file" ]; then
-				if [ -z "${installed_certs[$cert_file]:-}" ]; then
-					log_warn "Removing obsolete certificate: $(basename "$cert_file")"
-					sudo rm "$cert_file"
-				fi
-			fi
-		done
-	fi
+	for old_cert in "$CA_DIR"/*.crt; do
+		if [ -f "$old_cert" ] && [ "$old_cert" != "$cert_file" ]; then
+			log_warn "Removing old certificate: $(basename "$old_cert")"
+			sudo rm "$old_cert"
+		fi
+	done
 
 	# Update CA certificates
 	echo ""
@@ -144,32 +109,29 @@ install_certificates() {
 	sudo update-ca-certificates 2>&1 | grep -E "^(Adding|Removing|done)" || true
 
 	echo ""
-	log_info "Done! Certificates installed"
-
-	# Show summary
-	cert_count=$(find "$CA_DIR" -name "*.crt" 2>/dev/null | wc -l)
+	log_info "Done! Root CA installed"
 	echo ""
 	echo "Summary:"
-	echo "  - Total certificates installed: $cert_count"
-	echo "  - Location: $CA_DIR"
+	echo "  - Root CA: $cert_file"
+	echo "  - All certificates signed by this CA will now be trusted"
 	echo ""
 	echo "You may need to restart your browser for changes to take effect."
 }
 
 watch_certificates() {
-	log_info "Starting watch mode - will update certificates automatically"
+	log_info "Starting watch mode - will update CA automatically"
 	echo "Press Ctrl+C to stop"
 	echo ""
 
 	# Initial installation
-	install_certificates
+	install_root_ca
 
 	# Watch for changes every 5 minutes
 	while true; do
 		sleep 300 # 5 minutes
 		echo ""
-		echo "Checking for certificate changes..."
-		install_certificates
+		echo "Checking for CA certificate changes..."
+		install_root_ca
 	done
 }
 
@@ -177,5 +139,5 @@ watch_certificates() {
 if [ "$WATCH_MODE" = true ]; then
 	watch_certificates
 else
-	install_certificates
+	install_root_ca
 fi
