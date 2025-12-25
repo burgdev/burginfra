@@ -97,7 +97,7 @@ next_steps() {
 	echo "kubectl get pods -n flux-system # wait until ready"
 	echo "just flux create-deploy-key"
 	echo "$(s d "# Add deploy key to GitHub and deploy")"
-	echo "just flux deploy \$cluster"
+	echo "just flux deploy \$cluster [no-dry]"
 	echo ""
 	echo "$(s d "# Configure secrets (fill out .env file if needed!")"
 	echo "$(s d "# WAIT until namespaces are created")"

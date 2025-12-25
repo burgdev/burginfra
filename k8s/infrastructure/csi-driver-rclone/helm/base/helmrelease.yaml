@@ -21,7 +21,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: ${NAME}
-      version: "0.2.*"
+      version: "0.4.*"
   valuesFrom:
     - kind: ConfigMap
       name: ${NAME}-values
