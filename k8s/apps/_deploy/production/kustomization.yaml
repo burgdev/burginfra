@@ -4,7 +4,7 @@ resources:
   # BURGDEV
   - ../../podinfo/overlays/production/
   # CRUXLI
-  - ../../immich/flux/staging
+  - ../../immich/flux/production
   # WODORE
   - ../../umami/overlays/production/
   - ../../wodore/flux/production
