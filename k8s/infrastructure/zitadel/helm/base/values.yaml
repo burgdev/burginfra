@@ -138,3 +138,5 @@ login:
   ingress:
     enabled: true
     className: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
