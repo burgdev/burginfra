@@ -57,8 +57,15 @@ get_k3s_config() {
 	section "Get k3s config"
 	scp $K3S_USER@$K3S_HOST:/etc/rancher/k3s/k3s.yaml $K3S_MY_CONFIG
 
+	# Get the actual hostname from the remote server
+	REMOTE_HOSTNAME=$(ssh $K3S_USER@$K3S_HOST hostname)
+	echo "Remote hostname: $(s B $REMOTE_HOSTNAME)"
+
 	# Replace localhost with the actual host
 	sed -i "s|server: https://127.0.0.1:6443|server: https://${K3S_HOST}:${K3S_PORT}|" ${K3S_MY_CONFIG}
+
+	# Replace "default" with the actual hostname in cluster name, context name, and user name
+	sed -i "s|name: default|name: ${REMOTE_HOSTNAME}|g" ${K3S_MY_CONFIG}
 
 	# Check if K3S_HOST is a domain name (not an IP)
 	if ! [[ $K3S_HOST =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then

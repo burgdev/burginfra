@@ -2,6 +2,8 @@ import 'core.just'
 
 # ⚡ Code quality tasks (lint, fix, types, deps, ...)
 mod check
+# 🖥️ Run server commands (setup, cluster init, ....)
+mod server
 # 🌊 Run flux commands
 mod flux
 # 🔐 Run openbao commands (init, restore)

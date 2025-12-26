@@ -211,27 +211,34 @@ install_utils() {
 		section "Installing vim"
 		sudo apt install -y vim
 	fi
-	if ! command -v rsync >/dev/null 2>&1; then
-		section "Installing rsync"
-		sudo apt install -y rsync
-	fi
+	# this should not be needed anymore
+	# if ! command -v rsync >/dev/null 2>&1; then
+	# 	section "Installing rsync"
+	# 	sudo apt install -y rsync
+	# fi
 	# In your install_utils function
-	section "Installing/updating rclone"
-	curl -s https://rclone.org/install.sh | sudo bash -s -- --yes || {
-		echo "$(s Y "Warning: Failed to install/update rclone. Continuing...")" >&2
-	}
-	if ! command -v kopia >/dev/null 2>&1; then
-		section "Installing kopia"
-		curl -s https://kopia.io/signing-key | sudo gpg --dearmor -o /usr/share/keyrings/kopia-keyring.gpg
-		echo "deb [signed-by=/usr/share/keyrings/kopia-keyring.gpg] https://packages.kopia.io/apt/ stable main" | sudo tee /etc/apt/sources.list.d/kopia.list
-		sudo apt update
-		sudo apt install -y kopia
-	fi
+	# section "Installing/updating rclone"
+	# if ! command -v curl >/dev/null 2>&1; then
+	# 	sudo apt install -y curl
+	# fi
+	# curl -s https://rclone.org/install.sh | sudo bash -s -- --yes || {
+	# 	echo "$(s Y "Warning: Failed to install/update rclone. Continuing...")" >&2
+	# }
+	# if ! command -v kopia >/dev/null 2>&1; then
+	# 	section "Installing kopia"
+	# 	curl -s https://kopia.io/signing-key | sudo gpg --dearmor -o /usr/share/keyrings/kopia-keyring.gpg
+	# 	echo "deb [signed-by=/usr/share/keyrings/kopia-keyring.gpg] https://packages.kopia.io/apt/ stable main" | sudo tee /etc/apt/sources.list.d/kopia.list
+	# 	sudo apt update
+	# 	sudo apt install -y kopia
+	# fi
 }
 
 install_k3s_help="Installs k3s lightweight Kubernetes distribution."
 install_k3s() {
 	section "Installing k3s"
+	if ! command -v curl >/dev/null 2>&1; then
+		sudo apt install -y curl
+	fi
 	if ! command -v k3s >/dev/null 2>&1; then
 		curl -sfL https://get.k3s.io | sh -
 		_secure_kubeconfig

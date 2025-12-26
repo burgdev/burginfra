@@ -44,6 +44,10 @@ deploy cluster="local" dry="dry":
             exit 1
         fi
         kubectl apply -k $cluster_path && success "Deploy to {{cluster}} successful." || error "Deploy to {{cluster}} failed."
+        info "If successfull:"
+        info "  Configure secrets in k8s/infrastructure/volsync/configs/base/.env.secrets"
+        info "  Wait until all namespaces are created"
+        info $'  Run \'\e[34m./k8s/infrastructure/volsync/apply-config {{cluster}}\e[0m\' to deploy.'
     else
         kubectl apply -k $cluster_path --dry-run=client && success $'\e[1;33mDRY RUN\e[0m to {{cluster}} successful.' || error $'\e[1;33mDRY RUN\e[0m to {{cluster}} failed.'
         info $'Run \'\e[34mjust flux deploy {{cluster}} no-dry\e[0m\' to deploy.'
