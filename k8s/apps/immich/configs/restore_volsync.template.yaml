@@ -9,7 +9,7 @@ spec:
     manual: restore-immich-library-${TIMESTAMP}
   kopia:
     repository: volsync-kopia-webdav-secrets
-    destinationPVC: immich-library-pvc-v1
+    destinationPVC: immich-library-pvc-v2
     copyMethod: Direct
     enableFileDeletion: true
 
@@ -33,7 +33,7 @@ spec:
     manual: restore-immich-external-${TIMESTAMP}
   kopia:
     repository: volsync-kopia-webdav-secrets
-    destinationPVC: immich-external-pvc-v1
+    destinationPVC: immich-external-pvc-v2
     copyMethod: Direct
     enableFileDeletion: true
     # Non-negative integer that specifies how many snapshots to skip before selecting one to restore from.

@@ -6,7 +6,7 @@ metadata:
   name: ${CLUSTER}-immich-library # 'username' for kopia
   namespace: ${NAMESPACE}
 spec:
-  sourcePVC: immich-library-pvc-v1
+  sourcePVC: immich-library-pvc-v2
   trigger:
     schedule: "20 */1 * * *" # every hour
     #manual: backup-01
@@ -44,7 +44,7 @@ metadata:
   name: ${CLUSTER}-immich-external # 'username' for kopia
   namespace: ${NAMESPACE}
 spec:
-  sourcePVC: immich-external-pvc-v1
+  sourcePVC: immich-external-pvc-v2
   trigger:
     schedule: "30 */4 * * *" # every 4 hour
     #manual: backup-01
