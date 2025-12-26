@@ -17,6 +17,6 @@ spec:
                 port:
                   number: 8000
   tls:
-    - hosts:
+    - secretName: wd-imagor-${ENVIRONMENT}-tls
+      hosts:
         - img.${ENV_SUBDOMAIN}${WODORE_HOST}
-      secretName: wd-imagor-tls

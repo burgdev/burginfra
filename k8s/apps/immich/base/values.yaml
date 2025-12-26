@@ -65,7 +65,8 @@ server:
     main:
       enabled: true
       tls:
-        - hosts:
+        - secretName: immich-${ENVIRONMENT}-tls
+          hosts:
             - pix.${ENV_SUBDOMAIN}${CRUXLI_HOST}
       hosts:
         - host: pix.${ENV_SUBDOMAIN}${CRUXLI_HOST}

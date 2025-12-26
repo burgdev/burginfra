@@ -6,7 +6,7 @@ metadata:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 spec:
   rules:
-    - host: podinfo.${BURGINFRA_HOST}
+    - host: podinfo.${ENV_SUBDOMAIN}${BURGINFRA_HOST}
       http:
         paths:
           - path: /
@@ -17,6 +17,6 @@ spec:
                 port:
                   number: 80
   tls:
-    - hosts:
-        - podinfo.${BURGINFRA_HOST}
-      secretName: podinfo-tls
+    - secretName: podinfo-${ENVIRONMENT}-tls
+      hosts:
+        - podinfo.${ENV_SUBDOMAIN}${BURGINFRA_HOST}

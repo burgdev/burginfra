@@ -128,7 +128,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: zitadel-tls
+    - secretName: zitadel-${ENVIRONMENT}-tls
       hosts:
         - auth.${BURGDEV_HOST}
 

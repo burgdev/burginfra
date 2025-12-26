@@ -26,6 +26,6 @@ spec:
                 port:
                   number: 8008
   tls:
-    - hosts:
+    - secretName: wd-backend-${ENVIRONMENT}-tls
+      hosts:
         - api.${ENV_SUBDOMAIN}${WODORE_HOST}
-      secretName: wd-backend-tls

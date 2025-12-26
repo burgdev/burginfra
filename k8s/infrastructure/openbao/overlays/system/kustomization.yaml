@@ -3,5 +3,4 @@ kind: Kustomization
 namespace: ${NAMESPACE}
 resources:
   - ../../base
-  - ingress.yaml
   - backup.yaml

@@ -10,6 +10,7 @@ commonLabels:
 resources:
   - helmrelease.yaml
   - serviceaccount.yaml
+  - ingress.yaml
   - rbac.yaml
   - job-policies.yaml
   # - certificate.yaml # not used

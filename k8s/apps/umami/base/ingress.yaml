@@ -27,7 +27,7 @@ spec:
                 port:
                   number: 3000
   tls:
-    - hosts:
+    - secretName: umami-${ENVIRONMENT}-tls
+      hosts:
         - stats.${ENV_SUBDOMAIN}${WODORE_HOST}
         - stats.${ENV_SUBDOMAIN}${BURGDEV_HOST}
-      secretName: umami-tls

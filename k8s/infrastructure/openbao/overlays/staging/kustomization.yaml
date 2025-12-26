@@ -4,4 +4,3 @@ namespace: ${NAMESPACE}
 resources:
   - ../../base
   - backup.yaml
-  - ingress.yaml
