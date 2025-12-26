@@ -64,6 +64,8 @@ server:
   ingress:
     main:
       enabled: true
+      annotations:
+        cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
       tls:
         - secretName: immich-${ENVIRONMENT}-tls
           hosts:
