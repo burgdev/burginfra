@@ -6,7 +6,7 @@ spec:
   instances: 1
 
   storage:
-    storageClass: fast-local-data-v2
+    storageClass: fast-local-data-v3
     size: ${IMMICH_DB_STORAGE_SIZE:-2Gi}
 
   # https://github.com/tensorchord/cloudnative-vectorchord/pkgs/container/cloudnative-vectorchord

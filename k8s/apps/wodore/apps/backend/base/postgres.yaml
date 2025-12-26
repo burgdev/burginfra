@@ -6,7 +6,7 @@ spec:
   instances: 1
 
   storage:
-    storageClass: fast-local-data-v2
+    storageClass: fast-local-data-v3
     size: ${WODORE_DB_STORAGE_SIZE:-2Gi}
 
   # PostGIS-enabled PostgreSQL 18 (system variant includes Barman Cloud for backups)

@@ -104,10 +104,10 @@ spec:
         #  emptyDir: {}
         - name: fast-data
           persistentVolumeClaim:
-            claimName: podinfo-fast-data-pvc-v2
+            claimName: podinfo-fast-data-pvc-v3
         - name: fast-media
           persistentVolumeClaim:
-            claimName: podinfo-fast-media-pvc-v2
+            claimName: podinfo-fast-media-pvc-v3
         - name: kdrive-data
           persistentVolumeClaim:
             claimName: podinfo-kdrive-data-pvc-v0

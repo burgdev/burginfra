@@ -56,12 +56,12 @@ server:
   dataStorage:
     enabled: true
     size: 5Gi
-    storageClass: fast-local-data-v2
+    storageClass: fast-local-data-v3
 
   auditStorage:
     enabled: true
     size: 2Gi
-    storageClass: fast-local-data-v2
+    storageClass: fast-local-data-v3
 
 csi:
   enabled: true

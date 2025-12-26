@@ -5,7 +5,7 @@ metadata:
 spec:
   instances: 1
   storage:
-    storageClass: fast-local-data-v2 # Use thin-provisioned storage for snapshot support
+    storageClass: fast-local-data-v3
     size: 5Gi
 
   # Bootstrap with database and users

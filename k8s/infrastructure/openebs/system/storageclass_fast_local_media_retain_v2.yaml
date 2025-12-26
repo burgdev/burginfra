@@ -6,7 +6,6 @@ provisioner: local.csi.openebs.io
 parameters:
   storageType: lvm
   volgroup: ${VG_NAME:-openebs-vg}
-  thinPoolName: ${THINPOOL_NAME:-openebs-vg_thinpool} # Explicitly specify thin pool name
   fsType: xfs
   shared: yes
   thinProvision: "yes" # Enable thin provisioning for snapshot support

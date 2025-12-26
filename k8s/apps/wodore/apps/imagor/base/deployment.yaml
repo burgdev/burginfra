@@ -101,10 +101,10 @@ spec:
         # Shared PVC with backend - defined in backend/base/pvcs.yaml
         - name: backend-media
           persistentVolumeClaim:
-            claimName: wd-backend-media-v0
+            claimName: wd-backend-media-v1
         - name: imagor-storage
           persistentVolumeClaim:
-            claimName: wd-imagor-storage-v0
+            claimName: wd-imagor-storage-v1
         - name: imagor-result
           persistentVolumeClaim:
-            claimName: wd-imagor-result-v0
+            claimName: wd-imagor-result-v1

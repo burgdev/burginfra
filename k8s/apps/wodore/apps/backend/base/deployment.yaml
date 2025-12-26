@@ -155,7 +155,7 @@ spec:
       volumes:
         - name: media
           persistentVolumeClaim:
-            claimName: wd-backend-media-v0
+            claimName: wd-backend-media-v1
         - name: py-cache
           persistentVolumeClaim:
-            claimName: wd-backend-py-cache-v0
+            claimName: wd-backend-py-cache-v1

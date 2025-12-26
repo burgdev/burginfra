@@ -108,14 +108,128 @@ install_root_ca() {
 	echo "Updating system CA certificates..."
 	sudo update-ca-certificates 2>&1 | grep -E "^(Adding|Removing|done)" || true
 
+	# Install into browser NSS certificate stores
+	echo ""
+	echo "Installing into browser certificate stores..."
+	
+	# Initialize counters
+	browsers_updated=0
+	browsers_failed=0
+	
+	if ! command -v certutil &>/dev/null; then
+		log_warn "certutil not found - skipping browser installation"
+		log_warn "Install with: sudo apt install libnss3-tools"
+	else
+		# Check if browsers are running
+		firefox_running=false
+		chromium_running=false
+		
+		if pgrep -x "firefox" &>/dev/null || pgrep -f "firefox" &>/dev/null; then
+			firefox_running=true
+		fi
+		
+		if pgrep -x "brave" &>/dev/null || pgrep -f "brave-browser" &>/dev/null || \
+		   pgrep -x "chromium" &>/dev/null || pgrep -x "chrome" &>/dev/null || \
+		   pgrep -x "google-chrome" &>/dev/null; then
+			chromium_running=true
+		fi
+		
+		# Warn if browsers are running
+		if [ "$firefox_running" = true ] || [ "$chromium_running" = true ]; then
+			echo ""
+			log_warn "The following browsers are currently running:"
+			[ "$firefox_running" = true ] && echo "  - Firefox"
+			[ "$chromium_running" = true ] && echo "  - Brave/Chromium/Chrome"
+			log_warn "Browser certificate databases are locked while browsers are running"
+			log_warn "Please close all browsers and run this script again"
+			echo ""
+		fi
+		
+		# Install into Firefox profiles
+		if [ -d "$HOME/.mozilla/firefox" ]; then
+			for profile_dir in "$HOME/.mozilla/firefox"/*.*/; do
+				if [ -f "$profile_dir/cert9.db" ]; then
+					profile_name=$(basename "$profile_dir")
+					echo "  Installing into Firefox profile: $profile_name"
+					
+					# Remove old certificate if it exists
+					certutil -D -n "BurgInfra Local Root CA" -d "sql:$profile_dir" 2>/dev/null || true
+					
+					# Add the certificate with trust flags for SSL/TLS
+					# C = trusted CA, , = not trusted for email, , = not trusted for code signing
+					if certutil -A -n "BurgInfra Local Root CA" -t "C,," -i "$cert_file" -d "sql:$profile_dir" 2>/dev/null; then
+						log_info "Installed into Firefox profile: $profile_name"
+						browsers_updated=$((browsers_updated + 1))
+					else
+						log_error "Failed to install into Firefox profile: $profile_name"
+						if [ "$firefox_running" = true ]; then
+							echo "    Reason: Firefox is running - close it and try again"
+						fi
+						browsers_failed=$((browsers_failed + 1))
+					fi
+				fi
+			done
+		fi
+		
+		# Install into Chromium/Chrome/Brave NSS database
+		if [ -d "$HOME/.pki/nssdb" ]; then
+			echo "  Installing into Chromium/Chrome/Brave certificate store"
+			
+			# Create the NSS database if it doesn't exist
+			if [ ! -f "$HOME/.pki/nssdb/cert9.db" ]; then
+				mkdir -p "$HOME/.pki/nssdb"
+				certutil -N -d "sql:$HOME/.pki/nssdb" --empty-password 2>/dev/null || true
+			fi
+			
+			# Remove old certificate if it exists
+			certutil -D -n "BurgInfra Local Root CA" -d "sql:$HOME/.pki/nssdb" 2>/dev/null || true
+			
+			# Add the certificate with trust flags for SSL/TLS
+			if certutil -A -n "BurgInfra Local Root CA" -t "C,," -i "$cert_file" -d "sql:$HOME/.pki/nssdb" 2>/dev/null; then
+				log_info "Installed into Chromium/Chrome/Brave certificate store"
+				browsers_updated=$((browsers_updated + 1))
+			else
+				log_error "Failed to install into Chromium/Chrome/Brave certificate store"
+				if [ "$chromium_running" = true ]; then
+					echo "    Reason: Brave/Chromium/Chrome is running - close it and try again"
+				fi
+				browsers_failed=$((browsers_failed + 1))
+			fi
+		else
+			# Create the NSS database directory
+			echo "  Creating Chromium/Chrome/Brave certificate store"
+			mkdir -p "$HOME/.pki/nssdb"
+			certutil -N -d "sql:$HOME/.pki/nssdb" --empty-password 2>/dev/null || true
+			
+			if certutil -A -n "BurgInfra Local Root CA" -t "C,," -i "$cert_file" -d "sql:$HOME/.pki/nssdb" 2>/dev/null; then
+				log_info "Created and installed into Chromium/Chrome/Brave certificate store"
+				browsers_updated=$((browsers_updated + 1))
+			else
+				log_error "Failed to create Chromium/Chrome/Brave certificate store"
+				browsers_failed=$((browsers_failed + 1))
+			fi
+		fi
+		
+		# Summary of browser installations
+		if [ "$browsers_failed" -gt 0 ]; then
+			echo ""
+			log_error "Failed to install CA into $browsers_failed browser certificate store(s)"
+			log_warn "Close all browsers and run this script again"
+		fi
+	fi
+
 	echo ""
 	log_info "Done! Root CA installed"
 	echo ""
 	echo "Summary:"
 	echo "  - Root CA: $cert_file"
+	echo "  - System trust store: Updated"
+	echo "  - Browser trust stores: $browsers_updated browser(s) updated"
 	echo "  - All certificates signed by this CA will now be trusted"
 	echo ""
-	echo "You may need to restart your browser for changes to take effect."
+	echo "IMPORTANT: You must completely close and restart your browser for changes to take effect."
+	echo "           - Firefox: Use Ctrl+Q or File > Quit"
+	echo "           - Brave/Chrome: Close all windows and quit completely"
 }
 
 watch_certificates() {
@@ -141,3 +255,6 @@ if [ "$WATCH_MODE" = true ]; then
 else
 	install_root_ca
 fi
+
+# Ensure clean exit
+exit 0

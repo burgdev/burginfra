@@ -37,7 +37,7 @@ valkey:
   persistence:
     data:
       type: persistentVolumeClaim
-      storageClassName: fast-local-data-v2
+      storageClassName: fast-local-data-v3
 
 machine-learning:
   resources:
@@ -51,7 +51,7 @@ machine-learning:
     cache:
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      storageClassName: fast-local-data-v2
+      storageClassName: fast-local-data-v3
 
 server:
   persistence:
