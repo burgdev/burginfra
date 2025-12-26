@@ -13,6 +13,7 @@ loki:
 alloydb:
   enabled: false
 lvm-localpv:
+  storageCapacity: false  # Disable capacity tracking to allow thin provisioning over-commitment
   crds:
     csi:
       volumeSnapshots:
