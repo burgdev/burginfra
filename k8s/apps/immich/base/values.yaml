@@ -60,7 +60,7 @@ server:
       type: persistentVolumeClaim
       mountPath: /mnt/external
       readOnly: true
-      existingClaim: immich-external-pvc-v1
+      existingClaim: immich-external-pvc-v2
   ingress:
     main:
       enabled: true
@@ -78,7 +78,7 @@ server:
 immich:
   persistence:
     library:
-      existingClaim: immich-library-pvc-v1
+      existingClaim: immich-library-pvc-v2
   configuration:
     image:
       colorspace: p3
