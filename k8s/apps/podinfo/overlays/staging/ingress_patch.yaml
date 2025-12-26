@@ -17,3 +17,4 @@ spec:
   tls:
     - hosts:
         - podinfo.staging.${BURGINFRA_HOST}
+      secretName: podinfo-staging-tls
