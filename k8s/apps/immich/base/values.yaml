@@ -158,7 +158,7 @@ immich:
           password: ${SMTP_PASSWORD}
           port: ${SMTP_PORT}
           username: ${SMTP_USERNAME}
-          secure: false
+          secure: ${SMTP_TLS_BOOL}
     storageTemplate:
       enabled: true
       hashVerificationEnabled: true
