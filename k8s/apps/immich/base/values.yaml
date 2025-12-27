@@ -83,6 +83,11 @@ immich:
     library:
       existingClaim: immich-library-pvc-v2
   configuration:
+    backup:
+      database:
+        cronExpression: "0 02 * * *"
+        enabled: true,
+        keepLastAmount: 7
     image:
       colorspace: p3
       extractEmbedded: false
@@ -142,18 +147,18 @@ immich:
       missingThumbnails: true
       startTime: "02:30"
       syncQuotaUsage: true
-      notifications:
-        smtp:
-          enabled: true
-          from: "tobias from pix.crux.li <${CRUXLI_EMAIL}>"
-          replyTo: "${BURGDEV_EMAIL}"
-          transport:
-            host: ${SMTP_HOST}
-            ignoreCert: false
-            password: ${SMTP_PASSWORD}
-            port: ${SMTP_PORT}
-            username: ${SMTP_USERNAME}
-            secure: true
+    notifications:
+      smtp:
+        enabled: true
+        from: "tobias from pix.crux.li <${CRUXLI_EMAIL}>"
+        replyTo: "${BURGDEV_EMAIL}"
+        transport:
+          host: ${SMTP_HOST}
+          ignoreCert: false
+          password: ${SMTP_PASSWORD}
+          port: ${SMTP_PORT}
+          username: ${SMTP_USERNAME}
+          secure: true
     storageTemplate:
       enabled: true
       hashVerificationEnabled: true
