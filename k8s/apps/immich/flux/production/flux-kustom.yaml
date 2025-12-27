@@ -30,6 +30,22 @@ spec:
       excludeRaw: true
   path: configs/smtp
 ---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: heartbeats-production-config
+  namespace: flux-system
+spec:
+  type: kv-v2
+  mount: kv
+  vaultAuthRef: configs-kv-all
+  destination:
+    name: heartbeats-production-config
+    create: true
+    transformation:
+      excludeRaw: true
+  path: configs/heartbeats
+---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -56,3 +72,5 @@ spec:
         name: immich-production-config-secret
       - kind: Secret
         name: immich-production-smtp
+      - kind: Secret
+        name: heartbeats-production-config
