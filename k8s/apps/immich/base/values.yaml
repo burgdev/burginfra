@@ -86,7 +86,7 @@ immich:
     backup:
       database:
         cronExpression: "0 02 * * *"
-        enabled: true,
+        enabled: true
         keepLastAmount: 7
     image:
       colorspace: p3
