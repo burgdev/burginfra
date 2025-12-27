@@ -142,17 +142,17 @@ immich:
       missingThumbnails: true
       startTime: "02:30"
       syncQuotaUsage: true
-      #notifications:
-      #  smtp:
-      #    enabled: $EMAIL_ENABLED
-      #    from: $EMAIL_FROM
-      #    replyTo: ""
-      #    transport:
-      #      host: $EMAIL_HOST
-      #      ignoreCert: false
-      #      password: $EMAIL_HOST_PASSWORD
-      #      port: $EMAIL_HOST_PORT
-      #      username: $EMAIL_HOST_USER
+      notifications:
+        smtp:
+          enabled: true
+          from: ${CRUXLI_EMAIL}
+          replyTo: ""
+          transport:
+            host: ${SMTP_HOST}
+            ignoreCert: false
+            password: ${SMTP_PASSWORD}
+            port: ${SMTP_PORT}
+            username: ${SMTP_USERNAME}
     storageTemplate:
       enabled: true
       hashVerificationEnabled: true

@@ -14,6 +14,21 @@ spec:
       excludeRaw: true # exclue _raw field
   path: apps/immich/production # OpenBao KV path
 ---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: immich-production-smtp
+spec:
+  type: kv-v2
+  mount: kv
+  vaultAuthRef: configs-kv-all
+  destination:
+    name: immich-production-smtp
+    create: true
+    transformation:
+      excludeRaw: true
+  path: configs/smtp
+---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -38,3 +53,5 @@ spec:
         name: cluster-settings
       - kind: Secret
         name: immich-production-config-secret
+      - kind: Secret
+        name: immich-production-smtp
