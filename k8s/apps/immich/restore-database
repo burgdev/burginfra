@@ -155,12 +155,19 @@ info "This may take a few minutes depending on the backup size..."
 # The backup file is on the library PVC which is only mounted by the server pod
 # Following Immich docs: gunzip | sed (fix search_path) | psql to postgres database
 info "Streaming backup file and restoring database (this may take several minutes)..."
+
+# Enable pipefail to ensure we catch errors from any command in the pipe
+set -o pipefail
+
 kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- sh -c \
-	"gunzip < '$BACKUP_FILE' | sed \"s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', false);/g\"" |
+	"set -o pipefail; gunzip < '$BACKUP_FILE' | sed -e \"s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', false);/g\" -e \"/^DROP ROLE IF EXISTS postgres;/d\" -e \"/^CREATE ROLE postgres;/d\" -e \"/^ALTER ROLE postgres /d\"" |
 	kubectl exec -i -n "$NAMESPACE" immich-postgres-1 -- \
 		sh -c "PGPASSWORD='$DB_PASS' psql --dbname=postgres --username=$DB_USER --set ON_ERROR_STOP=1"
 
 RESTORE_EXIT_CODE=$?
+
+# Disable pipefail after restore
+set +o pipefail
 
 if [ $RESTORE_EXIT_CODE -ne 0 ]; then
 	error "ERROR: Database restore failed with exit code ${RESTORE_EXIT_CODE}"
@@ -185,10 +192,10 @@ else
 	error "Failed to update postgres password - Immich may not be able to connect"
 fi
 
-# Update immich app user password (for future use if needed)
-APP_PASSWORD=$(kubectl get secret immich-postgres-app -n "$NAMESPACE" -o jsonpath='{.data.password}' | base64 -d)
-kubectl exec -n "$NAMESPACE" immich-postgres-1 -- \
-	bash -c "psql -U \"$DB_USER\" -d postgres -c \"ALTER USER immich WITH PASSWORD '$APP_PASSWORD';\""
+### # Update immich app user password (for future use if needed)
+### APP_PASSWORD=$(kubectl get secret immich-postgres-app -n "$NAMESPACE" -o jsonpath='{.data.password}' | base64 -d)
+### kubectl exec -n "$NAMESPACE" immich-postgres-1 -- \
+### 	bash -c "psql -U \"$DB_USER\" -d postgres -c \"ALTER USER immich WITH PASSWORD '$APP_PASSWORD';\""
 
 if [ $? -eq 0 ]; then
 	success "Immich app user password updated successfully"

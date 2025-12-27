@@ -3,6 +3,7 @@
 .env.secret
 certs
 .immich-values.yaml
+immich-db-backup-*
 
 # Kubernetes generated files
 #kustomization.yaml
