@@ -247,6 +247,126 @@ install_k3s() {
 	fi
 }
 
+configure_k3s_gc_help="Configures K3s kubelet garbage collection to prevent disk pressure from failed pods and unused images."
+configure_k3s_gc() {
+	section "Configuring K3s Kubelet Garbage Collection"
+
+	local k3s_config_dir="/etc/rancher/k3s"
+	local k3s_config_file="$k3s_config_dir/config.yaml"
+
+	# Kubelet garbage collection settings
+	local eviction_hard="${EVICTION_HARD_NODEFS:-5%}"
+	local eviction_soft="${EVICTION_SOFT_NODEFS:-10%}"
+	local eviction_grace="${EVICTION_SOFT_GRACE:-1m30s}"
+	local image_gc_high="${IMAGE_GC_HIGH_THRESHOLD:-85}"
+	local image_gc_low="${IMAGE_GC_LOW_THRESHOLD:-80}"
+	local terminated_pod_gc="${TERMINATED_POD_GC_THRESHOLD:-100}"
+	local max_pods="${MAX_PODS:-110}"
+
+	# Create K3s config directory if it doesn't exist
+	if [ ! -d "$k3s_config_dir" ]; then
+		echo "Creating K3s config directory: $k3s_config_dir"
+		sudo mkdir -p "$k3s_config_dir"
+	fi
+
+	# Backup existing config if it exists
+	if [ -f "$k3s_config_file" ]; then
+		echo "Backing up existing config to ${k3s_config_file}.backup"
+		sudo cp "$k3s_config_file" "${k3s_config_file}.backup"
+	fi
+
+	# Create or update K3s config with kubelet arguments
+	echo "Adding kubelet garbage collection settings..."
+
+	cat <<EOF | sudo tee "$k3s_config_file" >/dev/null
+# K3s Server Configuration
+# Kubelet configuration for garbage collection and resource management
+
+kubelet-arg:
+  # Hard eviction thresholds - immediate pod eviction when crossed
+  - "eviction-hard=nodefs.available<${eviction_hard}"
+  - "eviction-hard=imagefs.available<${eviction_hard}"
+
+  # Soft eviction thresholds - gradual eviction with grace period
+  - "eviction-soft=nodefs.available<${eviction_soft}"
+  - "eviction-soft=imagefs.available<${eviction_soft}"
+  - "eviction-soft-grace-period=nodefs.available=${eviction_grace}"
+  - "eviction-soft-grace-period=imagefs.available=${eviction_grace}"
+
+  # Image garbage collection thresholds
+  - "image-gc-high-threshold=${image_gc_high}"
+  - "image-gc-low-threshold=${image_gc_low}"
+
+  # Terminated pod garbage collection
+  - "terminated-pod-gc-threshold=${terminated_pod_gc}"
+
+  # Maximum pods per node
+  - "max-pods=${max_pods}"
+EOF
+
+	echo "$(s G "Kubelet configuration written to $k3s_config_file")"
+	echo "Configuration:"
+	echo "  - Hard eviction: ${eviction_hard} free space"
+	echo "  - Soft eviction: ${eviction_soft} free space (grace: ${eviction_grace})"
+	echo "  - Image GC: ${image_gc_high}% → ${image_gc_low}%"
+	echo "  - Max terminated pods: ${terminated_pod_gc}"
+	echo ""
+	echo "$(s Y "NOTE: K3s must be restarted for these changes to take effect:")"
+	echo "  sudo systemctl restart k3s"
+}
+
+configure_journal_limits_help="Configures systemd journal size limits to prevent excessive log disk usage."
+configure_journal_limits() {
+	section "Configuring systemd Journal Size Limits"
+
+	local journald_conf="/etc/systemd/journald.conf.d/size-limit.conf"
+	local journal_max_use="${JOURNAL_MAX_USE:-500M}"
+	local journal_max_file="${JOURNAL_MAX_FILE_SIZE:-100M}"
+	local journal_retention="${JOURNAL_MAX_RETENTION:-1week}"
+
+	# Create journald config directory if it doesn't exist
+	local journald_conf_dir=$(dirname "$journald_conf")
+	if [ ! -d "$journald_conf_dir" ]; then
+		echo "Creating journald config directory: $journald_conf_dir"
+		sudo mkdir -p "$journald_conf_dir"
+	fi
+
+	echo "Setting journal size limits..."
+
+	cat <<EOF | sudo tee "$journald_conf" >/dev/null
+# systemd Journal Size Limits
+# Prevents journal logs from consuming excessive disk space
+
+[Journal]
+# Maximum disk space the journal may use
+SystemMaxUse=$journal_max_use
+
+# Maximum size of individual journal files
+SystemMaxFileSize=$journal_max_file
+
+# How long to keep journal entries
+MaxRetentionSec=$journal_retention
+
+# Ensure journals are stored on disk (persistent)
+Storage=persistent
+EOF
+
+	echo "$(s G "Journal configuration written to $journald_conf")"
+	echo "Journal limits:"
+	echo "  - Maximum disk usage: $journal_max_use"
+	echo "  - Maximum file size: $journal_max_file"
+	echo "  - Retention period: $journal_retention"
+
+	echo ""
+	echo "Restarting systemd-journald..."
+	sudo systemctl restart systemd-journald
+	echo "$(s G "systemd-journald restarted")"
+
+	echo ""
+	echo "Current journal disk usage:"
+	journalctl --disk-usage
+}
+
 install_longhorn_deps_help="Installs Longhorn dependencies."
 install_longhorn_deps() {
 	section "Installing Longhorn dependencies"
@@ -865,6 +985,10 @@ run_all() {
 	# Install k3s after storage is ready
 	install_k3s
 
+	# Configure k3s garbage collection and journal limits
+	configure_k3s_gc
+	configure_journal_limits
+
 	echo ""
 	echo "$(s G "==> Server setup complete!")"
 	echo ""
@@ -872,7 +996,9 @@ run_all() {
 	echo "  1. Run: $(s B "sudo $0 mount_webdav") - Mount WebDAV storage"
 	echo "  2. Run: $(s B "sudo $0 security_audit") - Run security audit"
 	echo ""
-	echo "$(s R "After completing optional steps, reboot your system:") $(s B "sudo reboot")"
+	echo "$(s R "After completing optional steps, restart k3s and reboot your system:")"
+	echo "  $(s B "sudo systemctl restart k3s")"
+	echo "  $(s B "sudo reboot")"
 }
 
 help_menu() {
@@ -938,6 +1064,8 @@ $(s Y Commands:)
   $(s b setup_openebs_storage)   $(s d $setup_openebs_storage_help)
   $(s b install_longhorn_deps)   $(s d $install_longhorn_deps_help)
   $(s b install_k3s)             $(s d $install_k3s_help)
+  $(s b configure_k3s_gc)        $(s d $configure_k3s_gc_help)
+  $(s b configure_journal_limits) $(s d $configure_journal_limits_help)
 
 $(s Y Optional Commands:)
   $(s b security_audit)          $(s d $security_audit_help)

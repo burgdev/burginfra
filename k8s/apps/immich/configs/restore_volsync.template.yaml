@@ -19,6 +19,11 @@ spec:
     copyMethod: Direct
     enableFileDeletion: false
 
+    # Cache configuration to avoid emptyDir on root filesystem
+    # Using PVC instead of emptyDir prevents disk pressure and preserves cache across restarts
+    # cacheStorageClassName defaults to destinationPVC's StorageClass if not specified
+    cacheCapacity: 10Gi # Large enough for repository metadata of 152.5GB backup
+
     sourceIdentity:
       sourceName: ${SRC_CLUSTER}-immich-library
       sourceNamespace: ${SRC_NAMESPACE}
@@ -86,3 +91,4 @@ spec:
 ###       fsGroup: 26
 ### ---
 ###
+
