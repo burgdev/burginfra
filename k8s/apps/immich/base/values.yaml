@@ -145,14 +145,15 @@ immich:
       notifications:
         smtp:
           enabled: true
-          from: ${CRUXLI_EMAIL}
-          replyTo: ""
+          from: "tobias from pix.crux.li <${CRUXLI_EMAIL}>"
+          replyTo: "${BURGDEV_EMAIL}"
           transport:
             host: ${SMTP_HOST}
             ignoreCert: false
             password: ${SMTP_PASSWORD}
             port: ${SMTP_PORT}
             username: ${SMTP_USERNAME}
+            secure: true
     storageTemplate:
       enabled: true
       hashVerificationEnabled: true

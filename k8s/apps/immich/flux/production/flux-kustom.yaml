@@ -18,6 +18,7 @@ apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
 metadata:
   name: immich-production-smtp
+  namespace: flux-system
 spec:
   type: kv-v2
   mount: kv

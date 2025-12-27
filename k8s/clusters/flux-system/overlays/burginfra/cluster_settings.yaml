@@ -8,7 +8,7 @@ data:
   # TODO: you need to MANUALLY apply any changes made here!
   #       k-localhost; kubectl apply -f k8s/clusters/flux-system/overlays/local/cluster_settings.yaml
   #       k-intra-vps1; kubectl apply -f k8s/clusters/flux-system/overlays/burginfra/cluster_settings.yaml
-  CRUXLI_HOST: "dev.crux.li"
+  CRUXLI_HOST: "crux.li"
   CRUXLI_EMAIL: "tobias@burgdev.ch"
   BURGDEV_HOST: "burgdev.ch"
   BURGDEV_EMAIL: "tobias@burgdev.ch"
