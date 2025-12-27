@@ -6,5 +6,5 @@ resources:
   # CRUXLI
   - ../../immich/flux/production
   # WODORE
-  - ../../umami/overlays/production/
-  - ../../wodore/flux/production
+  #- ../../umami/overlays/production/
+  #- ../../wodore/flux/production

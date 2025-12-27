@@ -12,21 +12,21 @@ NAMESPACES=("production") # "staging")
 source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
 
 # --- Scenario-specific steps ---
-echo -e "${YELLOW}Suspending Flux reconciliation for all apps...${RESET}"
+section "Suspending Flux reconciliation for all apps..."
 flux suspend kustomization apps-sync-all-${SRC_NAMESPACE}
-echo -e "${YELLOW}Suspending Flux reconciliation for immich...${RESET}"
+section "Suspending Flux reconciliation for immich..."
 flux suspend kustomization app-immich-${SRC_NAMESPACE}
 
-echo -e "${YELLOW}Scaling down deployment immich...${RESET}"
+section "Scaling down deployment immich..."
 kubectl scale deployment immich-server --replicas=0 -n "$SRC_NAMESPACE"
 kubectl scale deployment immich-machine-learning --replicas=0 -n "$SRC_NAMESPACE"
 
-echo -e "${YELLOW}Applying restore manifest...${RESET}"
+section "Applying restore manifest..."
 echo "$RESTORE_YAML" | kubectl apply -f -
 
 wait_for_restore
 
-echo -e "${YELLOW}Files restored. Now restoring database from SQL dump...${RESET}"
+section "Files restored. Now restoring database from SQL dump..."
 
 ### # Find the latest database dump from the restored library PVC
 ### echo -e "${YELLOW}Finding latest database dump...${RESET}"
