@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("staging" "production")
+
+# Parse command line arguments
+BACKUP_FILE=""
+
+usage() {
+	echo "Usage: $0 [-n namespace] [-f backup_file]"
+	echo ""
+	echo "Options:"
+	echo "  -n    Namespace (staging or production, default: will prompt)"
+	echo "  -f    Specific backup file to restore (default: latest)"
+	echo ""
+	echo "Examples:"
+	echo "  $0 -n production                    # Restore latest backup in production"
+	echo "  $0 -n staging -f backup.sql.gz      # Restore specific backup in staging"
+	exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+	case $1 in
+	-n)
+		NAMESPACE="$2"
+		shift 2
+		;;
+	-f)
+		BACKUP_FILE="$2"
+		shift 2
+		;;
+	-h | --help)
+		usage
+		;;
+	*)
+		echo "Unknown option: $1"
+		usage
+		;;
+	esac
+done
+
+# Select namespace if not provided
+if [ -z "${NAMESPACE:-}" ]; then
+	select_namespace
+fi
+
+title "Immich Database Restore"
+info "Namespace: ${NAMESPACE}"
+echo ""
+
+# Check if immich-server deployment exists
+if ! kubectl get deployment immich-server -n "$NAMESPACE" >/dev/null 2>&1; then
+	error "ERROR: immich-server deployment not found in namespace ${NAMESPACE}"
+	exit 1
+fi
+
+# Check if postgres cluster exists
+if ! kubectl get cluster immich-postgres -n "$NAMESPACE" >/dev/null 2>&1; then
+	error "ERROR: immich-postgres cluster not found in namespace ${NAMESPACE}"
+	exit 1
+fi
+
+# Find the server pod
+section "Finding Immich server pod..."
+SERVER_POD=$(kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name=server,app.kubernetes.io/instance=immich -o jsonpath='{.items[0].metadata.name}')
+
+if [ -z "$SERVER_POD" ]; then
+	error "ERROR: No Immich server pod found"
+	exit 1
+fi
+
+success "Found server pod: ${SERVER_POD}"
+
+# Find or list available backups
+if [ -z "$BACKUP_FILE" ]; then
+	section "Finding latest database backup..."
+	BACKUP_FILE=$(kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- \
+		sh -c 'ls -t /data/backups/*.sql.gz 2>/dev/null | head -1' || echo "")
+
+	if [ -z "$BACKUP_FILE" ]; then
+		error "ERROR: No database backups found in /data/backups/"
+		warn "Available files:"
+		kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- ls -lh /data/backups/ || true
+		exit 1
+	fi
+
+	success "Found latest backup: ${BACKUP_FILE}"
+else
+	# If user specified a filename without path, prepend /data/backups/
+	if [[ "$BACKUP_FILE" != /* ]]; then
+		BACKUP_FILE="/data/backups/$BACKUP_FILE"
+	fi
+
+	# Verify the file exists
+	if ! kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- test -f "$BACKUP_FILE"; then
+		error "ERROR: Backup file not found: ${BACKUP_FILE}"
+		warn "Available backups:"
+		kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- ls -lh /data/backups/ || true
+		exit 1
+	fi
+fi
+
+# Get backup file info
+BACKUP_SIZE=$(kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- \
+	stat -c %s "$BACKUP_FILE" | awk '{printf "%.1f MB", $1/1024/1024}')
+info "Backup size: ${BACKUP_SIZE}"
+
+# Get database credentials
+section "Retrieving database credentials..."
+DB_HOST=$(kubectl get secret immich-postgres-superuser -n "$NAMESPACE" -o jsonpath='{.data.host}' | base64 -d)
+DB_USER=$(kubectl get secret immich-postgres-superuser -n "$NAMESPACE" -o jsonpath='{.data.user}' | base64 -d)
+DB_PASS=$(kubectl get secret immich-postgres-superuser -n "$NAMESPACE" -o jsonpath='{.data.password}' | base64 -d)
+
+# The superuser secret has dbname='*' (wildcard for all databases)
+# We need to use the actual database name for Immich
+DB_NAME="immich"
+
+success "Database host: ${DB_HOST}"
+info "Database name: ${DB_NAME}"
+info "Database user: ${DB_USER}"
+
+# Confirmation prompt
+echo ""
+error "WARNING: This will restore the Immich database from backup!"
+error "The existing database will be DROPPED and recreated by the backup file."
+warn "Backup file: ${BACKUP_FILE}"
+warn "Note: Immich will continue running during the restore. You may experience errors during this time."
+echo ""
+read -p "Are you sure you want to continue? (yes/no): " -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
+	warn "Restore cancelled."
+	exit 0
+fi
+
+# Terminate existing database connections
+# The backup file created with pg_dumpall will handle dropping/recreating databases
+section "Terminating existing database connections..."
+kubectl exec -n "$NAMESPACE" immich-postgres-1 -- \
+	psql -U "$DB_USER" -d postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '${DB_NAME}' AND pid <> pg_backend_pid();" 2>/dev/null || true
+
+sleep 2
+
+# Restore the backup
+section "Restoring database from backup..."
+info "This may take a few minutes depending on the backup size..."
+
+# Stream the backup directly from server pod to postgres pod
+# This avoids needing to write temp files in the postgres pod (which has read-only /tmp)
+# The backup file is on the library PVC which is only mounted by the server pod
+# Following Immich docs: gunzip | sed (fix search_path) | psql to postgres database
+info "Streaming backup file and restoring database (this may take several minutes)..."
+kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- sh -c \
+	"gunzip < '$BACKUP_FILE' | sed \"s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', false);/g\"" |
+	kubectl exec -i -n "$NAMESPACE" immich-postgres-1 -- \
+		sh -c "PGPASSWORD='$DB_PASS' psql --dbname=postgres --username=$DB_USER --set ON_ERROR_STOP=0"
+
+RESTORE_EXIT_CODE=$?
+
+if [ $RESTORE_EXIT_CODE -ne 0 ]; then
+	error "ERROR: Database restore failed with exit code ${RESTORE_EXIT_CODE}"
+	error "Check the logs above for details. The database may be in an inconsistent state."
+	exit 1
+fi
+
+success "Database restored successfully!"
+
+# Restart the server pod to ensure it reconnects with the restored database
+section "Restarting Immich server to reconnect to restored database..."
+kubectl rollout restart deployment/immich-server -n "$NAMESPACE"
+
+section "Waiting for deployment to be ready..."
+kubectl rollout status deployment/immich-server -n "$NAMESPACE" --timeout=300s || true
+
+title "Database Restore Complete"
+success "Immich has been restarted and should now be running with the restored database."
