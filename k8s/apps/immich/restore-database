@@ -158,7 +158,7 @@ info "Streaming backup file and restoring database (this may take several minute
 kubectl exec -n "$NAMESPACE" "$SERVER_POD" -c main -- sh -c \
 	"gunzip < '$BACKUP_FILE' | sed \"s/SELECT pg_catalog.set_config('search_path', '', false);/SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', false);/g\"" |
 	kubectl exec -i -n "$NAMESPACE" immich-postgres-1 -- \
-		sh -c "PGPASSWORD='$DB_PASS' psql --dbname=postgres --username=$DB_USER --set ON_ERROR_STOP=0"
+		sh -c "PGPASSWORD='$DB_PASS' psql --dbname=postgres --username=$DB_USER --set ON_ERROR_STOP=1"
 
 RESTORE_EXIT_CODE=$?
 

@@ -12,6 +12,7 @@ controllers:
             memory: "2Gi"
             cpu: "2000m"
         env:
+          IMMICH_MEDIA_LOCATION: /data
           DB_HOSTNAME:
             valueFrom:
               secretKeyRef:
