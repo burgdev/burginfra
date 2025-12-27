@@ -1,7 +1,7 @@
 import 'core.just'
 
 
-# 🚀 Initialize cluster with flux (env: dev|staging|prod)
+# 🚀 Initialize cluster with flux
 bootstrap:
     @header "$(doc flux bootstrap)"
     kubectl apply -f k8s/clusters/flux-system/base/gotk-components.yaml
@@ -13,7 +13,7 @@ create-deploy-key:
     @header "$(doc flux create-deploy-key)"
     flux create secret git flux-system --url=ssh://git@github.com/burgdev/burginfra.git
     @info "Add deploy key to github https://github.com/burgdev/burginfra/settings/keys/new"
-    @info $'Run \'\e[34mjust flux deploy\e[0m\' to deploy.'
+    @info $'Run \'\e[34mjust flux deploy [local|burginfra] [no-dry]\e[0m\' to deploy.'
 
 # 🚀 Deploy everything to a cluster (cluster: local|burginfra, dry: dry|no-dry)
 deploy cluster="local" dry="dry":
@@ -47,7 +47,7 @@ deploy cluster="local" dry="dry":
         info "If successfull:"
         info "  Configure secrets in k8s/infrastructure/volsync/configs/base/.env.secrets"
         info "  Wait until all namespaces are created"
-        info $'  Run \'\e[34m./k8s/infrastructure/volsync/apply-config {{cluster}}\e[0m\' to deploy.'
+        info $'  Run \'\e[34mjust volsync apply-config {{cluster}}\e[0m\' to .'
     else
         kubectl apply -k $cluster_path --dry-run=client && success $'\e[1;33mDRY RUN\e[0m to {{cluster}} successful.' || error $'\e[1;33mDRY RUN\e[0m to {{cluster}} failed.'
         info $'Run \'\e[34mjust flux deploy {{cluster}} no-dry\e[0m\' to deploy.'

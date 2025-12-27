@@ -8,72 +8,81 @@ spec:
   trigger:
     manual: restore-immich-library-${TIMESTAMP}
   kopia:
-    repository: volsync-kopia-webdav-secrets
+    #repository: volsync-kopia-webdav-secrets
+    # ONLY for immich current backup
+    repository: volsync-immich-kopia-webdav-secrets
+    username: "burg"
+    hostname: "infra"
+    # ~~~~~~
+
     destinationPVC: immich-library-pvc-v2
     copyMethod: Direct
-    enableFileDeletion: true
+    enableFileDeletion: false
 
     sourceIdentity:
       sourceName: ${SRC_CLUSTER}-immich-library
       sourceNamespace: ${SRC_NAMESPACE}
+      #sourcePathOverride: "/mnt/kubernetes/volumes/immich/server/data"
+      #sourcePathOverride: "/data"
 
     moverSecurityContext:
       runAsUser: 0 # root
       runAsGroup: 0 # root
       fsGroup: 0
 ---
-# IMMICH LIBRARY - volsync
-apiVersion: volsync.backube/v1alpha1
-kind: ReplicationDestination
-metadata:
-  name: ${CLUSTER}-immich-external # 'username' for kopia
-  namespace: ${NAMESPACE}
-spec:
-  trigger:
-    manual: restore-immich-external-${TIMESTAMP}
-  kopia:
-    repository: volsync-kopia-webdav-secrets
-    destinationPVC: immich-external-pvc-v2
-    copyMethod: Direct
-    enableFileDeletion: true
-    # Non-negative integer that specifies how many snapshots to skip before selecting one to restore from.
-    # When set to 0 (the default), the latest snapshot is used.
-    # When set to 1, the second newest snapshot is used (skipping 1 snapshot), and so on.
-    # This parameter can be combined with restoreAsOf to skip snapshots from a specific point in time.
-    previous: 0
-    restoreAsOf: ${RESTORE_AS_OF}
-
-    sourceIdentity:
-      sourceName: ${SRC_CLUSTER}-immich-external
-      sourceNamespace: ${SRC_NAMESPACE}
-
-    moverSecurityContext:
-      runAsUser: 0 # root
-      runAsGroup: 0 # root
-      fsGroup: 0
----
-# DATABASE - volsync
-apiVersion: volsync.backube/v1alpha1
-kind: ReplicationDestination
-metadata:
-  name: ${CLUSTER}-immich-postgres # 'username' for kopia
-  namespace: ${NAMESPACE}
-spec:
-  trigger:
-    manual: restore-immich-postgres-${TIMESTAMP}
-  kopia:
-    repository: volsync-kopia-webdav-secrets
-    destinationPVC: immich-postgres-1
-    copyMethod: Direct
-    enableFileDeletion: true
-
-    sourceIdentity:
-      sourceName: ${SRC_CLUSTER}-immich-postgres
-      sourceNamespace: ${SRC_NAMESPACE}
-
-    moverSecurityContext:
-      runAsUser: 26 # postgres
-      runAsGroup: 26 # tape
-      fsGroup: 26
----
-
+### Not yet used
+### # IMMICH LIBRARY - volsync
+### apiVersion: volsync.backube/v1alpha1
+### kind: ReplicationDestination
+### metadata:
+###   name: ${CLUSTER}-immich-external # 'username' for kopia
+###   namespace: ${NAMESPACE}
+### spec:
+###   trigger:
+###     manual: restore-immich-external-${TIMESTAMP}
+###   kopia:
+###     repository: volsync-kopia-webdav-secrets
+###     destinationPVC: immich-external-pvc-v2
+###     copyMethod: Direct
+###     enableFileDeletion: true
+###     # Non-negative integer that specifies how many snapshots to skip before selecting one to restore from.
+###     # When set to 0 (the default), the latest snapshot is used.
+###     # When set to 1, the second newest snapshot is used (skipping 1 snapshot), and so on.
+###     # This parameter can be combined with restoreAsOf to skip snapshots from a specific point in time.
+###     previous: 0
+###     restoreAsOf: ${RESTORE_AS_OF}
+###
+###     sourceIdentity:
+###       sourceName: ${SRC_CLUSTER}-immich-external
+###       sourceNamespace: ${SRC_NAMESPACE}
+###
+###     moverSecurityContext:
+###       runAsUser: 0 # root
+###       runAsGroup: 0 # root
+###       fsGroup: 0
+### ---
+### # DATABASE - volsync
+### apiVersion: volsync.backube/v1alpha1
+### kind: ReplicationDestination
+### metadata:
+###   name: ${CLUSTER}-immich-postgres # 'username' for kopia
+###   namespace: ${NAMESPACE}
+### spec:
+###   trigger:
+###     manual: restore-immich-postgres-${TIMESTAMP}
+###   kopia:
+###     repository: volsync-kopia-webdav-secrets
+###     destinationPVC: immich-postgres-1
+###     copyMethod: Direct
+###     enableFileDeletion: true
+###
+###     sourceIdentity:
+###       sourceName: ${SRC_CLUSTER}-immich-postgres
+###       sourceNamespace: ${SRC_NAMESPACE}
+###
+###     moverSecurityContext:
+###       runAsUser: 26 # postgres
+###       runAsGroup: 26 # tape
+###       fsGroup: 26
+### ---
+###

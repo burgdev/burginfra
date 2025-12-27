@@ -6,7 +6,7 @@ ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
 . "$ROOT_DIR/scripts/_base.sh"
 cd "$SCRIPT_DIR"
 
-NAMESPACES=("staging" "production")
+NAMESPACES=("production") # "staging")
 
 # Source the helper: sets RESTORE_YAML and provides wait_for_restore()
 source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
@@ -19,16 +19,57 @@ flux suspend kustomization app-immich-${SRC_NAMESPACE}
 
 echo -e "${YELLOW}Scaling down deployment immich...${RESET}"
 kubectl scale deployment immich-server --replicas=0 -n "$SRC_NAMESPACE"
+kubectl scale deployment immich-machine-learning --replicas=0 -n "$SRC_NAMESPACE"
 
 echo -e "${YELLOW}Applying restore manifest...${RESET}"
 echo "$RESTORE_YAML" | kubectl apply -f -
 
 wait_for_restore
 
+echo -e "${YELLOW}Files restored. Now restoring database from SQL dump...${RESET}"
+
+# Find the latest database dump from the restored library PVC
+echo -e "${YELLOW}Finding latest database dump...${RESET}"
+LATEST_DUMP=$(kubectl exec -n "$SRC_NAMESPACE" \
+	deployment/immich-server -c immich-server -- \
+	sh -c 'ls -t /data/upload/backups/*.sql.gz 2>/dev/null | head -1' || echo "")
+
+if [ -z "$LATEST_DUMP" ]; then
+	echo -e "${RED}ERROR: No database dump found in /data/upload/backups/${RESET}"
+	echo -e "${RED}Skipping database restore. You may need to restore manually.${RESET}"
+else
+	echo -e "${GREEN}Found dump: $LATEST_DUMP${RESET}"
+
+	# Get database credentials from the secret
+	DB_HOST=$(kubectl get secret immich-postgres-superuser -n "$SRC_NAMESPACE" -o jsonpath='{.data.host}' | base64 -d)
+	DB_USER=$(kubectl get secret immich-postgres-superuser -n "$SRC_NAMESPACE" -o jsonpath='{.data.user}' | base64 -d)
+	DB_PASS=$(kubectl get secret immich-postgres-superuser -n "$SRC_NAMESPACE" -o jsonpath='{.data.password}' | base64 -d)
+
+	echo -e "${YELLOW}Dropping and recreating database...${RESET}"
+	# Drop and recreate the database to ensure clean state
+	kubectl exec -n "$SRC_NAMESPACE" immich-postgres-1 -- \
+		psql -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS immich;"
+	kubectl exec -n "$SRC_NAMESPACE" immich-postgres-1 -- \
+		psql -U "$DB_USER" -d postgres -c "CREATE DATABASE immich;"
+
+	echo -e "${YELLOW}Restoring database from dump...${RESET}"
+	# Restore the dump using the same approach as Immich's documentation
+	# The sed command fixes search_path issues as mentioned in the docs
+	kubectl exec -n "$SRC_NAMESPACE" deployment/immich-server -c immich-server -- \
+		sh -c "gunzip < $LATEST_DUMP | sed 's/SELECT pg_catalog.set_config/-- SELECT pg_catalog.set_config/g'" |
+		kubectl exec -i -n "$SRC_NAMESPACE" immich-postgres-1 -- \
+			psql -U "$DB_USER" -d immich
+
+	echo -e "${GREEN}Database restored successfully!${RESET}"
+fi
+
 echo -e "${YELLOW}Scaling deployment immich back up...${RESET}"
 kubectl scale deployment immich-server --replicas=1 -n "$SRC_NAMESPACE"
+kubectl scale deployment immich-machine-learning --replicas=1 -n "$SRC_NAMESPACE"
 
-sleep 5 # wait until ready
+echo -e "${YELLOW}Waiting for deployment to be ready...${RESET}"
+kubectl wait --for=condition=available --timeout=300s deployment/immich-server -n "$SRC_NAMESPACE" || true
+kubectl wait --for=condition=available --timeout=300s deployment/immich-machine-learning -n "$SRC_NAMESPACE" || true
 
 echo -e "${YELLOW}Resuming Flux reconciliation for all apps...${RESET}"
 flux resume kustomization app-immich-${SRC_NAMESPACE}

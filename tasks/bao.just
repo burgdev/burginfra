@@ -9,7 +9,7 @@ init cluster="local" namespace="burginfra-system":
 # 🚀 Restore openbao (interactive)
 restore:
     @header "$(doc bao restore)"
-    @{{justfile_dir()}}/k8s/infrastructure/openbao/restore
+    @{{justfile_dir()}}/k8s/infrastructure/openbao/restore-volsync
 
 
 # ❓ Show help

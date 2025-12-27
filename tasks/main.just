@@ -10,6 +10,8 @@ mod flux
 mod bao
 # 🗃️ Run volsync commands (backup, restore, ...)
 mod volsync
+# 📁 Run rclone commands (configs, ...)
+mod rclone
 # 📚 Documentation tasks (build, serve, ...)
 mod docs
 # 📦 Project tasks (install, release, ...)

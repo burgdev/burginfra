@@ -27,7 +27,7 @@ wait_for_restore
 echo -e "${YELLOW}Scaling StatefulSet openbao back up...${RESET}"
 kubectl scale statefulset openbao --replicas=1 -n "$SRC_NAMESPACE"
 
-sleep 5 # wait until ready
+sleep 20 # wait until ready
 
 echo -e "${YELLOW}Update kubernetes config...${RESET}"
 # Prompt for root token if not set
