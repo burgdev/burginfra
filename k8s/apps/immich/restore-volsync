@@ -22,9 +22,9 @@ kubectl scale deployment immich-server --replicas=0 -n "$SRC_NAMESPACE"
 kubectl scale deployment immich-machine-learning --replicas=0 -n "$SRC_NAMESPACE"
 
 echo -e "${YELLOW}Applying restore manifest...${RESET}"
-echo "$RESTORE_YAML" | kubectl apply -f -
+#echo "$RESTORE_YAML" | kubectl apply -f -
 
-wait_for_restore
+#wait_for_restore
 
 echo -e "${YELLOW}Files restored. Now restoring database from SQL dump...${RESET}"
 
