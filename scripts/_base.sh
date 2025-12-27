@@ -124,3 +124,51 @@ kubeconfig_check() {
 		fi
 	fi
 }
+
+# --- Single-key yes/no ---
+ask_yes_no() {
+	local prompt="$1"
+	local default="$2"
+	local def_upper def_lower
+	if [[ "$default" == "y" ]]; then
+		def_upper="Y"
+		def_lower="n"
+	else
+		def_upper="y"
+		def_lower="N"
+	fi
+
+	printf "${yellow}%s (${def_upper}/${def_lower}): ${rst}" "$prompt" >&2
+	local answer
+	IFS= read -r -n1 answer </dev/tty || true
+	echo >&2
+	if [[ -z "$answer" ]]; then
+		echo "$default"
+	elif [[ "$answer" =~ [Yy] ]]; then
+		echo "y"
+	else
+		echo "n"
+	fi
+}
+
+# --- Choose option ---
+choose_option() {
+	local prompt="$1"
+	shift
+	local options=("$@")
+	local default="${options[0]}"
+
+	printf "\n${cyan}%s${rst}\n" "$prompt" >&2
+	for i in "${!options[@]}"; do
+		printf " [%d] %s\n" "$i" "${options[$i]}" >&2
+	done
+	printf "Answer (default: %s): " "$default" >&2
+	read -r choice </dev/tty
+	if [[ -z "$choice" ]]; then
+		echo "$default"
+	elif [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 0 && choice < ${#options[@]})); then
+		echo "${options[$choice]}"
+	else
+		echo "$choice"
+	fi
+}

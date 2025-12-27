@@ -2,14 +2,9 @@
 # Usage: source restore_base.sh
 # Expects: $TEMPLATE_FILE, $CLUSTERS and $NAMESPACES to be set
 
-# --- Colors ---
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Source base functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/../_base.sh"
 
 if [ -z "${CLUSTERS+x}" ] || [ "${#CLUSTERS[@]}" -eq 0 ]; then
 	CLUSTERS=("local" "burginfra")
@@ -19,54 +14,6 @@ if [ -z "${NAMESPACES+x}" ] || [ "${#NAMESPACES[@]}" -eq 0 ]; then
 fi
 TEMPLATE_FILE=${TEMPLATE_FILE:-"configs/restore_volsync.template.yaml"}
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-
-# --- Single-key yes/no ---
-ask_yes_no() {
-	local prompt="$1"
-	local default="$2"
-	local def_upper def_lower
-	if [[ "$default" == "y" ]]; then
-		def_upper="Y"
-		def_lower="n"
-	else
-		def_upper="y"
-		def_lower="N"
-	fi
-
-	printf "${YELLOW}%s (${def_upper}/${def_lower}): ${RESET}" "$prompt" >&2
-	local answer
-	IFS= read -r -n1 answer </dev/tty || true
-	echo >&2
-	if [[ -z "$answer" ]]; then
-		echo "$default"
-	elif [[ "$answer" =~ [Yy] ]]; then
-		echo "y"
-	else
-		echo "n"
-	fi
-}
-
-# --- Choose option ---
-choose_option() {
-	local prompt="$1"
-	shift
-	local options=("$@")
-	local default="${options[0]}"
-
-	printf "\n${CYAN}%s${RESET}\n" "$prompt" >&2
-	for i in "${!options[@]}"; do
-		printf " [%d] %s\n" "$i" "${options[$i]}" >&2
-	done
-	printf "Answer (default: %s): " "$default" >&2
-	read -r choice </dev/tty
-	if [[ -z "$choice" ]]; then
-		echo "$default"
-	elif [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 0 && choice < ${#options[@]})); then
-		echo "${options[$choice]}"
-	else
-		echo "$choice"
-	fi
-}
 
 # --- Prompt cluster/namespace ---
 if [[ -z "${CLUSTER:-}" ]]; then
@@ -94,7 +41,7 @@ if [[ -z "${RESTORE_AS_OF:-}" ]]; then
 	current_datetime=$(date +"%Y-%m-%d %H:%M")
 	current_tz=$(date +"%z" | sed 's/^\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
 
-	printf "${YELLOW}Enter restore date and time (default: %s):${RESET} " "$current_datetime" >&2
+	printf "$(style yellow "Enter restore date and time (default: %s): ")" "$current_datetime" >&2
 	read -r input_datetime </dev/tty
 
 	# Use current datetime if empty
@@ -104,7 +51,7 @@ if [[ -z "${RESTORE_AS_OF:-}" ]]; then
 
 	# Validate format
 	if [[ ! "$input_datetime" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{2}:[0-9]{2}$ ]]; then
-		echo -e "${RED}Invalid format. Expected YYYY-MM-DD HH:MM${RESET}" >&2
+		error "Invalid format. Expected YYYY-MM-DD HH:MM" >&2
 		exit 1
 	fi
 
@@ -112,7 +59,7 @@ if [[ -z "${RESTORE_AS_OF:-}" ]]; then
 	# Replace space with T, add :00 for seconds, and append timezone
 	RESTORE_AS_OF=$(echo "$input_datetime" | sed 's/ /T/')":00${current_tz}"
 
-	echo -e "${GREEN}Restore as of: ${RESTORE_AS_OF}${RESET}" >&2
+	success "Restore as of: ${RESTORE_AS_OF}" >&2
 fi
 
 # --- Export vars ---
@@ -127,7 +74,7 @@ wait_for_restore() {
 	local rd_name
 	rd_name=$(echo "$RESTORE_YAML" | grep "^\s*name:" | head -n1 | awk '{print $2}')
 	if [[ -z "$rd_name" ]]; then
-		echo -e "${RED}Failed to determine metadata.name from RESTORE_YAML${RESET}"
+		error "Failed to determine metadata.name from RESTORE_YAML"
 		return 1
 	fi
 
@@ -135,12 +82,12 @@ wait_for_restore() {
 	local trigger_name
 	trigger_name=$(echo "$RESTORE_YAML" | grep "^\s*manual:" | head -n1 | awk '{print $2}')
 	if [[ -z "$trigger_name" ]]; then
-		echo -e "${RED}Failed to determine manual trigger name from RESTORE_YAML${RESET}"
+		error "Failed to determine manual trigger name from RESTORE_YAML"
 		return 1
 	fi
 
-	echo -e "${BLUE}Waiting for ReplicationDestination $rd_name in namespace $NAMESPACE...${RESET}"
-	echo " → Expected manual trigger: $trigger_name"
+	section "Waiting for ReplicationDestination $rd_name in namespace $NAMESPACE..."
+	info " → Expected manual trigger: $trigger_name"
 
 	# Spinner frames
 	local FRAME=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
@@ -159,11 +106,13 @@ wait_for_restore() {
 			logs=$(kubectl get replicationdestination "$rd_name" -n "$NAMESPACE" -o jsonpath='{.status.latestMoverStatus.logs}' 2>/dev/null || echo "")
 
 			if [[ "$result" == "Successful" ]]; then
-				echo -e "\n${GREEN}Restore completed successfully!${RESET}"
+				echo ""
+				success "Restore completed successfully!"
 				break
 			else
-				echo -e "\n${RED}Restore failed! Logs:${RESET}"
-				echo -e "$logs"
+				echo ""
+				error "Restore failed! Logs:"
+				echo "$logs"
 				return 1
 			fi
 		fi
