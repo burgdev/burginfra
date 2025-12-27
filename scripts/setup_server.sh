@@ -297,9 +297,6 @@ kubelet-arg:
   - "image-gc-high-threshold=${image_gc_high}"
   - "image-gc-low-threshold=${image_gc_low}"
 
-  # Terminated pod garbage collection
-  - "terminated-pod-gc-threshold=${terminated_pod_gc}"
-
   # Maximum pods per node
   - "max-pods=${max_pods}"
 EOF
@@ -309,7 +306,7 @@ EOF
 	echo "  - Hard eviction: ${eviction_hard} free space"
 	echo "  - Soft eviction: ${eviction_soft} free space (grace: ${eviction_grace})"
 	echo "  - Image GC: ${image_gc_high}% → ${image_gc_low}%"
-	echo "  - Max terminated pods: ${terminated_pod_gc}"
+	echo "  - Max pods per node: ${max_pods}"
 	echo ""
 	echo "$(s Y "NOTE: K3s must be restarted for these changes to take effect:")"
 	echo "  sudo systemctl restart k3s"

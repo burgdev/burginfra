@@ -1,3 +1,102 @@
+# TODO: move pvc and tool job to volsync (infra)
+---
+# Shared PVC for volsync tools (kubectl) - shared across all backups
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: volsync-tools
+  namespace: staging
+spec:
+  accessModes:
+    - ReadWriteOnce # Shared across multiple backup jobs
+  resources:
+    requests:
+      storage: 100Mi
+  storageClassName: fast-local-data-v3
+---
+# Job to initialize volsync-tools PVC with kubectl (run once)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-volsync-tools
+  namespace: staging
+spec:
+  template:
+    metadata:
+      labels:
+        app: init-volsync-tools
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: setup
+          image: alpine:3.19
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+
+              # Skip if kubectl already exists
+              if [ -f /tools/kubectl ]; then
+                echo "kubectl already installed, skipping"
+                exit 0
+              fi
+
+              echo "Installing kubectl..."
+              apk add --no-cache curl
+
+              # Download kubectl
+              curl -sL https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl -o /tools/kubectl
+
+              # Verify checksum
+              curl -sL https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl.sha256 -o /tools/kubectl.sha256
+              cd /tools
+              echo "$(cat kubectl.sha256)  kubectl" | sha256sum -c
+
+              chmod +x /tools/kubectl
+
+              echo "kubectl installed successfully"
+              /tools/kubectl version --client
+          volumeMounts:
+            - name: tools
+              mountPath: /tools
+      volumes:
+        - name: tools
+          persistentVolumeClaim:
+            claimName: volsync-tools
+---
+# ServiceAccount for volsync mover with limited RBAC permissions
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: volsync-podinfo-mover
+  namespace: staging
+---
+# Role with minimal permissions - only scale podinfo deployment
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: volsync-podinfo-mover
+  namespace: staging
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/scale"]
+    verbs: ["get", "patch"]
+    resourceNames: ["podinfo"] # Only allow access to podinfo deployment
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: volsync-podinfo-mover
+  namespace: staging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: volsync-podinfo-mover
+subjects:
+  - kind: ServiceAccount
+    name: volsync-podinfo-mover
+    namespace: staging
 ---
 # docu from fork: https://perfectra1n.github.io/volsync/usage/kopia/index.html#
 apiVersion: volsync.backube/v1alpha1
@@ -6,14 +105,25 @@ metadata:
   name: podinfo-data-manual # 'username' for kopia
   namespace: staging
 spec:
-  sourcePVC: podinfo-fast-data-pvc-v1
+  sourcePVC: podinfo-fast-data-pvc-v3
   trigger:
     #schedule: "*/2 * * * *"
-    manual: backup-2
+    manual: backup-5
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
       configMapName: kopia-policies
+
+    # Use custom ServiceAccount with limited RBAC
+    moverServiceAccount: volsync-podinfo-mover
+
+    # TODO: Use moverVolumes once available (waiting for https://github.com/perfectra1n/volsync/pull/25)
+    #       Then it is also possible to use config maps for the scripts
+    # moverVolumes:
+    #   - mountPath: tools # Mounts to /mnt/tools in the mover pod
+    #     volumeSource:
+    #       persistentVolumeClaim:
+    #         claimName: volsync-tools
 
     # Overwrite Retention Policy
     retain:
@@ -23,16 +133,81 @@ spec:
       monthly: 6
       yearly: 1
 
+    # Application consistency hooks
     actions:
       beforeSnapshot: |
-        echo "[Manual] $(date)" >> /data/backup.log
-        cat /etc/os-release > /data/os-release
-        echo "[Manual] Backup from cloned" >> /data/backup.log
+        #!/bin/sh
+        set -e
+        echo "==> [$(date)] Pre-backup starting..."
+
+        # Download kubectl to /cache (persists across backups, not included in snapshot)
+        KUBECTL=/cache/.volsync-tools/kubectl
+        if [ ! -f "$KUBECTL" ]; then
+          echo "==> Downloading kubectl (first run only)..."
+          mkdir -p /cache/.volsync-tools
+          curl -sL https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl -o "$KUBECTL"
+          chmod +x "$KUBECTL"
+          echo "==> kubectl downloaded and cached"
+        fi
+
+        # Get current replica count
+        CURRENT_REPLICAS=$($KUBECTL get deployment podinfo -n staging -o jsonpath='{.spec.replicas}')
+        echo "==> Current replicas: $CURRENT_REPLICAS"
+
+        # Store state in /tmp (ephemeral, not backed up)
+        echo "$CURRENT_REPLICAS" > /tmp/original-replicas
+
+        # Scale down podinfo
+        echo "==> Scaling down podinfo deployment..."
+        $KUBECTL scale deployment podinfo --replicas=0 -n staging
+
+        # Wait for graceful shutdown
+        echo "==> Waiting for graceful shutdown..."
+        sleep 15
+
+        # Log to backup data
+        echo "[$(date)] Backup started - podinfo scaled from $CURRENT_REPLICAS to 0" >> /data/backup.log
+        echo "==> Pre-backup complete"
 
       afterSnapshot: |
-        echo "[Manual] Cleanup completed at $(date)" >> /data/backup.log
+        #!/bin/sh
+        set -e
+        echo "==> [$(date)] Post-backup starting..."
 
-    # Use snapshot for point-in-time consistency
-    # Snapshot is not supported yet https://github.com/openebs/openebs/issues/4071
+        # Use kubectl from cache
+        KUBECTL=/cache/.volsync-tools/kubectl
+
+        # Restore original replica count from /tmp
+        if [ -f /tmp/original-replicas ]; then
+          ORIGINAL_REPLICAS=$(cat /tmp/original-replicas)
+          echo "==> Scaling podinfo back to $ORIGINAL_REPLICAS replicas..."
+          $KUBECTL scale deployment podinfo --replicas=$ORIGINAL_REPLICAS -n staging
+        else
+          echo "==> Warning: original replica count not found, scaling to 1"
+          $KUBECTL scale deployment podinfo --replicas=1 -n staging
+          ORIGINAL_REPLICAS=1
+        fi
+
+        # Log to backup data
+        echo "[$(date)] Backup completed - podinfo scaled back to $ORIGINAL_REPLICAS" >> /data/backup.log
+
+        # Cleanup old logs (keep last 100 lines)
+        if [ -f /data/backup.log ]; then
+          tail -n 100 /data/backup.log > /data/backup.log.tmp
+          mv /data/backup.log.tmp /data/backup.log
+        fi
+        echo "==> Post-backup complete"
+
+    # Use Direct copy method since LVM volume is not thin-provisioned
+    # Snapshot requires thin LVM: https://github.com/openebs/openebs/issues/4071
     copyMethod: Snapshot
-    # copyMethod: Direct
+    #
+    #
+    #
+    #actions:
+    #  # Use mounted scripts for before/after snapshot
+    #  beforeSnapshot:
+    #    - /scripts/pre-snapshot.sh
+
+    #  afterSnapshot:
+    #    - /scripts/post-snapshot.sh
