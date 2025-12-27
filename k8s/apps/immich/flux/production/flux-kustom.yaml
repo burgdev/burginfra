@@ -33,14 +33,14 @@ spec:
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
 metadata:
-  name: heartbeats-production-config
+  name: heartbeat-urls
   namespace: flux-system
 spec:
   type: kv-v2
   mount: kv
   vaultAuthRef: configs-kv-all
   destination:
-    name: heartbeats-production-config
+    name: heartbeat-urls
     create: true
     transformation:
       excludeRaw: true
@@ -73,4 +73,4 @@ spec:
       - kind: Secret
         name: immich-production-smtp
       - kind: Secret
-        name: heartbeats-production-config
+        name: heartbeat-urls
