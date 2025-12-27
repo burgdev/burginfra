@@ -170,6 +170,32 @@ fi
 
 success "Database restored successfully!"
 
+# Fix database user passwords to match current Kubernetes secrets
+# The restored backup has old passwords, but the k8s secrets have current passwords
+section "Updating database user passwords to match current credentials..."
+
+# Update postgres superuser password (used by immich-server)
+SUPER_PASSWORD=$(kubectl get secret immich-postgres-superuser -n "$NAMESPACE" -o jsonpath='{.data.password}' | base64 -d)
+kubectl exec -n "$NAMESPACE" immich-postgres-1 -- \
+	bash -c "psql -U \"$DB_USER\" -d postgres -c \"ALTER USER postgres WITH PASSWORD '$SUPER_PASSWORD';\""
+
+if [ $? -eq 0 ]; then
+	success "Postgres superuser password updated successfully"
+else
+	error "Failed to update postgres password - Immich may not be able to connect"
+fi
+
+# Update immich app user password (for future use if needed)
+APP_PASSWORD=$(kubectl get secret immich-postgres-app -n "$NAMESPACE" -o jsonpath='{.data.password}' | base64 -d)
+kubectl exec -n "$NAMESPACE" immich-postgres-1 -- \
+	bash -c "psql -U \"$DB_USER\" -d postgres -c \"ALTER USER immich WITH PASSWORD '$APP_PASSWORD';\""
+
+if [ $? -eq 0 ]; then
+	success "Immich app user password updated successfully"
+else
+	warn "Failed to update immich user password (non-critical)"
+fi
+
 # Restart the server pod to ensure it reconnects with the restored database
 section "Restarting Immich server to reconnect to restored database..."
 kubectl rollout restart deployment/immich-server -n "$NAMESPACE"
