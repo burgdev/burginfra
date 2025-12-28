@@ -144,12 +144,12 @@ ingress:
 
 # Login UI ingress - Disabled as Zitadel v4+ has login built-in
 # The login UI is served by the main Zitadel application at /ui/v2/login/
-#login:
-#  ingress:
-#    enabled: true
-#    className: traefik
-#    annotations:
-#      cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+login:
+  ingress:
+    enabled: true
+    className: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 
 # Override kubectl image version for setup job sidecars
 # The chart uses cluster k8s version but alpine/k8s may not have that exact tag
