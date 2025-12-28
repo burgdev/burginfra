@@ -3,8 +3,8 @@ kind: Kustomization
 resources:
   # BURGDEV
   - ../../podinfo/overlays/production/
+  - ../../umami/overlays/production/
   # CRUXLI
   - ../../immich/flux/production
   # WODORE
-  #- ../../umami/overlays/production/
   #- ../../wodore/flux/production
