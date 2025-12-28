@@ -24,3 +24,5 @@ spec:
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
+      - kind: Secret
+        name: openbao-configs-heartbeats
