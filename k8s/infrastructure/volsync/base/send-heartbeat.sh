@@ -59,7 +59,7 @@ if [ "$EXTERNAL_CHECK_FAILED" = "0" ]; then
 else
 	# Failure - send error heartbeat
 	echo "==> Sending error heartbeat to monitoring service..."
-	if curl -fsS -m 10 "${HEARTBEAT_URL}/fail" >/dev/null 2>&1; then
+	if curl -fsS -m 10 "$${HEARTBEAT_URL}/fail" >/dev/null 2>&1; then
 		echo "==> Error heartbeat sent"
 	else
 		echo "ERROR: Failed to send error heartbeat (curl failed)"

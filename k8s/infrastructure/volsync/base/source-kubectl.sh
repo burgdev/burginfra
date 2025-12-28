@@ -34,8 +34,7 @@ while getopts "t:" opt; do
 	case $opt in
 	t) TOOLS_DIR="$OPTARG" ;;
 	*)
-		echo "ERROR: Invalid option" >&2
-		return 1
+		echo "WARNING: Invalid option" >&2
 		;;
 	esac
 done
