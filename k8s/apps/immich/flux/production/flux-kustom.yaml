@@ -39,6 +39,6 @@ spec:
       - kind: Secret
         name: immich-production-config-secret
       - kind: Secret
-        name: openbao-configs-smtp-burgdev
+        name: openbao-configs-smtp-cruxli
       - kind: Secret
         name: openbao-configs-heartbeats
