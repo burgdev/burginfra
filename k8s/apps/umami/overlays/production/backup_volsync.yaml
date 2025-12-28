@@ -50,8 +50,8 @@ metadata:
 spec:
   sourcePVC: umami-postgres-1
   trigger:
-    #schedule: "30 3 * * *" # 03:30
-    manual: backup-01
+    #schedule: "50 1 * * *" # 01:50
+    manual: backup-02
 
   kopia:
     repository: volsync-kopia-webdav-secrets
