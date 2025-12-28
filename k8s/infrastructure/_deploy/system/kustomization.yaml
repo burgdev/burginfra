@@ -6,6 +6,7 @@ resources:
   - ../../cert-manager/flux/system/
   - ../../openebs/flux/system/
   - ../../openbao/flux/system/
+  - ../../openbao-configs/flux/system/
   - ../../volsync/flux/
   - ../../secret-store-csi-driver/flux/system/
   - ../../csi-driver-rclone/flux/system/
