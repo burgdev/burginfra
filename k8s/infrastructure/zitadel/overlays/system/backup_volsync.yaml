@@ -122,3 +122,8 @@ spec:
         bash /kopia-config/post-snapshot-postgres.sh -c /tmp/backup-config.env
 
     copyMethod: Snapshot
+
+    moverSecurityContext:
+      runAsUser: 26 # postgres
+      runAsGroup: 26 # tape
+      fsGroup: 26
