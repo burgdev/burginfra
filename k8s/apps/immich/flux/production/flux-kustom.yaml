@@ -14,38 +14,6 @@ spec:
       excludeRaw: true # exclue _raw field
   path: apps/immich/production # OpenBao KV path
 ---
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultStaticSecret
-metadata:
-  name: immich-production-smtp
-  namespace: flux-system
-spec:
-  type: kv-v2
-  mount: kv
-  vaultAuthRef: configs-kv-all
-  destination:
-    name: immich-production-smtp
-    create: true
-    transformation:
-      excludeRaw: true
-  path: configs/smtp_burgdev
----
-apiVersion: secrets.hashicorp.com/v1beta1
-kind: VaultStaticSecret
-metadata:
-  name: heartbeat-urls
-  namespace: flux-system
-spec:
-  type: kv-v2
-  mount: kv
-  vaultAuthRef: configs-kv-all
-  destination:
-    name: heartbeat-urls
-    create: true
-    transformation:
-      excludeRaw: true
-  path: configs/heartbeats
----
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -71,6 +39,6 @@ spec:
       - kind: Secret
         name: immich-production-config-secret
       - kind: Secret
-        name: immich-production-smtp
+        name: openbao-configs-smtp-burgdev
       - kind: Secret
-        name: heartbeat-urls
+        name: openbao-configs-heartbeats

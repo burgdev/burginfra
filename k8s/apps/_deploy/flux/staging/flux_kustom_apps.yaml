@@ -12,6 +12,7 @@ spec:
   dependsOn:
     - name: infra-csi-driver-rclone-system
     - name: infra-openebs-system
+    - name: infra-openbao-configs
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
