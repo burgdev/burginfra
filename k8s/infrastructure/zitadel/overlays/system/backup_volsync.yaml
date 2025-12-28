@@ -5,14 +5,6 @@
 # - PVC snapshots (physical backup) for full recovery
 # - PostgreSQL CHECKPOINT before snapshot for consistency
 # - Validation and heartbeat monitoring
-#
-# To adapt for other databases:
-# 1. Update the configuration section in beforeSnapshot (lines ~99-113)
-# 2. All configuration is automatically shared with afterSnapshot via /tmp/backup-config.env
-# 3. No need to modify afterSnapshot script
-#
-# TODO: move pvc and tool job to volsync (infra)
-#       see podinfo backup_manual.yaml file!
 ---
 # ServiceAccount for volsync mover with minimal RBAC permissions
 apiVersion: v1
@@ -59,7 +51,7 @@ spec:
   sourcePVC: zitadel-postgres-1
   trigger:
     #schedule: "0 4 * * *" # Daily at 4 AM (low activity period)
-    manual: backup-2nd
+    manual: backup-01
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:

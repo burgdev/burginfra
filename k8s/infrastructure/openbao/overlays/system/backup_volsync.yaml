@@ -7,7 +7,7 @@ spec:
   sourcePVC: data-openbao-0
   trigger:
     #schedule: "*/60 * * * *" # every 60 minutes
-    manual: backup-02
+    manual: backup-03
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
@@ -27,7 +27,7 @@ spec:
 
       afterSnapshot: |
         #!/bin/bash
-        bash /kopia-config/send-heartbeat.sh -u ${BEAT_OPENBAO_DATA_VOLSYNC}
+        bash /kopia-config/send-heartbeat.sh -u "${BEAT_OPENBAO_DATA_VOLSYNC}"
 
     # Use snapshot for point-in-time consistency
     copyMethod: Snapshot

@@ -3,4 +3,4 @@ kind: Kustomization
 namespace: ${NAMESPACE}
 resources:
   - ../../base
-  - backup.yaml
+  - backup_volsync.yaml
