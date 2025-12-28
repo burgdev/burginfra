@@ -150,7 +150,7 @@ immich:
     notifications:
       smtp:
         enabled: true
-        from: "tobias from pix.crux.li <${CRUXLI_EMAIL}>"
+        from: "Cruxli Pix <${CRUXLI_EMAIL}>"
         replyTo: "${BURGDEV_EMAIL}"
         transport:
           host: ${SMTP_HOST}
