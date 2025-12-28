@@ -127,10 +127,16 @@ if ! kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- echo "test" &>/dev/null; the
 	exit 1
 fi
 
-# Get service account token
-SA_TOKEN=$(kubectl create token "$SERVICE_ACCOUNT" -n "$NAMESPACE" --duration=5m 2>/dev/null)
-if [ -z "$SA_TOKEN" ]; then
+# Get service account token (minimum 10 minutes required by Kubernetes)
+SA_TOKEN=$(kubectl create token "$SERVICE_ACCOUNT" -n "$NAMESPACE" --duration=10m 2>&1)
+TOKEN_EXIT=$?
+if [ $TOKEN_EXIT -ne 0 ]; then
 	error "Failed to get service account token for '$SERVICE_ACCOUNT'"
+	error "Output: $SA_TOKEN"
+	exit 1
+fi
+if [ -z "$SA_TOKEN" ]; then
+	error "Service account token is empty"
 	exit 1
 fi
 
@@ -156,29 +162,57 @@ set -e
 export BAO_ADDR="http://localhost:8200"
 
 # Authenticate using Kubernetes service account token
+echo "DEBUG: Authenticating to OpenBao..." >&2
+echo "DEBUG: Role: $ROLE" >&2
 BAO_TOKEN=\$(bao write -field=token auth/kubernetes/login role="$ROLE" jwt="$SA_TOKEN" 2>&1)
-if [ \$? -ne 0 ]; then
-	echo "ERROR: Failed to authenticate to OpenBao" >&2
+AUTH_EXIT=\$?
+if [ \$AUTH_EXIT -ne 0 ]; then
+	echo "ERROR: Failed to authenticate to OpenBao (exit code: \$AUTH_EXIT)" >&2
+	echo "ERROR: Authentication output:" >&2
 	echo "\$BAO_TOKEN" >&2
 	exit 1
 fi
 
+if [ -z "\$BAO_TOKEN" ]; then
+	echo "ERROR: Authentication succeeded but token is empty" >&2
+	exit 1
+fi
+
+echo "DEBUG: Authentication successful" >&2
 export BAO_TOKEN
 
 # Execute the bao command
+echo "DEBUG: Executing command: $BAO_CMD" >&2
 $BAO_CMD
+CMD_EXIT=\$?
+if [ \$CMD_EXIT -ne 0 ]; then
+	echo "ERROR: Command failed with exit code: \$CMD_EXIT" >&2
+	exit \$CMD_EXIT
+fi
 EOFSCRIPT
 
 # Copy script to pod and execute it
-if kubectl cp "$TEMP_SCRIPT" "$NAMESPACE/$OPENBAO_POD:/tmp/bao-wrapper.sh" >/dev/null 2>&1; then
-	kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- sh /tmp/bao-wrapper.sh
-	EXIT_CODE=$?
-
-	# Clean up script from pod
-	kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/bao-wrapper.sh >/dev/null 2>&1 || true
-
-	exit $EXIT_CODE
-else
-	error "Failed to copy script to OpenBao pod"
+COPY_OUTPUT=$(kubectl cp "$TEMP_SCRIPT" "$NAMESPACE/$OPENBAO_POD:/tmp/bao-wrapper.sh" 2>&1)
+COPY_EXIT=$?
+if [ $COPY_EXIT -ne 0 ]; then
+	error "Failed to copy script to OpenBao pod (exit code: $COPY_EXIT)"
+	error "Output: $COPY_OUTPUT"
 	exit 1
 fi
+
+# Execute the script and capture all output
+EXEC_OUTPUT=$(kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- sh /tmp/bao-wrapper.sh 2>&1)
+EXIT_CODE=$?
+
+# Clean up script from pod
+kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/bao-wrapper.sh >/dev/null 2>&1 || true
+
+# Display output
+echo "$EXEC_OUTPUT"
+
+# Exit with the command's exit code
+if [ $EXIT_CODE -ne 0 ]; then
+	error "Command failed with exit code: $EXIT_CODE"
+fi
+
+exit $EXIT_CODE

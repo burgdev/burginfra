@@ -148,19 +148,22 @@ title "Generating Zitadel Secrets"
 
 # Generate secure random secrets
 info "Generating masterkey (32 bytes)..."
-ZITADEL_MASTERKEY="$(LC_ALL=C tr -dc '[:graph:]' </dev/urandom | head -c 32)"
+ZITADEL_MASTERKEY="$(LC_ALL=C tr -dc '[:graph:]' </dev/urandom | head -c 32 || true)"
 success "Masterkey generated"
 
 echo ""
 title "Storing Secrets in OpenBao"
 
 info "OpenBao path: kv/$OPENBAO_PATH"
+info "OpenBao namespace: $OPENBAO_NAMESPACE"
+info "Cluster: $CLUSTER"
 info "Storing secrets using Kubernetes authentication..."
 echo ""
 
 # Store all secrets in one operation
-if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv put "kv/$OPENBAO_PATH" \
-	"ZITADEL_MASTERKEY=$ZITADEL_MASTERKEY"; then
+info "Executing: $BAO_WRAPPER -c $CLUSTER -n $OPENBAO_NAMESPACE -- kv put kv/$OPENBAO_PATH ZITADEL_MASTERKEY=***"
+if OUTPUT=$("$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv put "kv/$OPENBAO_PATH" \
+	"ZITADEL_MASTERKEY=$ZITADEL_MASTERKEY" 2>&1); then
 
 	echo ""
 	success "Secrets stored successfully!"
@@ -197,6 +200,21 @@ if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv put "kv/$OPENBAO_P
 	echo "  • Apps can then use VaultStaticSecret to pull the JWT from OpenBao"
 	echo "  • Key name in OpenBao: ZITADEL_ADMIN_JWT"
 else
+	echo ""
 	error "Failed to store secrets in OpenBao"
+	error "Command output:"
+	echo "$OUTPUT"
+	echo ""
+	info "Debug information:"
+	info "  Cluster: $CLUSTER"
+	info "  OpenBao namespace: $OPENBAO_NAMESPACE"
+	info "  Target path: kv/$OPENBAO_PATH"
+	info "  Wrapper script: $BAO_WRAPPER"
+	echo ""
+	info "Troubleshooting steps:"
+	echo "  1. Check if OpenBao is running: kubectl get pods -n $OPENBAO_NAMESPACE"
+	echo "  2. Check OpenBao pod logs: kubectl logs -n $OPENBAO_NAMESPACE \$OPENBAO_POD"
+	echo "  3. Verify service account exists: kubectl get sa $SERVICE_ACCOUNT -n $OPENBAO_NAMESPACE"
+	echo "  4. Test authentication manually: $BAO_WRAPPER -c $CLUSTER -n $OPENBAO_NAMESPACE -- kv list kv/"
 	exit 1
 fi

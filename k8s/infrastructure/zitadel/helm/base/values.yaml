@@ -140,3 +140,16 @@ login:
     className: traefik
     annotations:
       cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+
+# Override kubectl image version for setup job sidecars
+# The chart uses cluster k8s version but alpine/k8s may not have that exact tag
+setupJob:
+  machinekeyWriter:
+    image:
+      tag: "1.33.7"
+  machineUserPATWriter:
+    image:
+      tag: "1.33.7"
+  loginUserPATWriter:
+    image:
+      tag: "1.33.7"
