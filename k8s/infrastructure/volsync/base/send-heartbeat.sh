@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # ============================================================================
 # Heartbeat Sender Script
@@ -6,28 +6,40 @@
 # Sends heartbeat notifications to monitoring services (e.g., Betterstack).
 #
 # Usage:
-#   sh /kopia-config/send-heartbeat.sh <heartbeat_url> [external_check_failed]
+#   bash /kopia-config/send-heartbeat.sh -u <heartbeat_url> [-f]
 #
 # Parameters:
-#   heartbeat_url: URL to send heartbeat to (required, use "" to skip)
-#   external_check_failed: 0 = success, 1 = external validation failed (default: 0)
+#   -u heartbeat_url: URL to send heartbeat to (required, use "" to skip)
+#   -f: External validation failed flag (if present, sends failure heartbeat)
 #
 # Exit codes:
 #   0: Always exits 0 (never fails the calling script)
 #
 # Examples:
 #   # Send success heartbeat
-#   sh /kopia-config/send-heartbeat.sh "https://heartbeat.example.com/backup-id"
+#   bash /kopia-config/send-heartbeat.sh -u "https://heartbeat.example.com/backup-id"
 #
-#   # Send failure heartbeat (external validation failed)
-#   sh /kopia-config/send-heartbeat.sh "https://heartbeat.example.com/backup-id" 1
+#   # Send failure heartbeat
+#   bash /kopia-config/send-heartbeat.sh -u "https://heartbeat.example.com/backup-id" -f
 #
 #   # Skip heartbeat (empty URL)
-#   sh /kopia-config/send-heartbeat.sh ""
+#   bash /kopia-config/send-heartbeat.sh -u ""
 # ============================================================================
 
-HEARTBEAT_URL="$1"
-EXTERNAL_CHECK_FAILED="$${2:-0}"
+# Parse parameters
+HEARTBEAT_URL=""
+EXTERNAL_CHECK_FAILED=0
+
+while getopts "u:f" opt; do
+	case $opt in
+	u) HEARTBEAT_URL="$OPTARG" ;;
+	f) EXTERNAL_CHECK_FAILED=1 ;;
+	*)
+		echo "ERROR: Invalid option" >&2
+		exit 0 # Never fail the calling script
+		;;
+	esac
+done
 
 # Skip if no heartbeat URL provided
 if [ -z "$HEARTBEAT_URL" ]; then
@@ -47,7 +59,7 @@ if [ "$EXTERNAL_CHECK_FAILED" = "0" ]; then
 else
 	# Failure - send error heartbeat
 	echo "==> Sending error heartbeat to monitoring service..."
-	if curl -fsS -m 10 "$HEARTBEAT_URL/fail" >/dev/null 2>&1; then
+	if curl -fsS -m 10 "${HEARTBEAT_URL}/fail" >/dev/null 2>&1; then
 		echo "==> Error heartbeat sent"
 	else
 		echo "ERROR: Failed to send error heartbeat (curl failed)"

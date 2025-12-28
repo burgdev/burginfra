@@ -6,29 +6,40 @@
 # Downloads the latest stable kubectl and adds it to PATH for use in backup scripts.
 #
 # Usage:
-#   . /kopia-config/source-kubectl.sh [tools_dir]
-#   source /kopia-config/source-kubectl.sh [tools_dir]
+#   . /kopia-config/source-kubectl.sh [-t tools_dir]
+#   source /kopia-config/source-kubectl.sh [-t tools_dir]
 #
 # Parameters:
-#   tools_dir: directory to store kubectl binary (default: /cache/.volsync-tools)
+#   -t tools_dir: directory to store kubectl binary (default: /cache/.volsync-tools)
 #
 # After sourcing, kubectl is available directly:
 #   kubectl get pods
 #
 # Example:
-#   . /kopia-config/source-kubectl.sh
+#   . /kopia-config/source-kubectl.sh -t /cache/.volsync-tools
 #   kubectl get pods -n default
 # ============================================================================
 
 # Check if script is being sourced (not executed)
 if [[ "$${BASH_SOURCE[0]}" == "$${0}" ]]; then
 	echo "ERROR: This script must be sourced, not executed directly" >&2
-	echo "Usage: . /kopia-config/source-kubectl.sh [tools_dir]" >&2
-	echo "   or: source /kopia-config/source-kubectl.sh [tools_dir]" >&2
+	echo "Usage: . /kopia-config/source-kubectl.sh [-t tools_dir]" >&2
+	echo "   or: source /kopia-config/source-kubectl.sh [-t tools_dir]" >&2
 	exit 1
 fi
 
-TOOLS_DIR="$${1:-/cache/.volsync-tools}"
+# Parse parameters
+TOOLS_DIR="/cache/.volsync-tools"
+while getopts "t:" opt; do
+	case $opt in
+	t) TOOLS_DIR="$OPTARG" ;;
+	*)
+		echo "ERROR: Invalid option" >&2
+		return 1
+		;;
+	esac
+done
+
 KUBECTL_PATH="$TOOLS_DIR/kubectl"
 
 # Download kubectl if it doesn't exist
@@ -44,11 +55,11 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 		echo "ERROR: Network error or API unavailable" >&2
 		return 1
 	fi
-	echo "==> Latest stable version: $${KUBECTL_VERSION}" >&2
+	echo "==> Latest stable version: $KUBECTL_VERSION" >&2
 
 	# Download kubectl with error handling
-	if ! curl -fsSL "https://dl.k8s.io/release/$${KUBECTL_VERSION}/bin/linux/amd64/kubectl" -o "$KUBECTL_PATH"; then
-		echo "ERROR: Failed to download kubectl $${KUBECTL_VERSION}" >&2
+	if ! curl -fsSL "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl" -o "$KUBECTL_PATH"; then
+		echo "ERROR: Failed to download kubectl $KUBECTL_VERSION" >&2
 		echo "ERROR: Network error occurred" >&2
 		echo "ERROR: Check available versions at: https://github.com/kubernetes/kubernetes/releases" >&2
 		rm -f "$KUBECTL_PATH" # Clean up partial download
@@ -65,7 +76,7 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 	# Download checksum file for validation
 	echo "==> Downloading kubectl checksum for verification..." >&2
 	CHECKSUM_PATH="$TOOLS_DIR/kubectl.sha256"
-	if ! curl -fsSL "https://dl.k8s.io/release/$${KUBECTL_VERSION}/bin/linux/amd64/kubectl.sha256" -o "$CHECKSUM_PATH"; then
+	if ! curl -fsSL "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl.sha256" -o "$CHECKSUM_PATH"; then
 		echo "ERROR: Failed to download kubectl checksum" >&2
 		rm -f "$KUBECTL_PATH" "$CHECKSUM_PATH"
 		return 1
@@ -91,7 +102,7 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 		return 1
 	fi
 
-	echo "==> kubectl $${KUBECTL_VERSION} downloaded and cached at $KUBECTL_PATH" >&2
+	echo "==> kubectl $KUBECTL_VERSION downloaded and cached at $KUBECTL_PATH" >&2
 fi
 
 # Add kubectl directory to PATH

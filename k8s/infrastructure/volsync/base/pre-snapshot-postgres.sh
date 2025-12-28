@@ -8,10 +8,10 @@ set -e
 # the VolSync snapshot to ensure backup consistency.
 #
 # Usage:
-#   sh /kopia-config/pre-snapshot-postgres.sh [config_file]
+#   bash /kopia-config/pre-snapshot-postgres.sh -c <config_file>
 #
 # Parameters:
-#   config_file: Path to config file (default: /tmp/backup-config.env)
+#   -c config_file: Path to config file (default: /tmp/backup-config.env)
 #
 # Required configuration (loaded from config file):
 # - NAMESPACE: Kubernetes namespace
@@ -25,7 +25,17 @@ set -e
 # - PG_DUMP_ARGS: Additional pg_dump arguments
 # ============================================================================
 
-CONFIG_FILE="$${1:-/tmp/backup-config.env}"
+# Parse parameters
+CONFIG_FILE="/tmp/backup-config.env"
+while getopts "c:" opt; do
+	case $opt in
+	c) CONFIG_FILE="$OPTARG" ;;
+	*)
+		echo "ERROR: Invalid option" >&2
+		exit 1
+		;;
+	esac
+done
 
 # Load configuration from caller
 if [ ! -f "$CONFIG_FILE" ]; then

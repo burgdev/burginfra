@@ -114,11 +114,11 @@ spec:
         EOF
 
         # Run generic PostgreSQL backup script from kopia-policies ConfigMap
-        bash /kopia-config/pre-snapshot-postgres.sh /tmp/backup-config.env
+        bash /kopia-config/pre-snapshot-postgres.sh -c /tmp/backup-config.env
 
       afterSnapshot: |
         #!/bin/bash
         # Run generic PostgreSQL post-snapshot validation script from kopia-policies ConfigMap
-        bash /kopia-config/post-snapshot-postgres.sh /tmp/backup-config.env
+        bash /kopia-config/post-snapshot-postgres.sh -c /tmp/backup-config.env
 
     copyMethod: Snapshot

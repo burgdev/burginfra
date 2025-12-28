@@ -8,10 +8,10 @@ set +e
 # This script validates the backup and sends optional heartbeat notifications.
 #
 # Usage:
-#   sh /kopia-config/post-snapshot-postgres.sh [config_file]
+#   bash /kopia-config/post-snapshot-postgres.sh -c <config_file>
 #
 # Parameters:
-#   config_file: Path to config file (default: /tmp/backup-config.env)
+#   -c config_file: Path to config file (default: /tmp/backup-config.env)
 #
 # Required configuration (loaded from config file):
 # - NAMESPACE: Kubernetes namespace
@@ -23,7 +23,17 @@ set +e
 # - REPLICATION_SOURCE_NAME: VolSync ReplicationSource name
 # ============================================================================
 
-CONFIG_FILE="$${1:-/tmp/backup-config.env}"
+# Parse parameters
+CONFIG_FILE="/tmp/backup-config.env"
+while getopts "c:" opt; do
+	case $opt in
+	c) CONFIG_FILE="$OPTARG" ;;
+	*)
+		echo "ERROR: Invalid option" >&2
+		exit 1
+		;;
+	esac
+done
 
 # Load configuration from pre-snapshot
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -89,7 +99,11 @@ if [ $VALIDATION_FAILED -eq 0 ]; then
 fi
 
 # Send heartbeat using helper script
-sh /kopia-config/send-heartbeat.sh "$HEARTBEAT_URL" "$VALIDATION_FAILED"
+if [ "$VALIDATION_FAILED" = "0" ]; then
+	bash /kopia-config/send-heartbeat.sh -u "$HEARTBEAT_URL"
+else
+	bash /kopia-config/send-heartbeat.sh -u "$HEARTBEAT_URL" -f
+fi
 
 # Log backup result to data volume
 if [ $VALIDATION_FAILED -eq 0 ]; then
