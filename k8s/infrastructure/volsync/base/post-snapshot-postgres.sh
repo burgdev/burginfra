@@ -23,7 +23,7 @@ set +e
 # - REPLICATION_SOURCE_NAME: VolSync ReplicationSource name
 # ============================================================================
 
-CONFIG_FILE="${1:-/tmp/backup-config.env}"
+CONFIG_FILE="$${1:-/tmp/backup-config.env}"
 
 # Load configuration from pre-snapshot
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -71,7 +71,7 @@ if [ $VALIDATION_FAILED -eq 0 ]; then
 		ERROR_MSG="Backup file is stale: $DUMP_AGE seconds old"
 		VALIDATION_FAILED=1
 	else
-		echo "==> Backup file age: ${DUMP_AGE}s (recent)"
+		echo "==> Backup file age: $${DUMP_AGE}s (recent)"
 	fi
 fi
 

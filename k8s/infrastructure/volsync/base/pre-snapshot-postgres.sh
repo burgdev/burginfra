@@ -25,7 +25,7 @@ set -e
 # - PG_DUMP_ARGS: Additional pg_dump arguments
 # ============================================================================
 
-CONFIG_FILE="${1:-/tmp/backup-config.env}"
+CONFIG_FILE="$${1:-/tmp/backup-config.env}"
 
 # Load configuration from caller
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -44,9 +44,9 @@ BACKUP_FILE="/data/$BACKUP_FILENAME"
 
 # Find postgres pod dynamically
 echo "==> Finding postgres pod..."
-POSTGRES_POD=$(kubectl get pods -n "$NAMESPACE" -l cnpg.io/cluster=${CNPG_CLUSTER_NAME} -o jsonpath='{.items[0].metadata.name}')
+POSTGRES_POD=$(kubectl get pods -n "$NAMESPACE" -l cnpg.io/cluster=$${CNPG_CLUSTER_NAME} -o jsonpath='{.items[0].metadata.name}')
 if [ -z "$POSTGRES_POD" ]; then
-	echo "ERROR: Could not find pod for cluster: ${CNPG_CLUSTER_NAME}"
+	echo "ERROR: Could not find pod for cluster: $${CNPG_CLUSTER_NAME}"
 	exit 1
 fi
 echo "==> Found postgres pod: $POSTGRES_POD"
@@ -60,7 +60,7 @@ fi
 
 # Create SQL dump inside postgres container (using PGDATA env var for path)
 # Use superuser with Unix socket (no password needed, peer auth)
-echo "==> Creating SQL dump with $PG_DUMP_COMMAND (timeout: ${DUMP_TIMEOUT}s)..."
+echo "==> Creating SQL dump with $PG_DUMP_COMMAND (timeout: $${DUMP_TIMEOUT}s)..."
 DUMP_START=$(date +%s)
 
 # Build dump command based on PG_DUMP_COMMAND
@@ -83,7 +83,7 @@ if [ $DUMP_EXIT_CODE -ne 0 ]; then
 	echo "ERROR: pg_dump failed with exit code $DUMP_EXIT_CODE"
 	exit 1
 fi
-echo "==> SQL dump completed in ${DUMP_DURATION}s"
+echo "==> SQL dump completed in $${DUMP_DURATION}s"
 
 # Verify dump file was created
 if [ ! -f "$BACKUP_FILE" ]; then

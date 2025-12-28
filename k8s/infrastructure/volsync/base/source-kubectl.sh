@@ -21,7 +21,7 @@
 # ============================================================================
 
 # Check if script is being sourced (not executed)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "$${BASH_SOURCE[0]}" == "$${0}" ]]; then
 	echo "ERROR: This script must be sourced, not executed directly" >&2
 	echo "Usage: . /kopia-config/source-kubectl.sh [tools_dir]" >&2
 	echo "   or: source /kopia-config/source-kubectl.sh [tools_dir]" >&2
@@ -29,7 +29,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 fi
 
 KUBECTL_VERSION="${KUBE_TOOLS_VERSION}"
-TOOLS_DIR="${2:-/cache/.volsync-tools}"
+TOOLS_DIR="$${2:-/cache/.volsync-tools}"
 KUBECTL_PATH="$TOOLS_DIR/kubectl"
 
 # Download kubectl if it doesn't exist
