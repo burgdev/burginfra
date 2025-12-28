@@ -28,7 +28,7 @@ spec:
     create: true
     transformation:
       excludeRaw: true
-  path: configs/smtp
+  path: configs/smtp_burgdev
 ---
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret

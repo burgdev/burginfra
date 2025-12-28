@@ -8,8 +8,8 @@ metadata:
 spec:
   sourcePVC: immich-library-pvc-v2
   trigger:
-    #schedule: "10 3 * * *" # 03:10
-    manual: backup-init
+    schedule: "10 3 * * *" # 03:10
+    #manual: backup-init
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
@@ -28,7 +28,7 @@ spec:
       #    echo "[Auto] Start at $(date)" >> /data/backup.log
 
       afterSnapshot: |
-        curl ${BEAT_IMMICH_VOLSYNC}
+        curl ${BEAT_IMMICH_LIBRARY_VOLSYNC}
 
     # Use snapshot for point-in-time consistency
     copyMethod: Snapshot
