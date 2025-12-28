@@ -8,12 +8,12 @@ spec:
   trigger:
     manual: restore-immich-library-${TIMESTAMP}
   kopia:
-    #repository: volsync-kopia-webdav-secrets
-    # ONLY for immich current backup
-    repository: volsync-immich-kopia-webdav-secrets
-    username: "burg"
-    hostname: "infra"
-    # ~~~~~~
+    repository: volsync-kopia-webdav-secrets
+    ### ONLY for immich old vps backup
+    ##repository: volsync-immich-kopia-webdav-secrets
+    ##username: "burg"
+    ##hostname: "infra"
+    ### ~~~~~~
 
     destinationPVC: immich-library-pvc-v2
     copyMethod: Direct

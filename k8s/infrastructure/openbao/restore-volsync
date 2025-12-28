@@ -12,10 +12,10 @@ NAMESPACES=("burginfra-system" "burginfra-staging")
 source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
 
 # --- Scenario-specific steps ---
-echo -e "${YELLOW}Scaling down StatefulSet openbao...${RESET}"
+section "Scaling down StatefulSet openbao..."
 kubectl scale statefulset openbao --replicas=0 -n "$SRC_NAMESPACE"
 
-echo -e "${YELLOW}Applying restore manifest...${RESET}"
+section "Applying restore manifest..."
 echo "$RESTORE_YAML" | kubectl apply -f -
 
 # check for unseal keys:
@@ -24,12 +24,13 @@ title "Check for unseal key"
 
 wait_for_restore
 
-echo -e "${YELLOW}Scaling StatefulSet openbao back up...${RESET}"
+section "Scaling StatefulSet openbao back up..."
 kubectl scale statefulset openbao --replicas=1 -n "$SRC_NAMESPACE"
 
-sleep 20 # wait until ready
+section "Waiting for StatefulSet to be ready..."
+kubectl wait --for=jsonpath='{.status.readyReplicas}'=1 --timeout=300s statefulset/openbao -n "$SRC_NAMESPACE" || true
 
-echo -e "${YELLOW}Update kubernetes config...${RESET}"
+section "Update kubernetes config..."
 # Prompt for root token if not set
 if [ -z "${BAO_TOKEN:-}" ]; then
 	read -rsp "Enter OpenBao root token: " BAO_TOKEN
@@ -46,4 +47,4 @@ bao write auth/kubernetes/config \
   kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 "
 
-echo -e "${GREEN}Restore scenario completed successfully.${RESET}"
+success "Restore scenario completed successfully."

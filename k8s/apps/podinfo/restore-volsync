@@ -12,23 +12,24 @@ NAMESPACES=("staging" "production")
 source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
 
 # --- Scenario-specific steps ---
-echo -e "${YELLOW}Suspending Flux reconciliation for all apps...${RESET}"
+section "Suspending Flux reconciliation for all apps..."
 flux suspend kustomization apps-sync-all-${SRC_NAMESPACE}
 
-echo -e "${YELLOW}Scaling down deployment podinfo...${RESET}"
+section "Scaling down deployment podinfo..."
 kubectl scale deployment podinfo --replicas=0 -n "$SRC_NAMESPACE"
 
-echo -e "${YELLOW}Applying restore manifest...${RESET}"
+section "Applying restore manifest..."
 echo "$RESTORE_YAML" | kubectl apply -f -
 
 wait_for_restore
 
-echo -e "${YELLOW}Scaling deployment podinfo back up...${RESET}"
+section "Scaling deployment podinfo back up..."
 kubectl scale deployment podinfo --replicas=1 -n "$SRC_NAMESPACE"
 
-sleep 5 # wait until ready
+section "Waiting for deployment to be ready..."
+kubectl wait --for=condition=available --timeout=300s deployment/podinfo -n "$SRC_NAMESPACE" || true
 
-echo -e "${YELLOW}Resuming Flux reconciliation for all apps...${RESET}"
+section "Resuming Flux reconciliation for all apps..."
 flux resume kustomization apps-sync-all-${SRC_NAMESPACE}
 
-echo -e "${GREEN}Restore scenario completed successfully.${RESET}"
+success "Restore scenario completed successfully."
