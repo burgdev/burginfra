@@ -167,5 +167,6 @@ setupJob:
 
 # Override kubectl image version for cleanup job
 cleanupJob:
-  image:
-    tag: "${KUBE_TOOLS_VERSION}"
+  kubectl:
+    image:
+      tag: "${KUBE_TOOLS_VERSION}"
