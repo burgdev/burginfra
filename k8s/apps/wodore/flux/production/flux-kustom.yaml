@@ -11,9 +11,9 @@ spec:
   dependsOn:
     - name: apps-sync-all-production
   healthChecks:
-    - apiVersion: batch/v1
-      kind: Job
-      name: wd-backend-migrate
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: wd-backend
       namespace: production
   timeout: 3m # Overall timeout for reconciliation including health checks
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
