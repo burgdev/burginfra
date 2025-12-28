@@ -6,7 +6,7 @@ metadata:
   name: apps-sync-all-production
   namespace: flux-system # do not change!
 spec:
-  interval: 5s
+  interval: 1m
   path: "./k8s/apps/_deploy/production"
   prune: false
   dependsOn:

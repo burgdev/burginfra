@@ -6,7 +6,7 @@ metadata:
   name: apps-sync-all-staging
   namespace: flux-system # do not change!
 spec:
-  interval: 5s
+  interval: 5m
   path: "./k8s/apps/_deploy/staging"
   prune: false
   dependsOn:
