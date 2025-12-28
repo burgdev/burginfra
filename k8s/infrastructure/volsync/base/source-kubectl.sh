@@ -28,7 +28,7 @@ if [[ "$${BASH_SOURCE[0]}" == "$${0}" ]]; then
 	exit 1
 fi
 
-KUBECTL_VERSION="${KUBE_TOOLS_VERSION}"
+KUBECTL_VERSION="v${KUBE_TOOLS_VERSION:-1.33.6}" # TODO is it used from cluster settings?
 TOOLS_DIR="$${2:-/cache/.volsync-tools}"
 KUBECTL_PATH="$TOOLS_DIR/kubectl"
 
