@@ -19,6 +19,7 @@ data:
   WODO_EMAIL: "tb@wodo.re"
   CLUSTER: "burginfra"
   KUBE_VERSION: "1.33.6"  # Server version: v1.33.6+k3s1
+  KUBE_TOOLS_VERSION: "1.33.7"  # alpine/k8s image tag version (1.33.6 doesn't exist)
   CERT_ISSUER_STAGING: "letsencrypt-staging"
   CERT_ISSUER_PROD: "letsencrypt-prod"
   IMMICH_LIBRARY_STORAGE_SIZE: "200Gi"

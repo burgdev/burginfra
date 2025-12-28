@@ -143,13 +143,14 @@ login:
 
 # Override kubectl image version for setup job sidecars
 # The chart uses cluster k8s version but alpine/k8s may not have that exact tag
+# Use KUBE_TOOLS_VERSION from cluster settings
 setupJob:
   machinekeyWriter:
     image:
-      tag: "1.33.7"
+      tag: "${KUBE_TOOLS_VERSION}"
   machineUserPATWriter:
     image:
-      tag: "1.33.7"
+      tag: "${KUBE_TOOLS_VERSION}"
   loginUserPATWriter:
     image:
-      tag: "1.33.7"
+      tag: "${KUBE_TOOLS_VERSION}"

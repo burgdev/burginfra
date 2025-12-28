@@ -17,6 +17,7 @@ data:
   BURGINFRA_HOST: "infra.local.gd"
   CLUSTER: "local"
   KUBE_VERSION: "1.33.5"  # Server version: v1.33.5+k3s1
+  KUBE_TOOLS_VERSION: "1.33.5"  # alpine/k8s image tag version
   CERT_ISSUER_STAGING: "local-ca-issuer"
   CERT_ISSUER_PROD: "local-ca-issuer"
   IMMICH_LIBRARY_STORAGE_SIZE: "5Gi"
