@@ -7,6 +7,7 @@ metadata:
 #- name: base-configs  # optional, only if you have one
 spec:
   interval: 3h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/openbao/overlays/system"
   prune: false
   dependsOn:

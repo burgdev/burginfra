@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: ./k8s/clusters/_deploy
   prune: false
   sourceRef:

@@ -7,6 +7,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/kube-prometheus-stack/helm/overlays/local"
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
@@ -25,6 +26,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/kube-prometheus-stack/helm/overlays/local"
   prune: true
   dependsOn:

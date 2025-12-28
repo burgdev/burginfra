@@ -21,6 +21,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 3h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/apps/immich/overlays/production"
   prune: false
   dependsOn:

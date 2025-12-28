@@ -7,6 +7,7 @@ metadata:
 #- name: base-configs  # optional, only if you have one
 spec:
   interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/volsync/helm/overlays/staging"
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
@@ -31,6 +32,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/volsync/base"
   dependsOn:
     - name: helm-volsync-system

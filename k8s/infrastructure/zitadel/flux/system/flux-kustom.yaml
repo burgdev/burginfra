@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/zitadel/overlays/system"
   prune: true
   dependsOn:
@@ -30,6 +31,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/zitadel/helm/base"
   prune: true
   dependsOn:

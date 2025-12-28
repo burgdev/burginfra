@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/cloudnative-pg/helm/system"
   prune: false
   dependsOn:
