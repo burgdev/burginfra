@@ -26,4 +26,4 @@ spec:
     - kind: ConfigMap
       name: zitadel-values
       valuesKey: values.yaml
-  interval: 1h0s
+  inter: 1h0s
