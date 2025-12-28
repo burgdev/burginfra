@@ -21,14 +21,14 @@
 # ============================================================================
 
 # Check if script is being sourced (not executed)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "$${BASH_SOURCE[0]}" == "$${0}" ]]; then
 	echo "ERROR: This script must be sourced, not executed directly" >&2
 	echo "Usage: . /kopia-config/source-kubectl.sh [tools_dir]" >&2
 	echo "   or: source /kopia-config/source-kubectl.sh [tools_dir]" >&2
 	exit 1
 fi
 
-TOOLS_DIR="${1:-/cache/.volsync-tools}"
+TOOLS_DIR="$${1:-/cache/.volsync-tools}"
 KUBECTL_PATH="$TOOLS_DIR/kubectl"
 
 # Download kubectl if it doesn't exist
@@ -44,11 +44,11 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 		echo "ERROR: Network error or API unavailable" >&2
 		return 1
 	fi
-	echo "==> Latest stable version: ${KUBECTL_VERSION}" >&2
+	echo "==> Latest stable version: $${KUBECTL_VERSION}" >&2
 
 	# Download kubectl with error handling
-	if ! curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" -o "$KUBECTL_PATH"; then
-		echo "ERROR: Failed to download kubectl ${KUBECTL_VERSION}" >&2
+	if ! curl -fsSL "https://dl.k8s.io/release/$${KUBECTL_VERSION}/bin/linux/amd64/kubectl" -o "$KUBECTL_PATH"; then
+		echo "ERROR: Failed to download kubectl $${KUBECTL_VERSION}" >&2
 		echo "ERROR: Network error occurred" >&2
 		echo "ERROR: Check available versions at: https://github.com/kubernetes/kubernetes/releases" >&2
 		rm -f "$KUBECTL_PATH" # Clean up partial download
@@ -65,7 +65,7 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 	# Download checksum file for validation
 	echo "==> Downloading kubectl checksum for verification..." >&2
 	CHECKSUM_PATH="$TOOLS_DIR/kubectl.sha256"
-	if ! curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl.sha256" -o "$CHECKSUM_PATH"; then
+	if ! curl -fsSL "https://dl.k8s.io/release/$${KUBECTL_VERSION}/bin/linux/amd64/kubectl.sha256" -o "$CHECKSUM_PATH"; then
 		echo "ERROR: Failed to download kubectl checksum" >&2
 		rm -f "$KUBECTL_PATH" "$CHECKSUM_PATH"
 		return 1
@@ -91,7 +91,7 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 		return 1
 	fi
 
-	echo "==> kubectl ${KUBECTL_VERSION} downloaded and cached at $KUBECTL_PATH" >&2
+	echo "==> kubectl $${KUBECTL_VERSION} downloaded and cached at $KUBECTL_PATH" >&2
 fi
 
 # Add kubectl directory to PATH
