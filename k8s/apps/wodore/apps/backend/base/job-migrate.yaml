@@ -74,4 +74,4 @@ spec:
       volumes:
         - name: media
           persistentVolumeClaim:
-            claimName: wd-backend-media-v0
+            claimName: wd-backend-media-v1
