@@ -46,21 +46,37 @@ echo "==> [$(date)] Post-backup validation starting for $CNPG_CLUSTER_NAME..."
 
 # Source kubectl (adds kubectl to PATH)
 . /kopia-config/source-kubectl.sh
-BACKUP_FILE="/data/$BACKUP_FILENAME"
 
 VALIDATION_FAILED=0
 ERROR_MSG=""
 
-# Validate SQL dump exists
-if [ ! -f "$BACKUP_FILE" ]; then
-	echo "ERROR: Backup file not found at $BACKUP_FILE"
-	ERROR_MSG="Backup file not found"
+# Find postgres pod dynamically
+echo "==> Finding postgres pod..."
+POSTGRES_POD=$(kubectl get pods -n "$NAMESPACE" -l cnpg.io/cluster=$CNPG_CLUSTER_NAME -o jsonpath='{.items[0].metadata.name}')
+if [ -z "$POSTGRES_POD" ]; then
+	echo "ERROR: Could not find pod for cluster: $CNPG_CLUSTER_NAME"
 	VALIDATION_FAILED=1
+	ERROR_MSG="Postgres pod not found"
 fi
 
-# Validate dump file size
+# Helper function to execute commands in postgres pod
+postgres_exec() {
+	kubectl exec -n "$NAMESPACE" "$POSTGRES_POD" -c postgres -- sh -c "$1"
+}
+
+# Validate SQL dump exists (check inside postgres pod)
 if [ $VALIDATION_FAILED -eq 0 ]; then
-	DUMP_SIZE=$(stat -c%s "$BACKUP_FILE" 2>/dev/null || echo 0)
+	echo "==> Validating backup file in postgres pod..."
+	if ! postgres_exec "test -f \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null; then
+		echo "ERROR: Backup file not found at \$PGDATA/$BACKUP_FILENAME"
+		ERROR_MSG="Backup file not found"
+		VALIDATION_FAILED=1
+	fi
+fi
+
+# Validate dump file size (check inside postgres pod)
+if [ $VALIDATION_FAILED -eq 0 ]; then
+	DUMP_SIZE=$(postgres_exec "stat -c%s \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null || echo 0)
 	if [ "$DUMP_SIZE" -lt $MIN_DUMP_SIZE ]; then
 		echo "ERROR: Backup file too small ($DUMP_SIZE bytes)"
 		ERROR_MSG="Backup file too small: $DUMP_SIZE bytes"
@@ -70,10 +86,10 @@ if [ $VALIDATION_FAILED -eq 0 ]; then
 	fi
 fi
 
-# Validate dump file age (created during this backup run)
+# Validate dump file age (created during this backup run, check inside postgres pod)
 if [ $VALIDATION_FAILED -eq 0 ]; then
 	CURRENT_TIME=$(date +%s)
-	DUMP_MTIME=$(stat -c%Y "$BACKUP_FILE" 2>/dev/null || echo 0)
+	DUMP_MTIME=$(postgres_exec "stat -c%Y \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null || echo 0)
 	DUMP_AGE=$((CURRENT_TIME - DUMP_MTIME))
 
 	if [ $DUMP_AGE -gt $MAX_DUMP_AGE ]; then
@@ -81,7 +97,7 @@ if [ $VALIDATION_FAILED -eq 0 ]; then
 		ERROR_MSG="Backup file is stale: $DUMP_AGE seconds old"
 		VALIDATION_FAILED=1
 	else
-		echo "==> Backup file age: $${DUMP_AGE}s (recent)"
+		echo "==> Backup file age: $DUMP_AGE seconds (recent)"
 	fi
 fi
 

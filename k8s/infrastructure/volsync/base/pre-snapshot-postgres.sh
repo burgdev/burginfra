@@ -50,27 +50,31 @@ echo "==> [$(date)] PostgreSQL backup starting for $CNPG_CLUSTER_NAME..."
 # Source kubectl (adds kubectl to PATH)
 . /kopia-config/source-kubectl.sh
 
-BACKUP_FILE="/data/$BACKUP_FILENAME"
-
 # Find postgres pod dynamically
 echo "==> Finding postgres pod..."
-POSTGRES_POD=$(kubectl get pods -n "$NAMESPACE" -l cnpg.io/cluster=$${CNPG_CLUSTER_NAME} -o jsonpath='{.items[0].metadata.name}')
+POSTGRES_POD=$(kubectl get pods -n "$NAMESPACE" -l cnpg.io/cluster=$CNPG_CLUSTER_NAME -o jsonpath='{.items[0].metadata.name}')
 if [ -z "$POSTGRES_POD" ]; then
-	echo "ERROR: Could not find pod for cluster: $${CNPG_CLUSTER_NAME}"
+	echo "ERROR: Could not find pod for cluster: $CNPG_CLUSTER_NAME"
 	exit 1
 fi
 echo "==> Found postgres pod: $POSTGRES_POD"
 echo "==> Database: $DB_NAME, User: $DB_USER"
 
-# Delete old backup file if it exists
-if [ -f "$BACKUP_FILE" ]; then
+# Helper function to execute commands in postgres pod
+postgres_exec() {
+	kubectl exec -n "$NAMESPACE" "$POSTGRES_POD" -c postgres -- sh -c "$1"
+}
+
+# Delete old backup file if it exists (inside postgres pod)
+echo "==> Checking for old backup file in postgres pod..."
+if postgres_exec "test -f \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null; then
 	echo "==> Removing old backup file..."
-	rm -f "$BACKUP_FILE"
+	postgres_exec "rm -f \"\$PGDATA/$BACKUP_FILENAME\""
 fi
 
 # Create SQL dump inside postgres container (using PGDATA env var for path)
 # Use superuser with Unix socket (no password needed, peer auth)
-echo "==> Creating SQL dump with $PG_DUMP_COMMAND (timeout: $${DUMP_TIMEOUT}s)..."
+echo "==> Creating SQL dump with $PG_DUMP_COMMAND (timeout: $DUMP_TIMEOUT s)..."
 DUMP_START=$(date +%s)
 
 # Build dump command based on PG_DUMP_COMMAND
@@ -82,8 +86,7 @@ else
 	DUMP_CMD="$PG_DUMP_COMMAND -U \"$DB_USER\" -d \"$DB_NAME\" $PG_DUMP_ARGS -f \"\$PGDATA/$BACKUP_FILENAME\""
 fi
 
-kubectl exec -n "$NAMESPACE" "$POSTGRES_POD" -c postgres -- \
-	timeout $DUMP_TIMEOUT sh -c "$DUMP_CMD"
+postgres_exec "timeout $DUMP_TIMEOUT $DUMP_CMD"
 
 DUMP_EXIT_CODE=$?
 DUMP_END=$(date +%s)
@@ -93,16 +96,17 @@ if [ $DUMP_EXIT_CODE -ne 0 ]; then
 	echo "ERROR: pg_dump failed with exit code $DUMP_EXIT_CODE"
 	exit 1
 fi
-echo "==> SQL dump completed in $${DUMP_DURATION}s"
+echo "==> SQL dump completed in $DUMP_DURATION seconds"
 
-# Verify dump file was created
-if [ ! -f "$BACKUP_FILE" ]; then
-	echo "ERROR: Backup file was not created at $BACKUP_FILE"
+# Verify dump file was created (check inside postgres pod)
+echo "==> Verifying backup file in postgres pod..."
+if ! postgres_exec "test -f \"\$PGDATA/$BACKUP_FILENAME\""; then
+	echo "ERROR: Backup file was not created at \$PGDATA/$BACKUP_FILENAME"
 	exit 1
 fi
 
-# Verify dump file size
-DUMP_SIZE=$(stat -c%s "$BACKUP_FILE" 2>/dev/null || echo 0)
+# Verify dump file size (check inside postgres pod)
+DUMP_SIZE=$(postgres_exec "stat -c%s \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null || echo 0)
 if [ "$DUMP_SIZE" -lt $MIN_DUMP_SIZE ]; then
 	echo "ERROR: Backup file too small ($DUMP_SIZE bytes < $MIN_DUMP_SIZE bytes), likely corrupted"
 	exit 1
@@ -111,8 +115,7 @@ echo "==> Backup file created: $(numfmt --to=iec-i --suffix=B $DUMP_SIZE)"
 
 # Issue CHECKPOINT to ensure PostgreSQL buffers are flushed to disk
 echo "==> Issuing PostgreSQL CHECKPOINT..."
-kubectl exec -n "$NAMESPACE" "$POSTGRES_POD" -c postgres -- \
-	psql -U postgres -c "CHECKPOINT;"
+postgres_exec "psql -U postgres -c 'CHECKPOINT;'"
 echo "==> CHECKPOINT completed - database is ready for snapshot"
 
 # Store metadata for post-snapshot validation
