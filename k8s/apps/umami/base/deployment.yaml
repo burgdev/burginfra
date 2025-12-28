@@ -28,7 +28,8 @@ spec:
       containers:
         - name: umami
           # https://github.com/umami-software/umami/pkgs/container/umami
-          image: ghcr.io/umami-software/umami:3.0.3
+          #image: ghcr.io/umami-software/umami:3.0.3
+          image: ghcr.io/umami-software/umami:postgres-v2.17
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
