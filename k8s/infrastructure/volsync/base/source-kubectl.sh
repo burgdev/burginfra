@@ -3,11 +3,11 @@
 # ============================================================================
 # kubectl Source Script
 # ============================================================================
-# Downloads kubectl and adds it to PATH for use in backup scripts.
+# Downloads the latest stable kubectl and adds it to PATH for use in backup scripts.
 #
 # Usage:
-#   . /kopia-config/source-kubectl.sh [version] [cache_dir]
-#   source /kopia-config/source-kubectl.sh [version] [cache_dir]
+#   . /kopia-config/source-kubectl.sh [tools_dir]
+#   source /kopia-config/source-kubectl.sh [tools_dir]
 #
 # Parameters:
 #   tools_dir: directory to store kubectl binary (default: /cache/.volsync-tools)
@@ -16,31 +16,40 @@
 #   kubectl get pods
 #
 # Example:
-#   . /kopia-config/source-kubectl.sh "v1.31.0"
+#   . /kopia-config/source-kubectl.sh
 #   kubectl get pods -n default
 # ============================================================================
 
 # Check if script is being sourced (not executed)
-if [[ "$${BASH_SOURCE[0]}" == "$${0}" ]]; then
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 	echo "ERROR: This script must be sourced, not executed directly" >&2
 	echo "Usage: . /kopia-config/source-kubectl.sh [tools_dir]" >&2
 	echo "   or: source /kopia-config/source-kubectl.sh [tools_dir]" >&2
 	exit 1
 fi
 
-KUBECTL_VERSION="v${KUBE_TOOLS_VERSION:-1.33.6}" # TODO is it used from cluster settings?
-TOOLS_DIR="$${2:-/cache/.volsync-tools}"
+TOOLS_DIR="${1:-/cache/.volsync-tools}"
 KUBECTL_PATH="$TOOLS_DIR/kubectl"
 
 # Download kubectl if it doesn't exist
 if [ ! -f "$KUBECTL_PATH" ]; then
-	echo "==> Downloading kubectl $KUBECTL_VERSION (first run only)..." >&2
+	echo "==> Downloading latest stable kubectl (first run only)..." >&2
 	mkdir -p "$TOOLS_DIR"
 
+	# Get latest stable version
+	echo "==> Fetching latest stable kubectl version..." >&2
+	KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+	if [ -z "$KUBECTL_VERSION" ]; then
+		echo "ERROR: Failed to fetch latest kubectl version" >&2
+		echo "ERROR: Network error or API unavailable" >&2
+		return 1
+	fi
+	echo "==> Latest stable version: ${KUBECTL_VERSION}" >&2
+
 	# Download kubectl with error handling
-	if ! curl -fsSL "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl" -o "$KUBECTL_PATH"; then
-		echo "ERROR: Failed to download kubectl $KUBECTL_VERSION" >&2
-		echo "ERROR: Version may not exist or network error occurred" >&2
+	if ! curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" -o "$KUBECTL_PATH"; then
+		echo "ERROR: Failed to download kubectl ${KUBECTL_VERSION}" >&2
+		echo "ERROR: Network error occurred" >&2
 		echo "ERROR: Check available versions at: https://github.com/kubernetes/kubernetes/releases" >&2
 		rm -f "$KUBECTL_PATH" # Clean up partial download
 		return 1
@@ -53,6 +62,26 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 		return 1
 	fi
 
+	# Download checksum file for validation
+	echo "==> Downloading kubectl checksum for verification..." >&2
+	CHECKSUM_PATH="$TOOLS_DIR/kubectl.sha256"
+	if ! curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl.sha256" -o "$CHECKSUM_PATH"; then
+		echo "ERROR: Failed to download kubectl checksum" >&2
+		rm -f "$KUBECTL_PATH" "$CHECKSUM_PATH"
+		return 1
+	fi
+
+	# Validate kubectl binary against checksum
+	echo "==> Validating kubectl binary checksum..." >&2
+	if ! echo "$(cat "$CHECKSUM_PATH")  $KUBECTL_PATH" | sha256sum --check --status; then
+		echo "ERROR: kubectl checksum validation failed" >&2
+		echo "ERROR: Binary may be corrupted or tampered with" >&2
+		rm -f "$KUBECTL_PATH" "$CHECKSUM_PATH"
+		return 1
+	fi
+	rm -f "$CHECKSUM_PATH" # Clean up checksum file
+	echo "==> Checksum validation passed" >&2
+
 	chmod +x "$KUBECTL_PATH"
 
 	# Verify kubectl works
@@ -62,7 +91,7 @@ if [ ! -f "$KUBECTL_PATH" ]; then
 		return 1
 	fi
 
-	echo "==> kubectl $KUBECTL_VERSION downloaded and cached at $KUBECTL_PATH" >&2
+	echo "==> kubectl ${KUBECTL_VERSION} downloaded and cached at $KUBECTL_PATH" >&2
 fi
 
 # Add kubectl directory to PATH
