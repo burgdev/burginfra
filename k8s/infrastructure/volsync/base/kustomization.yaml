@@ -15,5 +15,9 @@ configMapGenerator:
     files:
       - global-policy.json=global-policy.json
       - repository.config=repository.config.json
+      - source-kubectl.sh=source-kubectl.sh
+      - send-heartbeat.sh=send-heartbeat.sh
+      - pre-snapshot-postgres.sh=pre-snapshot-postgres.sh
+      - post-snapshot-postgres.sh=post-snapshot-postgres.sh
     options:
       disableNameSuffixHash: true
