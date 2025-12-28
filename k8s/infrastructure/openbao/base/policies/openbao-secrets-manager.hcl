@@ -40,3 +40,17 @@ path "kv/metadata/apps/*" {
 path "kv/metadata/apps" {
   capabilities = ["list"]
 }
+
+# Allow full access to configs secrets
+path "kv/data/configs/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "kv/metadata/configs/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# Allow listing configs secrets
+path "kv/metadata/configs" {
+  capabilities = ["list"]
+}
