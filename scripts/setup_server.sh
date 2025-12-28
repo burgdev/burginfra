@@ -364,6 +364,49 @@ EOF
 	journalctl --disk-usage
 }
 
+configure_inotify_limits_help="Configures kernel inotify limits for containers and file watchers."
+configure_inotify_limits() {
+	section "Configuring inotify Limits"
+
+	local sysctl_conf="/etc/sysctl.d/99-inotify.conf"
+	local max_user_instances="${INOTIFY_MAX_USER_INSTANCES:-512}"
+	local max_user_watches="${INOTIFY_MAX_USER_WATCHES:-524288}"
+	local max_queued_events="${INOTIFY_MAX_QUEUED_EVENTS:-16384}"
+
+	echo "Setting inotify kernel limits..."
+
+	cat <<EOF | sudo tee "$sysctl_conf" >/dev/null
+# inotify Limits for Kubernetes and Container Workloads
+# Prevents "too many open files" errors from file watchers
+
+# Maximum number of inotify instances per user
+fs.inotify.max_user_instances = $max_user_instances
+
+# Maximum number of files that can be watched per user
+fs.inotify.max_user_watches = $max_user_watches
+
+# Maximum queued events
+fs.inotify.max_queued_events = $max_queued_events
+EOF
+
+	echo "$(s G "inotify configuration written to $sysctl_conf")"
+	echo "inotify limits:"
+	echo "  - max_user_instances: $max_user_instances"
+	echo "  - max_user_watches: $max_user_watches"
+	echo "  - max_queued_events: $max_queued_events"
+
+	echo ""
+	echo "Applying sysctl settings..."
+	sudo sysctl -p "$sysctl_conf"
+	echo "$(s G "inotify limits applied")"
+
+	echo ""
+	echo "Current inotify values:"
+	echo "  max_user_instances: $(cat /proc/sys/fs/inotify/max_user_instances)"
+	echo "  max_user_watches: $(cat /proc/sys/fs/inotify/max_user_watches)"
+	echo "  max_queued_events: $(cat /proc/sys/fs/inotify/max_queued_events)"
+}
+
 install_longhorn_deps_help="Installs Longhorn dependencies."
 install_longhorn_deps() {
 	section "Installing Longhorn dependencies"
@@ -982,9 +1025,10 @@ run_all() {
 	# Install k3s after storage is ready
 	install_k3s
 
-	# Configure k3s garbage collection and journal limits
+	# Configure k3s garbage collection, journal limits, and inotify limits
 	configure_k3s_gc
 	configure_journal_limits
+	configure_inotify_limits
 
 	echo ""
 	echo "$(s G "==> Server setup complete!")"
@@ -1063,6 +1107,7 @@ $(s Y Commands:)
   $(s b install_k3s)             $(s d $install_k3s_help)
   $(s b configure_k3s_gc)        $(s d $configure_k3s_gc_help)
   $(s b configure_journal_limits) $(s d $configure_journal_limits_help)
+  $(s b configure_inotify_limits) $(s d $configure_inotify_limits_help)
 
 $(s Y Optional Commands:)
   $(s b security_audit)          $(s d $security_audit_help)

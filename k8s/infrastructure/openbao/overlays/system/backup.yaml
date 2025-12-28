@@ -6,8 +6,8 @@ metadata:
 spec:
   sourcePVC: data-openbao-0
   trigger:
-    schedule: "*/60 * * * *" # every 60 minutes
-    #manual: backup-01
+    #schedule: "*/60 * * * *" # every 60 minutes
+    manual: backup-02
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
@@ -21,16 +21,16 @@ spec:
       monthly: 1
       yearly: 1
 
-    #actions:
-    #  beforeSnapshot: |
-    #    echo "[Auto] Start at $(date)" >> /data/backup.log
+    actions:
+      #  beforeSnapshot: |
+      #    echo "[Auto] Start at $(date)" >> /data/backup.log
 
-    #  afterSnapshot: |
-    #    echo "[Auto] Finished at $(date)" >> /data/backup.log
+      afterSnapshot: |
+        #!/bin/bash
+        bash /kopia-config/send-heartbeat.sh -u ${BEAT_OPENBAO_DATA_VOLSYNC}
 
     # Use snapshot for point-in-time consistency
     copyMethod: Snapshot
-    # copyMethod: Direct
 
     moverSecurityContext:
       runAsUser: 100

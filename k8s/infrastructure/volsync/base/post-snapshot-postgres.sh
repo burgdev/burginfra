@@ -20,7 +20,6 @@ set +e
 # - MIN_DUMP_SIZE: Minimum valid dump size in bytes
 # - MAX_DUMP_AGE: Maximum age in seconds
 # - HEARTBEAT_URL: Optional heartbeat URL (leave empty to skip)
-# - REPLICATION_SOURCE_NAME: VolSync ReplicationSource name
 # ============================================================================
 
 # Parse parameters
@@ -98,19 +97,6 @@ if [ $VALIDATION_FAILED -eq 0 ]; then
 		VALIDATION_FAILED=1
 	else
 		echo "==> Backup file age: $DUMP_AGE seconds (recent)"
-	fi
-fi
-
-# Validate VolSync ReplicationSource status
-if [ $VALIDATION_FAILED -eq 0 ]; then
-	echo "==> Checking VolSync backup status..."
-	REPLICATION_STATUS=$(kubectl get replicationsource "$REPLICATION_SOURCE_NAME" -n "$NAMESPACE" -o jsonpath='{.status.lastSyncTime}' 2>/dev/null || echo "")
-
-	if [ -z "$REPLICATION_STATUS" ]; then
-		echo "WARNING: Could not retrieve ReplicationSource status"
-		# Don't fail on this - might be transient
-	else
-		echo "==> Last sync time: $REPLICATION_STATUS"
 	fi
 fi
 

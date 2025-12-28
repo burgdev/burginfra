@@ -21,7 +21,7 @@ metadata:
   name: volsync-zitadel-mover
   namespace: ${NAMESPACE}
 ---
-# Role with minimal permissions - exec into postgres pod and read secrets
+# Role with minimal permissions - exec into postgres pod
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -34,10 +34,6 @@ rules:
   - apiGroups: [""]
     resources: ["pods/exec"]
     verbs: ["create"]
-  - apiGroups: ["volsync.backube"]
-    resources: ["replicationsources"]
-    verbs: ["get"]
-    resourceNames: ["${CLUSTER}-zitadel-postgres"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -63,7 +59,7 @@ spec:
   sourcePVC: zitadel-postgres-1
   trigger:
     #schedule: "0 4 * * *" # Daily at 4 AM (low activity period)
-    manual: backup-init
+    manual: backup-2nd
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
@@ -109,7 +105,6 @@ spec:
         PG_DUMP_COMMAND="pg_dump"
         PG_DUMP_ARGS="--clean --if-exists --no-owner --no-privileges"
         HEARTBEAT_URL="${BEAT_ZITADEL_POSTGRES_VOLSYNC}"
-        REPLICATION_SOURCE_NAME="${CLUSTER}-zitadel-postgres"
         MAX_DUMP_AGE=600
         EOF
 
