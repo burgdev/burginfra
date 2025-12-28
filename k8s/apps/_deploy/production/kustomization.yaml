@@ -7,4 +7,4 @@ resources:
   # CRUXLI
   - ../../immich/flux/production
   # WODORE
-  #- ../../wodore/flux/production
+  - ../../wodore/flux/production
