@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system # do not change!
 spec:
   interval: 3h0s
+  retryInterval: 1m # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/apps/wodore/overlays/production"
   prune: false
   dependsOn:
