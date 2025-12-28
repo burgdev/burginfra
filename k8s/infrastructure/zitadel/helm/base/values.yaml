@@ -164,3 +164,8 @@ setupJob:
   loginUserPATWriter:
     image:
       tag: "${KUBE_TOOLS_VERSION}"
+
+# Override kubectl image version for cleanup job
+cleanupJob:
+  image:
+    tag: "${KUBE_TOOLS_VERSION}"
