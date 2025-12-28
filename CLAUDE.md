@@ -1,18 +1,34 @@
 # Kubernetes Cluster
 
+## Cluster Settings
+
+Cluster-specific configuration variables are stored in ConfigMaps:
+
+- **Local cluster**: `k8s/clusters/flux-system/overlays/local/cluster_settings.yaml`
+- **Burginfra cluster**: `k8s/clusters/flux-system/overlays/burginfra/cluster_settings.yaml`
+
+These ConfigMaps contain environment-specific settings like:
+- Domain names (e.g., `BURGDEV_HOST`, `CRUXLI_HOST`)
+- Email addresses
+- Certificate issuers
+- Storage sizes
+- Kubernetes version (`KUBE_VERSION`)
+
+**Important**: Changes to cluster_settings.yaml must be manually applied using `kubectl apply -f <file>`.
+
 ## `local` Cluster
 
-This runs local and need the following kubernetes config:
+This runs locally and needs the following kubernetes config:
 
-```
+```bash
 KUBECONFIG=$HOME/.kube/config-localhost
 ```
 
 ## `burginfra` Cluster
 
-This is a single node server which runs on a vps (8 CPUs, 16GB).
+This is a single node server which runs on a VPS (8 CPUs, 16GB).
 
-```
+```bash
 KUBECONFIG=$HOME/.kube/config-infra-vps1.burgdev.ch
 ```
 
