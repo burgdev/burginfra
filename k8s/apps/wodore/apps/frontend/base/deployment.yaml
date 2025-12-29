@@ -43,7 +43,7 @@ spec:
                 optional: false
           livenessProbe:
             httpGet:
-              path: /
+              path: /robots.txt
               port: http
               httpHeaders:
                 - name: Host
@@ -54,14 +54,14 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /
+              path: /robots.txt
               port: http
               httpHeaders:
                 - name: Host
                   value: ${ENV_SUBDOMAIN}${WODORE_HOST}
             initialDelaySeconds: 10
             timeoutSeconds: 5
-            periodSeconds: 10
+            periodSeconds: 15
             failureThreshold: 3
           resources:
             limits:
