@@ -38,6 +38,8 @@ spec:
           env:
             - name: NGINX_CONFIG
               value: "nginx-proxy.conf"
+            - name: TMPDIR
+              value: "/usr/share/nginx/tmp"
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
