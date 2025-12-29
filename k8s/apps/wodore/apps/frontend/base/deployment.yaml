@@ -39,7 +39,7 @@ spec:
             - name: NGINX_CONFIG
               value: "nginx-proxy.conf"
             - name: TMPDIR
-              value: "/usr/share/nginx/tmp"
+              value: "/usr/share/nginx/html/.tmp"
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
@@ -78,12 +78,8 @@ spec:
               mountPath: /var/cache/nginx
             - name: run
               mountPath: /var/run
-            - name: nginx-tmp
-              mountPath: /usr/share/nginx/tmp
       volumes:
         - name: cache
           emptyDir: {}
         - name: run
-          emptyDir: {}
-        - name: nginx-tmp
           emptyDir: {}
