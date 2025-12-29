@@ -50,8 +50,8 @@ metadata:
 spec:
   sourcePVC: wd-backend-postgres-1
   trigger:
-    #schedule: "50 1 * * *" # 01:50
-    manual: backup-03
+    schedule: "35 2 * * *" # 02:35
+    #manual: backup-03
 
   kopia:
     repository: volsync-kopia-webdav-secrets
@@ -115,8 +115,8 @@ metadata:
 spec:
   sourcePVC: wd-backend-media-v1
   trigger:
-    #schedule: "50 1 * * *" # 01:50
-    manual: backup-03
+    schedule: "48 2 * * *" # 02:48
+    #manual: backup-03
 
   kopia:
     repository: volsync-kopia-webdav-secrets
