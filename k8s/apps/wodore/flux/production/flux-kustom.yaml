@@ -24,7 +24,10 @@ spec:
       NAMESPACE: "production"
       ENVIRONMENT: "prod"
       ENV_SUBDOMAIN: ""
-      WD_BACKEND_TAG: "edge-alpine"
+      # TODO: move tags to openbao??
+      # WD_BACKEND_TAG: "edge-alpine"
+      WD_BACKEND_TAG: "sha-cec9031-alpine"
+      WD_FRONTEND_TAG: "edge-pwa"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
