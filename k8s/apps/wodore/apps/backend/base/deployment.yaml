@@ -24,6 +24,7 @@ spec:
         runAsGroup: 1001
         fsGroup: 1001
         fsGroupChangePolicy: "OnRootMismatch"
+      terminationGracePeriodSeconds: 60
       containers:
         # Django backend container
         - name: backend
@@ -45,6 +46,10 @@ spec:
             - name: http
               containerPort: 8008
               protocol: TCP
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
           env:
             # Imagor settings
             - name: IMAGOR_URL

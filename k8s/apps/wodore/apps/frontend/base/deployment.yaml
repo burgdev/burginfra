@@ -21,6 +21,7 @@ spec:
     spec:
       securityContext:
         fsGroup: 101
+      terminationGracePeriodSeconds: 30
       containers:
         - name: frontend
           image: ghcr.io/wodore/wodore-frontend-quasar:${WD_FRONTEND_TAG:-edge-pwa}
@@ -32,6 +33,10 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
           env:
             - name: NGINX_CONFIG
               value: "nginx-proxy.conf"
