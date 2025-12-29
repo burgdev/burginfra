@@ -39,7 +39,7 @@ spec:
             - name: NGINX_CONFIG
               value: "nginx-proxy.conf"
             - name: TMPDIR
-              value: "/usr/share/nginx/html/.tmp"
+              value: "/var/tmp"
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
