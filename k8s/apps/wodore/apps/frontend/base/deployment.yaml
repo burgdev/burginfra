@@ -72,15 +72,11 @@ spec:
               cpu: 100m
               memory: 128Mi
           volumeMounts:
-            - name: tmp
-              mountPath: /tmp
             - name: cache
               mountPath: /var/cache/nginx
             - name: run
               mountPath: /var/run
       volumes:
-        - name: tmp
-          emptyDir: {}
         - name: cache
           emptyDir: {}
         - name: run
