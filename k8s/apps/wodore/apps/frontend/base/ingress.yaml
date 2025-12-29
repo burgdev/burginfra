@@ -3,10 +3,8 @@ kind: Ingress
 metadata:
   name: wd-frontend
   annotations:
-    cert-manager.io/cluster-issuer: ${CERT_MANAGER_CLUSTER_ISSUER}
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 spec:
-  ingressClassName: traefik
   tls:
     - hosts:
         - ${ENV_SUBDOMAIN}${WODORE_HOST}
