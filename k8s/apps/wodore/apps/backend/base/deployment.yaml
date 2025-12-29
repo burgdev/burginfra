@@ -58,7 +58,7 @@ spec:
             - name: DEFAULT_FROM_EMAIL
               value: "Wodore <info@${WODORE_HOST}>"
             - name: DJANGO_ADMIN_EMAILS
-              value: "${WODORE_EMAIL}>"
+              value: "${WODORE_EMAIL}"
             - name: EMAIL_ADMIN_FROM_EMAIL
               value: "Wodore Admin <info@${WODORE_HOST}>"
             - name: EMAIL_DEFAULT_FROM_EMAIL
