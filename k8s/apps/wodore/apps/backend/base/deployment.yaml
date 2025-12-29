@@ -48,7 +48,7 @@ spec:
           env:
             # Imagor settings
             - name: IMAGOR_URL
-              value: "https://img.${ENV_SUBDOMAIN}.${WODORE_HOST}"
+              value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
             - name: IMAGOR_KEY
               valueFrom:
                 secretKeyRef:
