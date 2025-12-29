@@ -56,13 +56,13 @@ spec:
                   key: IMAGOR_SECRET
             # E-Mail (smtp settings in secrets.yaml)
             - name: DEFAULT_FROM_EMAIL
-              value: "${WODORE_HOST} <no-reply@${WODORE_HOST}>"
+              value: "Wodore <info@${WODORE_HOST}>"
             - name: DJANGO_ADMIN_EMAILS
               value: "${WODORE_EMAIL}>"
             - name: EMAIL_ADMIN_FROM_EMAIL
-              value: "${WODORE_HOST} internal <no-reply@${WODORE_HOST}>"
+              value: "Wodore Admin <info@${WODORE_HOST}>"
             - name: EMAIL_DEFAULT_FROM_EMAIL
-              value: "${WODORE_HOST} <no-reply@${WODORE_HOST}>"
+              value: "Wodore <info@${WODORE_HOST}>"
             # Database connection (CNPG service)
             - name: DJANGO_DATABASE_HOST
               valueFrom:
@@ -119,7 +119,7 @@ spec:
                   value: api.${ENV_SUBDOMAIN}${WODORE_HOST}
             initialDelaySeconds: 30
             timeoutSeconds: 5
-            periodSeconds: 10
+            periodSeconds: 15
             failureThreshold: 3
           resources:
             limits:

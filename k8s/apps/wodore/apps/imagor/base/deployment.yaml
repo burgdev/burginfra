@@ -82,14 +82,14 @@ spec:
               port: http
             initialDelaySeconds: 10
             timeoutSeconds: 5
-            periodSeconds: 10
+            periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /
               port: http
             initialDelaySeconds: 5
             timeoutSeconds: 5
-            periodSeconds: 10
+            periodSeconds: 15
           resources:
             limits:
               cpu: 2000m
