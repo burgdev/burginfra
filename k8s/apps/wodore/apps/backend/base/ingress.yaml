@@ -6,7 +6,7 @@ metadata:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 spec:
   rules:
-    - host: api.${ENV_SUBDOMAIN}${WODORE_HOST}
+    - host: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
       http:
         paths:
           # Media files served by nginx (higher priority)
@@ -28,4 +28,4 @@ spec:
   tls:
     - secretName: wd-backend-${ENVIRONMENT}-tls
       hosts:
-        - api.${ENV_SUBDOMAIN}${WODORE_HOST}
+        - hub.${ENV_SUBDOMAIN}${WODORE_HOST}
