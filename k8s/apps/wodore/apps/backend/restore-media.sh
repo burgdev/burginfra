@@ -80,25 +80,35 @@ echo "Waiting for restore pod to be ready..."
 kubectl wait --for=condition=ready pod/"$RESTORE_POD_NAME" -n "$NAMESPACE" --timeout=60s
 
 echo ""
+echo "Deleting existing media files..."
+kubectl exec -n "$NAMESPACE" "$RESTORE_POD_NAME" -- sh -c "rm -rf /media/*"
+
+echo ""
 echo "Copying media files to PVC..."
 echo "This may take a while depending on the number and size of files..."
 
-# Use kubectl cp to copy the entire directory
-kubectl cp "$BACKUP_DIR" "$NAMESPACE/$RESTORE_POD_NAME:/media/" --retries=3
+# Copy contents of the backup directory (not the directory itself)
+# kubectl cp copies the directory, so we copy to /media and then move contents
+kubectl cp "$BACKUP_DIR" "$NAMESPACE/$RESTORE_POD_NAME:/tmp/media-restore" --retries=3
 
 COPY_EXIT_CODE=$?
+
+if [ $COPY_EXIT_CODE -eq 0 ]; then
+	echo "Moving files to correct location..."
+	kubectl exec -n "$NAMESPACE" "$RESTORE_POD_NAME" -- sh -c "cp -r /tmp/media-restore/* /media/ && rm -rf /tmp/media-restore"
+fi
 
 # Verify the copy
 if [ $COPY_EXIT_CODE -eq 0 ]; then
 	echo ""
 	echo "Verifying copied files..."
-	COPIED_COUNT=$(kubectl exec -n "$NAMESPACE" "$RESTORE_POD_NAME" -- sh -c "find /media/media -type f 2>/dev/null | wc -l" || echo "0")
+	COPIED_COUNT=$(kubectl exec -n "$NAMESPACE" "$RESTORE_POD_NAME" -- sh -c "find /media -type f 2>/dev/null | wc -l" || echo "0")
 	echo "Files in PVC: $COPIED_COUNT"
-	
+
 	# Fix permissions (set to 1001:1001 as per deployment.yaml)
 	echo ""
 	echo "Setting correct ownership (1001:1001)..."
-	kubectl exec -n "$NAMESPACE" "$RESTORE_POD_NAME" -- sh -c "chown -R 1001:1001 /media/media"
+	kubectl exec -n "$NAMESPACE" "$RESTORE_POD_NAME" -- sh -c "chown -R 1001:1001 /media"
 fi
 
 # Cleanup restore pod

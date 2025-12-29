@@ -41,7 +41,7 @@ spec:
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
-                optional: true
+                optional: false
           livenessProbe:
             httpGet:
               path: /

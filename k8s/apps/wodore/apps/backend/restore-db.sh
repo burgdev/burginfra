@@ -47,13 +47,19 @@ kubectl exec -n "$NAMESPACE" "$POD" -- \
 
 sleep 2
 
+echo "Dropping and recreating database..."
+kubectl exec -n "$NAMESPACE" "$POD" -- \
+	psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;"
+
+kubectl exec -n "$NAMESPACE" "$POD" -- \
+	psql -U postgres -d postgres -c "CREATE DATABASE $DB_NAME OWNER wodore;"
+
 echo "Restoring database (this is a binary dump, using pg_restore)..."
+echo "Note: The backup includes PostGIS extensions, so they will be restored automatically."
 cat "$BACKUP_FILE" | kubectl exec -i -n "$NAMESPACE" "$POD" -- \
 	pg_restore \
 	--username=postgres \
 	--dbname="$DB_NAME" \
-	--clean \
-	--if-exists \
 	--no-owner \
 	--no-acl \
 	--verbose

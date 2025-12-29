@@ -10,9 +10,20 @@ spec:
   tls:
     - hosts:
         - ${ENV_SUBDOMAIN}${WODORE_HOST}
+        - ${ENV_SUBDOMAIN}${WODO_HOST}
       secretName: wd-frontend-tls
   rules:
     - host: ${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-frontend
+                port:
+                  number: 80
+    - host: ${ENV_SUBDOMAIN}${WODO_HOST}
       http:
         paths:
           - path: /
