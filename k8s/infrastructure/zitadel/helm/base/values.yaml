@@ -41,7 +41,7 @@ zitadel:
             Address: "tobias@burgdev.ch"
             Verified: true
           Password: "Password1!"
-          PasswordChangeRequired: false
+          PasswordChangeRequired: true
           PreferredLanguage: "en"
         Machine:
           Machine:
@@ -59,7 +59,7 @@ zitadel:
 
     DefaultInstance:
       SMTPConfiguration:
-        From: noreply@{BURGDEV_HOST}
+        From: noreply@${BURGDEV_HOST}
         FromName: "BurgDev Auth"
 
       Features:

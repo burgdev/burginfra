@@ -218,6 +218,59 @@ install_root_ca() {
 		fi
 	fi
 
+	# Install into Python certifi bundle
+	echo ""
+	echo "Installing into Python certifi certificate stores..."
+	
+	# Initialize counter
+	python_updated=0
+	python_failed=0
+	
+	# Find all Python installations
+	for python_cmd in python3 python; do
+		if command -v "$python_cmd" &>/dev/null; then
+			echo "  Checking $python_cmd..."
+			
+			# Get the certifi bundle path
+			certifi_path=$($python_cmd -c "import certifi; print(certifi.where())" 2>/dev/null || echo "")
+			
+			if [ -z "$certifi_path" ]; then
+				log_warn "$python_cmd: certifi module not found - skipping"
+				log_warn "Install with: $python_cmd -m pip install certifi"
+				continue
+			fi
+			
+			# Check if our CA is already in the bundle
+			if grep -q "BurgInfra Local Root CA" "$certifi_path" 2>/dev/null; then
+				# Remove old certificate section
+				# Create temp file without our old CA
+				temp_file=$(mktemp)
+				awk '/BurgInfra Local Root CA/,/END CERTIFICATE/ {next} {print}' "$certifi_path" > "$temp_file"
+				sudo cp "$temp_file" "$certifi_path"
+				rm "$temp_file"
+			fi
+			
+			# Append our CA to the bundle with a label
+			{
+				echo ""
+				echo "# BurgInfra Local Root CA"
+				cat "$cert_file"
+			} | sudo tee -a "$certifi_path" >/dev/null
+			
+			if [ $? -eq 0 ]; then
+				log_info "Installed into $python_cmd certifi bundle: $certifi_path"
+				python_updated=$((python_updated + 1))
+			else
+				log_error "Failed to install into $python_cmd certifi bundle"
+				python_failed=$((python_failed + 1))
+			fi
+		fi
+	done
+	
+	if [ "$python_updated" -eq 0 ] && [ "$python_failed" -eq 0 ]; then
+		log_warn "No Python installations found"
+	fi
+
 	echo ""
 	log_info "Done! Root CA installed"
 	echo ""
@@ -225,6 +278,7 @@ install_root_ca() {
 	echo "  - Root CA: $cert_file"
 	echo "  - System trust store: Updated"
 	echo "  - Browser trust stores: $browsers_updated browser(s) updated"
+	echo "  - Python certifi stores: $python_updated Python installation(s) updated"
 	echo "  - All certificates signed by this CA will now be trusted"
 	echo ""
 	echo "IMPORTANT: You must completely close and restart your browser for changes to take effect."
