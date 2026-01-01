@@ -11,9 +11,9 @@ spec:
             - name: PORT
               value: "8000"
             - name: DEBUG
-              value: "0"
-            - name: IMAGOR_UNSAFE
               value: "1"
+            - name: IMAGOR_UNSAFE
+              value: "0"
             - name: IMAGOR_AUTO_WEBP
               value: "1"
             - name: IMAGOR_AUTO_ACIF

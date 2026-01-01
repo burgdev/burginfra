@@ -18,8 +18,13 @@ spec:
       NAMESPACE: "staging"
       ENVIRONMENT: "staging"
       ENV_SUBDOMAIN: "staging."
+      WD_BACKEND_TAG: "edge-alpine" # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
+      WD_FRONTEND_TAG: "edge-pwa" # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
+      IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
+      - kind: Secret
+        name: openbao-configs-heartbeats
         #- kind: Secret
         #  name: wodore-staging-config-secret

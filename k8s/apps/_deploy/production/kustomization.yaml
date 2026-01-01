@@ -5,6 +5,6 @@ resources:
   - ../../podinfo/overlays/production/
   - ../../umami/overlays/production/
   # CRUXLI
-  - ../../immich/flux/production
+  - ../../immich/flux/production/
   # WODORE
-  - ../../wodore/flux/production
+  - ../../wodore/flux/production/
