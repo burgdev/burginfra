@@ -13,7 +13,7 @@ spec:
             - name: DEBUG
               value: "1"
             - name: IMAGOR_UNSAFE
-              value: "0"
+              value: "1"
             - name: IMAGOR_AUTO_WEBP
               value: "1"
             - name: IMAGOR_AUTO_ACIF
