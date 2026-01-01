@@ -5,6 +5,7 @@ metadata:
   annotations:
     reloader.stakater.com/match: "false"
 spec:
+  suspend: ${WD_CRON_AVAILABILITY_SUSPENDED:-false}
   schedule: "${WD_AVAILABILITY_CRON:-0 * * * *}" # Default: every hour at minute 0
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
