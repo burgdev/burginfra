@@ -128,11 +128,9 @@ spec:
             failureThreshold: 3
           resources:
             limits:
-              cpu: 2000m
               memory: 2Gi
             requests:
-              cpu: 250m
-              memory: 512Mi
+              memory: 600Mi
         # Nginx static media server container
         - name: media
           image: flashspys/nginx-static:latest

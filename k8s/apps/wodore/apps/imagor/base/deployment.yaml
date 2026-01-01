@@ -92,10 +92,8 @@ spec:
             periodSeconds: 15
           resources:
             limits:
-              cpu: 2000m
               memory: 1Gi
             requests:
-              cpu: 100m
               memory: 256Mi
       volumes:
         # Shared PVC with backend - defined in backend/base/pvcs.yaml
