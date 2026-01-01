@@ -68,6 +68,22 @@ export CLUSTER NAMESPACE SRC_CLUSTER SRC_NAMESPACE TIMESTAMP RESTORE_AS_OF
 # --- Generate YAML into variable ---
 RESTORE_YAML=$(envsubst <"$TEMPLATE_FILE")
 
+# --- Show summary and ask for confirmation ---
+section "Restore Summary"
+info "Template file:    ${TEMPLATE_FILE}"
+info "Target cluster:   ${CLUSTER}"
+info "Target namespace: ${NAMESPACE}"
+info "Source cluster:   ${SRC_CLUSTER}"
+info "Source namespace: ${SRC_NAMESPACE}"
+info "Restore as of:    ${RESTORE_AS_OF}"
+info "Timestamp:        ${TIMESTAMP}"
+echo ""
+
+if [[ "$(ask_yes_no "Proceed with restore?" "n")" != "y" ]]; then
+	error "Restore cancelled by user."
+	exit 1
+fi
+
 # --- Helper function to wait for restore (auto namespace and metadata.name) ---
 wait_for_restore() {
 	# Extract metadata.name from YAML

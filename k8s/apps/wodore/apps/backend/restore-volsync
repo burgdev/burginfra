@@ -2,11 +2,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../../../")
 . "$ROOT_DIR/scripts/_base.sh"
 cd "$SCRIPT_DIR"
 
-NAMESPACES=("production", "staging")
+NAMESPACES=("production" "staging")
 
 TARGETS=("media" "postgres")
 
@@ -23,10 +23,26 @@ flux suspend kustomization app-wodore-${SRC_NAMESPACE}
 section "Scaling down deployment wodore backend..."
 kubectl scale deployment wd-backend --replicas=0 -n "$SRC_NAMESPACE"
 
+# Scale down postgres cluster if restoring database
+if [[ "$TARGET" == "postgres" ]]; then
+	section "Scaling down postgres cluster..."
+	kubectl cnpg hibernate on wd-backend-postgres -n "$SRC_NAMESPACE"
+	info "Waiting for postgres cluster to hibernate..."
+	sleep 5
+fi
+
 section "Applying restore manifest..."
 echo "$RESTORE_YAML" | kubectl apply -f -
 
 wait_for_restore
+
+# Scale up postgres cluster if it was scaled down
+if [[ "$TARGET" == "postgres" ]]; then
+	section "Scaling up postgres cluster..."
+	kubectl cnpg hibernate off wd-backend-postgres -n "$SRC_NAMESPACE"
+	info "Waiting for postgres cluster to be ready..."
+	kubectl wait --for=condition=Ready --timeout=300s cluster/wd-backend-postgres -n "$SRC_NAMESPACE" || true
+fi
 
 section "Scaling deployment wodore backend back up..."
 kubectl scale deployment wd-backend --replicas=1 -n "$SRC_NAMESPACE"
