@@ -24,7 +24,7 @@ spec:
       NAMESPACE: "production"
       ENVIRONMENT: "prod"
       ENV_SUBDOMAIN: ""
-      WD_BACKEND_TAG: "edge-alpine" # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
+      WD_BACKEND_TAG: "latest-alpine" # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       WD_FRONTEND_TAG: "edge-pwa" # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
     substituteFrom:

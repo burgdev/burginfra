@@ -26,7 +26,7 @@ kubectl scale deployment wd-backend --replicas=0 -n "$SRC_NAMESPACE"
 # Scale down postgres cluster if restoring database
 if [[ "$TARGET" == "postgres" ]]; then
 	section "Scaling down postgres cluster..."
-	kubectl cnpg hibernate on wd-backend-postgres -n "$SRC_NAMESPACE"
+	kubectl annotate cluster wd-backend-postgres cnpg.io/hibernation=on --overwrite -n "$SRC_NAMESPACE"
 	info "Waiting for postgres cluster to hibernate..."
 	sleep 5
 fi
@@ -39,7 +39,7 @@ wait_for_restore
 # Scale up postgres cluster if it was scaled down
 if [[ "$TARGET" == "postgres" ]]; then
 	section "Scaling up postgres cluster..."
-	kubectl cnpg hibernate off wd-backend-postgres -n "$SRC_NAMESPACE"
+	kubectl annotate cluster wd-backend-postgres cnpg.io/hibernation=off --overwrite -n "$SRC_NAMESPACE"
 	info "Waiting for postgres cluster to be ready..."
 	kubectl wait --for=condition=Ready --timeout=300s cluster/wd-backend-postgres -n "$SRC_NAMESPACE" || true
 fi
