@@ -45,9 +45,9 @@ spec:
                   fi
 
                   # Send heartbeat with status if URL is configured
-                  if [ -n "${WODORE_AVAILABILITY_HEARTBEAT:-}" ]; then
+                  if [ -n "${BEAT_WODORE_AVAILABILITY:-}" ]; then
                     echo "Sending heartbeat to ${WODORE_AVAILABILITY_HEARTBEAT}/${STATUS}"
-                    wget -q -O- "${WODORE_AVAILABILITY_HEARTBEAT}/${STATUS}" || echo "Heartbeat failed (non-critical)"
+                    wget -q -O- "${BEAT_WODORE_AVAILABILITY}/${STATUS}" || echo "Heartbeat failed (non-critical)"
                   else
                     echo "No heartbeat URL configured, skipping"
                   fi
