@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       containers:
-        - name: imagor
+        - name: wd-imagor
           env:
             - name: PORT
               value: "8000"
