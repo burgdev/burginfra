@@ -5,7 +5,7 @@ metadata:
   annotations:
     reloader.stakater.com/match: "false"
 spec:
-  suspend: ${WD_CRON_AVAILABILITY_SUSPENDED:-false}
+  suspend: ${WD_CRON_AVAILABILITY_SUSPEND:-false}
   schedule: "${WD_AVAILABILITY_CRON:-0 * * * *}" # Default: every hour at minute 0
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -47,14 +47,14 @@ spec:
 
                   # Send heartbeat with status if URL is configured
                   if [ -n "${BEAT_WODORE_AVAILABILITY:-}" ]; then
-                    echo "Sending heartbeat to ${WODORE_AVAILABILITY_HEARTBEAT}/${STATUS}"
+                    echo "Sending heartbeat to ${BEAT_WODORE_AVAILABILITY}/$STATUS"
                     wget -q -O- "${BEAT_WODORE_AVAILABILITY}/${STATUS}" || echo "Heartbeat failed (non-critical)"
                   else
                     echo "No heartbeat URL configured, skipping"
                   fi
 
                   echo "Job completed at $(date)"
-                  exit ${STATUS}
+                  exit $STATUS
               env:
                 # Database connection (CNPG service)
                 - name: DJANGO_DATABASE_HOST

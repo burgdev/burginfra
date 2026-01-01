@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("production") # "staging") # no comma
+BACKUP_NAME="immich"
+
+# Optional: Uncomment to filter specific backup types
+# FILTERS=("media" "postgres")
+
+# Source the helper - it handles everything else
+source "${ROOT_DIR}/scripts/k8s/_manual_backup_volsync.sh"
