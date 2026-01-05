@@ -9,7 +9,8 @@ spec:
     name: wd-backend
     namespace: flux-system # Reference shared ImageRepository in flux-system
   filterTags:
-    pattern: "^sha-[a-f0-9]+-alpine$" # Match sha-abc123-alpine pattern
+    pattern: "^(?P<timestamp>[0-9]{8}T[0-9]{4})-sha-[a-f0-9]+-alpine$" # Match YYYYMMDDTHHmm-sha-abc123-alpine pattern
+    extract: "$timestamp"
   policy:
     alphabetical:
       order: asc # Sort alphabetically (latest selected)
