@@ -1,0 +1,13 @@
+# ImagePolicy for staging environment
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: wd-backend
+spec:
+  imageRepositoryRef:
+    name: wd-backend
+  policy:
+    semver:
+      range: "*" # Accept any version
+  filterTags:
+    pattern: "^${WD_BACKEND_TAG:-edge-alpine}$" # Only match edge-alpine tag

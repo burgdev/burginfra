@@ -1,0 +1,8 @@
+# ImageRepository scans the container registry for new image tags
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: wd-backend
+spec:
+  image: ghcr.io/wodore/wodore-backend
+  interval: 1m
