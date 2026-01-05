@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine} # {"$imagepolicy": "production:wd-backend"}
