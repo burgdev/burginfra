@@ -7,7 +7,9 @@ spec:
   imageRepositoryRef:
     name: wd-backend
   policy:
-    semver:
-      range: "*" # Accept any version
+    alphabetical:
+      order: asc
+    #semver:
+    #  range: "*" # Accept any version
   filterTags:
-    pattern: "^${WD_BACKEND_TAG:-latest-alpine}$" # Only match latest-alpine tag
+    pattern: "^${WD_BACKEND_TAG:-latest-alpine}$" # Only match tag
