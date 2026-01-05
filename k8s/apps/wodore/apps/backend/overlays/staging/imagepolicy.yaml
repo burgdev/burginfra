@@ -1,15 +1,14 @@
-# ImagePolicy for staging environment
+# ImagePolicy for staging environment - uses latest sha-tagged image
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
 metadata:
   name: wd-backend
+  namespace: staging
 spec:
   imageRepositoryRef:
     name: wd-backend
+  filterTags:
+    pattern: "^sha-[a-f0-9]+-alpine$" # Match sha-abc123-alpine pattern
   policy:
     alphabetical:
       order: asc
-    #semver:
-    #  range: "*" # Accept any version
-  filterTags:
-    pattern: "^${WD_BACKEND_TAG:-edge-alpine}$" # Only match tag

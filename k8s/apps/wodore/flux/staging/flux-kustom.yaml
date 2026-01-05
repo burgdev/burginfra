@@ -18,7 +18,8 @@ spec:
       NAMESPACE: "staging"
       ENVIRONMENT: "staging"
       ENV_SUBDOMAIN: "staging."
-      WD_BACKEND_TAG: "edge-alpine" # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
+      WD_BACKEND_TAG: "edge-alpine" # only used initially, after this backend/staging/imagepolicy.yaml
+      # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       WD_FRONTEND_TAG: "edge-pwa" # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
       WD_AVAILABILITY_CRON: "30 5 */1 * *" # Every 6 hours at minute 0

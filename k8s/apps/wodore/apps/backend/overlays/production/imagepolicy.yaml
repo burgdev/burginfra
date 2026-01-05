@@ -1,15 +1,15 @@
-# ImagePolicy for production environment
+# ImagePolicy for production environment - uses semantic versioning
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
 metadata:
   name: wd-backend
+  namespace: production
 spec:
   imageRepositoryRef:
     name: wd-backend
-  policy:
-    alphabetical:
-      order: asc
-    #semver:
-    #  range: "*" # Accept any version
   filterTags:
-    pattern: "^${WD_BACKEND_TAG:-latest-alpine}$" # Only match tag
+    pattern: '^0\.[0-9]+\.[0-9]+-alpine$' # Match 0.x.x-alpine semver pattern
+  policy:
+    semver:
+      range: ">=0.0.0" # Accept all 0.x.x versions
+
