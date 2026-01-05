@@ -1,0 +1,13 @@
+# ImageRepository scans the container registry for new image tags
+# Placed in flux-system namespace to be shared across environments
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: wd-backend
+  namespace: flux-system
+spec:
+  image: ghcr.io/wodore/wodore-backend
+  interval: 1m # Scan for new tags
+  accessFrom:
+    namespaceSelectors:
+      - matchLabels: {} # Allow access from all namespaces
