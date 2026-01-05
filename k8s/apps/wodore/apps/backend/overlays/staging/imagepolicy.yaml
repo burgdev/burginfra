@@ -10,5 +10,6 @@ spec:
   filterTags:
     pattern: "^sha-[a-f0-9]+-alpine$" # Match sha-abc123-alpine pattern
   policy:
-    alphabetical:
-      order: asc
+    numerical:
+      order: asc # Sort by image creation timestamp (oldest to newest, latest selected)
+

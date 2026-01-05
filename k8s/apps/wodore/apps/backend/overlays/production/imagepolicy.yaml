@@ -8,7 +8,8 @@ spec:
   imageRepositoryRef:
     name: wd-backend
   filterTags:
-    pattern: '^0\.[0-9]+\.[0-9]+-alpine$' # Match 0.x.x-alpine semver pattern
+    pattern: '^(?P<version>0\.[0-9]+\.[0-9]+)-alpine$' # Match 0.x.x-alpine and extract version
+    extract: "$version" # Extract just the version part (0.x.x) for semver comparison
   policy:
     semver:
       range: ">=0.0.0" # Accept all 0.x.x versions
