@@ -8,8 +8,8 @@ spec:
   retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/apps/wodore/overlays/staging"
   prune: false
-  dependsOn:
-    - name: apps-sync-all-staging
+  #dependsOn:
+  #  - name: apps-sync-all-staging
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra

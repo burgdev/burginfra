@@ -8,8 +8,8 @@ spec:
   retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/apps/wodore/overlays/production"
   prune: false
-  dependsOn:
-    - name: apps-sync-all-production
+  #dependsOn:
+  #  - name: apps-sync-all-production
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment

@@ -9,10 +9,10 @@ spec:
   interval: 5m
   path: "./k8s/apps/_deploy/staging"
   prune: false
-  dependsOn:
-    - name: infra-csi-driver-rclone-system
-    - name: infra-openebs-system
-    - name: infra-openbao-configs
+  #dependsOn:
+  #  - name: infra-csi-driver-rclone-system
+  #  - name: infra-openebs-system
+  #  - name: infra-openbao-configs
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
