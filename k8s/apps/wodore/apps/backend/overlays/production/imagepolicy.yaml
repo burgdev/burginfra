@@ -7,6 +7,7 @@ metadata:
 spec:
   imageRepositoryRef:
     name: wd-backend
+    namespace: flux-system # Reference shared ImageRepository in flux-system
   filterTags:
     pattern: '^(?P<version>0\.[0-9]+\.[0-9]+)-alpine$' # Match 0.x.x-alpine and extract version
     extract: "$version" # Extract just the version part (0.x.x) for semver comparison

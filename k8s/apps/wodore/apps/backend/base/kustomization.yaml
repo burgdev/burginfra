@@ -16,4 +16,4 @@ resources:
   - service.yaml
   - ingress.yaml
   - cronjob-availability.yaml
-  - imagerepository.yaml
+  - imagerepository-flux-system.yaml
