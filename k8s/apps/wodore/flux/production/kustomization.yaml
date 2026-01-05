@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - flux-kustom.yaml
   - ../base/imagerepositories.yaml
+  - ../base/imageupdateautomation.yaml

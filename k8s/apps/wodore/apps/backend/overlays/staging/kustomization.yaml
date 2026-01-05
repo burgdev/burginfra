@@ -4,5 +4,3 @@ namespace: ${NAMESPACE}
 resources:
   - ../../base
   - imagepolicy.yaml
-patches:
-  - path: deployment_patch.yaml

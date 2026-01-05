@@ -29,3 +29,4 @@ data:
   WD_BACKEND_MEDIA_STORAGE_SIZE: "40Gi"
   WD_BACKEND_PY_CACHE_STORAGE_SIZE: "5Gi"
   WD_BACKEND_DB_STORAGE_SIZE: "10Gi"
+  IMAGE_AUTOMATION_SUSPEND: "false" # enable image automation on burginfra cluster

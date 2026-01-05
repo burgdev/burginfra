@@ -28,7 +28,7 @@ spec:
             fsGroupChangePolicy: "OnRootMismatch"
           containers:
             - name: update-availability
-              image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine} # {"$imagepolicy": "${NAMESPACE}:wd-backend"}
+              image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
               imagePullPolicy: Always
               command:
                 - /bin/sh
