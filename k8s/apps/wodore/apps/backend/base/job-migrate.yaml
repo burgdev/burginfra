@@ -22,7 +22,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: migrate
-          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
+          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine} # {"$imagepolicy": "${NAMESPACE}:wd-backend"}
           imagePullPolicy: Always
           command:
             - python
