@@ -11,3 +11,15 @@ spec:
   accessFrom:
     namespaceSelectors:
       - matchLabels: {} # Allow access from all namespaces
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: wd-frontend
+  namespace: flux-system
+spec:
+  image: ghcr.io/wodore/wodore-frontend-quasar
+  interval: 1m # Scan for new tags
+  accessFrom:
+    namespaceSelectors:
+      - matchLabels: {} # Allow access from all namespaces
