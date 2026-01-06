@@ -20,7 +20,7 @@ spec:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
       messageTemplate: |
-        Automated image update
+        Fluxcd: {{ range $resource, $changes := .Changed.Objects }}{{ $resource.Name }} ({{ range $i, $change := $changes }}{{ if $i }}, {{ end }}{{ $change.OldValue }} -> {{ $change.NewValue }}{{ end }}){{ end }}
 
         Automation name: {{ .AutomationObject }}
 
@@ -38,7 +38,7 @@ spec:
         {{ end -}}
         {{ end -}}
     push:
-      branch: flux-image-update
+      branch: flux
   update:
     path: ./k8s/apps
     strategy: Setters
