@@ -14,7 +14,7 @@ spec:
   git:
     checkout:
       ref:
-        branch: flux # Your current branch
+        branch: staging # Your current branch
     commit:
       author:
         email: fluxcdbot@users.noreply.github.com
@@ -38,7 +38,7 @@ spec:
         {{ end -}}
         {{ end -}}
     push:
-      branch: flux
+      branch: staging
   update:
     path: ./k8s/apps
     strategy: Setters
