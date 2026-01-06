@@ -19,7 +19,7 @@ spec:
       ENVIRONMENT: "staging"
       ENV_SUBDOMAIN: "staging."
       # auto updated by fluxcd
-      WD_BACKEND_TAG: "20260106T1401-sha-90d2336-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
+      WD_BACKEND_TAG: "20260106T1448-sha-7b9de3f-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       WD_FRONTEND_TAG: "edge-pwa" # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
