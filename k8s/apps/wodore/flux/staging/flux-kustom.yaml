@@ -17,7 +17,7 @@ spec:
     substitute:
       NAMESPACE: "staging"
       ENVIRONMENT: "staging"
-      ENV_SUBDOMAIN: "staging."
+      ENV_SUBDOMAIN: "stg."
       # auto updated by fluxcd
       WD_BACKEND_TAG: "20260106T1715-sha-9d142ec-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
