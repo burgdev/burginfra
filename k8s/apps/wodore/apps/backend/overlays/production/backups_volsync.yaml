@@ -1,0 +1,148 @@
+# VolSync backup configuration for CloudNativePG PostgreSQL databases
+#
+# This configuration provides:
+# - SQL dumps (logical backup) for easy restore/portability
+# - PVC snapshots (physical backup) for full recovery
+# - PostgreSQL CHECKPOINT before snapshot for consistency
+# - Validation and heartbeat monitoring
+---
+# ServiceAccount for volsync mover with minimal RBAC permissions
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: volsync-wd-backend-mover
+  namespace: ${NAMESPACE}
+---
+# Role with minimal permissions - exec into postgres pod
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: volsync-wd-backend-mover
+  namespace: ${NAMESPACE}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: volsync-wd-backend-mover
+  namespace: ${NAMESPACE}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: volsync-wd-backend-mover
+subjects:
+  - kind: ServiceAccount
+    name: volsync-wd-backend-mover
+    namespace: ${NAMESPACE}
+---
+# docu from fork: https://perfectra1n.github.io/volsync/usage/kopia/index.html#
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: ${CLUSTER}-wd-backend-postgres # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  sourcePVC: wd-backend-postgres-1
+  trigger:
+    schedule: "35 2 * * *" # 02:35
+    #manual: backup-03
+
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    policyConfig:
+      configMapName: kopia-policies
+
+    # Use custom ServiceAccount with limited RBAC
+    moverServiceAccount: volsync-wd-backend-mover
+
+    # Overwrite Retention Policy
+    retain:
+      hourly: 72
+      daily: 7
+      weekly: 4
+      monthly: 6
+      yearly: 1
+
+    # Application consistency hooks
+    actions:
+      beforeSnapshot: |
+        #!/bin/sh
+        set -e
+
+        # ============================================================================
+        # Configuration - Customize these variables for different databases
+        # ============================================================================
+        cat > /tmp/backup-config.env <<'EOF'
+        NAMESPACE="${NAMESPACE}"
+        CNPG_CLUSTER_NAME="wd-backend-postgres"
+        DB_NAME="wodore"
+        DB_USER="postgres"
+        BACKUP_FILENAME="backup.sql"
+        DUMP_TIMEOUT=600
+        MIN_DUMP_SIZE=1024
+        PG_DUMP_COMMAND="pg_dumpall"
+        PG_DUMP_ARGS="--clean --if-exists --no-owner --no-privileges"
+        HEARTBEAT_URL="${BEAT_WODORE_POSTGRES_VOLSYNC}"
+        MAX_DUMP_AGE=600
+        EOF
+
+        # Run generic PostgreSQL backup script from kopia-policies ConfigMap
+        bash /kopia-config/pre-snapshot-postgres.sh -c /tmp/backup-config.env
+
+      afterSnapshot: |
+        #!/bin/bash
+        # Run generic PostgreSQL post-snapshot validation script from kopia-policies ConfigMap
+        bash /kopia-config/post-snapshot-postgres.sh -c /tmp/backup-config.env
+
+    copyMethod: Snapshot
+
+    moverSecurityContext:
+      runAsUser: 26 # postgres
+      runAsGroup: 26 # tape
+      fsGroup: 26
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: ${CLUSTER}-wd-backend-media # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  sourcePVC: wd-backend-media-v1
+  trigger:
+    schedule: "48 2 * * *" # 02:48
+    #manual: backup-03
+
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    policyConfig:
+      configMapName: kopia-policies
+
+    # Use custom ServiceAccount with limited RBAC
+    moverServiceAccount: volsync-wd-backend-mover
+
+    # Overwrite Retention Policy
+    retain:
+      hourly: 72
+      daily: 7
+      weekly: 4
+      monthly: 6
+      yearly: 1
+
+    # Application consistency hooks
+    actions:
+      afterSnapshot: |
+        #!/bin/bash
+        bash /kopia-config/send-heartbeat.sh -u "${BEAT_WODORE_MEDIA_VOLSYNC}"
+
+    copyMethod: Snapshot
+
+    moverSecurityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001

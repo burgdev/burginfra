@@ -1,0 +1,32 @@
+# not used!
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openbao-internal-wildcard-cert
+  namespace: burginfra-system
+spec:
+  secretName: openbao-internal-wildcard-cert-secret
+  duration: 2160h
+  renewBefore: 720h
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+    rotationPolicy: Always
+  subject:
+    organizations:
+      - BurgDev
+    organizationalUnits:
+      - burgdev.ch
+  dnsNames:
+    - "openbao"
+    - "vault.${BURGINFRA_HOST}"
+    - "*.openbao-internal"
+    - "*.openbao-internal.burginfra-system"
+    - "*.openbao-internal.burginfra-system.svc"
+    - "*.openbao-internal.burginfra-system.svc.cluster.local"
+  ipAddresses:
+    - "127.0.0.1"
+  issuerRef:
+    name: pki-system-selfsigned-issuer
+    kind: ClusterIssuer

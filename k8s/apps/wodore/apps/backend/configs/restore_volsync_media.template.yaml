@@ -1,0 +1,30 @@
+# WD-BACKEND MEDIA - volsync
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationDestination
+metadata:
+  name: ${CLUSTER}-wd-backend-media # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  trigger:
+    manual: restore-wd-backend-media-${TIMESTAMP}
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+
+    destinationPVC: wd-backend-media-v1
+    copyMethod: Direct
+    enableFileDeletion: false
+
+    # Cache configuration to avoid emptyDir on root filesystem
+    cacheCapacity: 10Gi
+    cacheAccessModes:
+      - ReadWriteOnce
+    # cacheStorageClassName # use default storage class
+
+    sourceIdentity:
+      sourceName: ${SRC_CLUSTER}-wd-backend-media
+      sourceNamespace: ${SRC_NAMESPACE}
+
+    moverSecurityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001

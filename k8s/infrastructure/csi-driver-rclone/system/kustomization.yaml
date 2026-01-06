@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ${NAMESPACE}
+commonLabels:
+  app.kubernetes.io/component: ${NAME}
+  app.kubernetes.io/part-of: infrastructure
+  app.kubernetes.io/environment: ${ENVIRONMENT}
+  app.kubernetes.io/managed-by: flux
+resources:
+  # - namespace.yaml # defined in helm/base
+  - secrets.yaml
+  - storageclass_kdrive_data_v0.yaml
+  - storageclass_kdrive_media_v0.yaml

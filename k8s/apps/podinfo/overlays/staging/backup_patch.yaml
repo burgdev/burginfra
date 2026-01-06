@@ -1,0 +1,16 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: ${CLUSTER}-podinfo-data # 'username' for kopia
+spec:
+  trigger:
+    schedule: "0 */2 * * *" # every 2 hours
+  kopia:
+    # Overwrite Retention Policy
+    retain:
+      hourly: 10
+      daily: 1
+      weekly: 1
+      monthly: 0
+      yearly: 0
+

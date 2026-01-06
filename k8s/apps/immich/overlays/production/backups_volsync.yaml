@@ -1,0 +1,38 @@
+# docu from fork: https://perfectra1n.github.io/volsync/usage/kopia/index.html
+# IMMICH LIBRARY - volsync
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: ${CLUSTER}-immich-library # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  sourcePVC: immich-library-pvc-v2
+  trigger:
+    schedule: "10 3 * * *" # 03:10
+    #manual: backup-init
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    policyConfig:
+      configMapName: kopia-policies
+
+    # Overwrite Retention Policy
+    retain:
+      hourly: 72
+      daily: 7
+      weekly: 4
+      monthly: 6
+      yearly: 1
+
+    actions:
+      #  beforeSnapshot: |
+      #    echo "[Auto] Start at $(date)" >> /data/backup.log
+
+      afterSnapshot: |
+        curl ${BEAT_IMMICH_LIBRARY_VOLSYNC}
+
+    # Use snapshot for point-in-time consistency
+    copyMethod: Snapshot
+    moverSecurityContext:
+      runAsUser: 26 # postgres
+      runAsGroup: 26 # tape
+      fsGroup: 26

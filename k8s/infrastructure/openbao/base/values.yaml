@@ -1,0 +1,70 @@
+# https://github.com/openbao/openbao-helm/tree/main/charts/openbao
+global:
+  enabled: true
+  #tlsDisable: false
+  # if enabled:
+  #   - https://nanibot.net/posts/vault/
+  #   - https://openbao.org/docs/platform/k8s/helm/examples/standalone-tls/
+server:
+  # extraEnvironmentVars:
+  #   BAO_CACERT: "/certs/ca.crt" # which one?
+  #   OPENBAO_CACERT: "/certs/ca.crt"
+  dev:
+    enabled: false
+  standalone:
+    enabled: true
+    # unseal docu: https://openbao.org/docs/configuration/seal/static/
+    # Needed?
+    #  tls_client_ca_file = "/certs/tls.ca"
+    # tls_client_ca_file = "/certs/ca.crt"
+    config: |
+      ui = true
+
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+        // tls_cert_file = "/certs/tls.crt"
+        // tls_key_file = "/certs/tls.key"
+      }
+
+      storage "file" {
+        path = "/openbao/data"
+      }
+
+      seal "static" {
+        current_key_id = "unseal-1"
+        current_key = "file:///keys/unseal-1.key"
+      }
+
+  volumes:
+    - name: unseal-volume
+      secret:
+        secretName: openbao-unseal-1-key
+    #- name: certs
+    #  secret:
+    #    secretName: openbao-internal-wildcard-cert-secret
+    #    defaultMode: 420
+  volumeMounts:
+    - mountPath: /keys
+      name: unseal-volume
+      readOnly: true
+    #- mountPath: /certs
+    #  name: certs
+    #  readOnly: true
+
+  dataStorage:
+    enabled: true
+    size: 5Gi
+    storageClass: fast-local-data-v3
+
+  auditStorage:
+    enabled: true
+    size: 2Gi
+    storageClass: fast-local-data-v3
+
+csi:
+  enabled: true
+
+ui:
+  enabled: true

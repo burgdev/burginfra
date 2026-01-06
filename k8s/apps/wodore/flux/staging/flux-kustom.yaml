@@ -1,0 +1,34 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app-wodore-staging
+  namespace: flux-system # do not change!
+spec:
+  interval: 3h0m
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/apps/wodore/overlays/staging"
+  prune: false
+  #dependsOn:
+  #  - name: apps-sync-all-staging
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAMESPACE: "staging"
+      ENVIRONMENT: "staging"
+      ENV_SUBDOMAIN: "stg."
+      # auto updated by fluxcd
+      # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
+      WD_BACKEND_TAG: "20260106T2223-sha-99d297d-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
+      # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
+      WD_FRONTEND_TAG: "20260106T2206-sha-c800340-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
+      IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
+      WD_AVAILABILITY_CRON: "30 5 */1 * *" # Every 6 hours at minute 0
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
+      - kind: Secret
+        name: openbao-configs-heartbeats
+        #- kind: Secret
+        #  name: wodore-staging-config-secret

@@ -1,0 +1,18 @@
+[Unit]
+Description=Sync Kubernetes Local CA Certificates
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/tobias/git/burgdev/burginfra
+ExecStart=/home/tobias/git/burgdev/burginfra/scripts/install_local_ca.sh --watch
+Restart=always
+RestartSec=60
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,49 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: helm-openebs-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/infrastructure/openebs/helm/system"
+  prune: true
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute: # use the same values for all kustomizations
+      NAME: "openebs"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+      REPO_INTERVAL: "1h0s"
+      SOURCE_INTERVAL: "1h0s"
+      CHART_VERSION: "4.4.*"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-openebs-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/infrastructure/openebs/system"
+  dependsOn:
+    - name: helm-openebs-system
+  prune: true
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute: # use the same values for all kustomizations
+      NAME: "openebs"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+    substituteFrom:
+      - kind: ConfigMap
+        name: openebs-config-vars
+        optional: true

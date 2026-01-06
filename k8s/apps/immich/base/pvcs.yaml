@@ -1,0 +1,25 @@
+# PRESISTEND VOLUME CLAIM DATA ====
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-library-pvc-v2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: ${IMMICH_LIBRARY_STORAGE_SIZE:-5Gi}
+  storageClassName: fast-local-media-v3
+---
+# PRESISTEND VOLUME CLAIM EXTERNAL ====
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-external-pvc-v2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: ${IMMICH_EXTERNAL_STORAGE_SIZE:-5Gi}
+  storageClassName: fast-local-media-v3

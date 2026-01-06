@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespaces.yaml
+  # INFRASTRUCTURE ~~~~~~~~~~~~~~~~~~~~~~~
+  - ../../cert-manager/flux/system/
+  - ../../openebs/flux/system/
+  - ../../openbao/flux/system/
+  - ../../openbao-configs/flux/system/
+  - ../../volsync/flux/
+  - ../../secret-store-csi-driver/flux/system/
+  - ../../csi-driver-rclone/flux/system/
+  - ../../vault-secrets-operator/flux/system/
+  - ../../reloader/flux/system/
+  - ../../cloudnative-pg/flux/system/
+  - ../../zitadel/flux/system/
+  #- ../../tofu-controller/flux/system/ # not used currently
+  #- ../../zitadel/flux/system/

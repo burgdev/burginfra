@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: podinfo-fast-data-pvc-v3 # update deployment.yaml
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-local-data-v3 # update metadata.name
+  resources:
+    requests:
+      storage: 50Mi

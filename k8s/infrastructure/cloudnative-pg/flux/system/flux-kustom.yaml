@@ -1,0 +1,23 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: helm-cloudnative-pg-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/infrastructure/cloudnative-pg/helm/system"
+  prune: false
+  dependsOn:
+    - name: infra-openebs-system
+    # - name: helm-kube-prometheus-stack-system # Ensure Prometheus Operator CRDs exist (currently disabled)
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings

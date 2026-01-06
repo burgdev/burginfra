@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("production") # "staging")
+
+TARGETS=("library" "postgres") # "external")
+
+TARGET=$(choose_option "Choose restore target:" "${TARGETS[@]}")
+TEMPLATE_FILE="configs/restore_volsync_${TARGET}.template.yaml"
+
+# Source the helper: sets RESTORE_YAML and provides wait_for_restore()
+source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
+
+# --- Scenario-specific steps ---
+section "Suspending Flux reconciliation for all apps..."
+flux suspend kustomization apps-sync-all-${SRC_NAMESPACE}
+section "Suspending Flux reconciliation for immich..."
+flux suspend kustomization app-immich-${SRC_NAMESPACE}
+
+section "Scaling down deployment immich..."
+kubectl scale deployment immich-server --replicas=0 -n "$SRC_NAMESPACE"
+kubectl scale deployment immich-machine-learning --replicas=0 -n "$SRC_NAMESPACE"
+
+section "Applying restore manifest..."
+echo "$RESTORE_YAML" | kubectl apply -f -
+
+wait_for_restore
+
+# Ask if user wants to restore the database
+if [[ ${TARGET} == "library" ]]; then
+	section "Database restore"
+	echo ""
+	warn "The library data has been restored."
+	warn "Do you also want to restore the database from the backup dump?"
+	echo ""
+	if [[ "$(ask_yes_no "Restore database from backup dump?" "y")" == "y" ]]; then
+		section "Running database restore script..."
+		"${SCRIPT_DIR}/restore-database" -n "$SRC_NAMESPACE"
+	else
+		info "Skipping database restore."
+	fi
+fi
+
+section "Scaling deployment immich back up..."
+kubectl scale deployment immich-server --replicas=1 -n "$SRC_NAMESPACE"
+kubectl scale deployment immich-machine-learning --replicas=1 -n "$SRC_NAMESPACE"
+
+section "Waiting for deployment to be ready..."
+kubectl wait --for=condition=available --timeout=300s deployment/immich-server -n "$SRC_NAMESPACE" || true
+kubectl wait --for=condition=available --timeout=300s deployment/immich-machine-learning -n "$SRC_NAMESPACE" || true
+
+section "Resuming Flux reconciliation for all apps..."
+flux resume kustomization app-immich-${SRC_NAMESPACE}
+flux resume kustomization apps-sync-all-${SRC_NAMESPACE}
+
+success "Restore scenario completed successfully."

@@ -1,0 +1,17 @@
+# ImagePolicy for production environment - uses semantic versioning
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: wd-frontend-${NAMESPACE}
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: wd-frontend
+    namespace: flux-system # Reference shared ImageRepository in flux-system
+  filterTags:
+    pattern: '^(?P<version>0\.[0-9]+\.[0-9]+)-pwa$' # Match 0.x.x-alpine and extract version
+    extract: "$version" # Extract just the version part (0.x.x) for semver comparison
+  policy:
+    semver:
+      range: ">=0.0.0" # Accept all 0.x.x versions
+

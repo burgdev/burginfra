@@ -1,0 +1,172 @@
+# https://artifacthub.io/packages/helm/zitadel/zitadel
+# Default valus: https://github.com/zitadel/zitadel/blob/main/cmd/defaults.yaml
+zitadel:
+  masterkeySecretName: zitadel-masterkey
+
+  configmapConfig:
+    # login with
+    # ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_USERNAME@ZITADEL_DEFAULTINSTANCE_ORG_NAME.ExternalDomain
+    # e.g. root@burginfra.auth.DOMAIN
+    ExternalDomain: auth.${BURGDEV_HOST}
+    ExternalPort: 443
+    ExternalSecure: true
+
+    TLS:
+      Enabled: false # TLS termination handled by Traefik
+
+    Database:
+      Postgres:
+        Host: zitadel-postgres-rw # CloudNativePG read-write service
+        # Admin and USer name is set by the 'zitadel-envvars' secret.
+        # The same credentials are used.
+        Admin:
+          #ExistingDatabase: zitadel
+          SSL:
+            Mode: disable
+        User:
+          SSL:
+            Mode: disable
+
+      #DefaultInstance:
+    FirstInstance:
+      InstanceName: BURGINFRA
+      Org:
+        Name: BurgInfra
+        Human:
+          UserName: root
+          FirstName: Burginfra
+          LastName: Admin
+          NickName: BurgAdmin
+          Email:
+            Address: "tobias@burgdev.ch"
+            Verified: true
+          Password: "Password1!"
+          PasswordChangeRequired: true
+          PreferredLanguage: "en"
+        Machine:
+          Machine:
+            Username: zitadel-service-admin
+            Name: "Service Admin Account"
+          MachineKey:
+            # Machine key will not expire, adjust as needed
+            ExpirationDate: "2526-11-24T00:00:00Z"
+            # Type 1 = JSON key for service account authentication
+            Type: 1
+        LoginClient:
+          Machine:
+            Username: zitadel-service-login
+            Name: "Service Login Account"
+
+    DefaultInstance:
+      SMTPConfiguration:
+        From: noreply@${BURGDEV_HOST}
+        FromName: "BurgDev Auth"
+
+      Features:
+        UserScheam: true
+
+envVarsSecret: "zitadel-envvars"
+# Env vars for init job (some chart versions need these at top level)
+env:
+  #- name: ZITADEL_FIRSTINSTANCE_INSTANCENAME
+  #  value: "BURGINFRA"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_NAME
+  #  value: "BurgInfra"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
+  #  value: "root"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_FIRSTNAME
+  #  value: "Burginfra"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_NICKNAME
+  #  value: "BurgAdmin"
+  #- name: ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD
+  #  value: "Password1!"
+  - name: ZITADEL_DEFAULTINSTANCE_SMTPCONFIGURATION_SMTP_HOST # inluding PORT
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-smtp-vars
+        key: SMTP_HOST_PORT
+  - name: ZITADEL_DEFAULTINSTANCE_SMTPCONFIGURATION_SMTP_USER
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-smtp-vars
+        key: SMTP_USERNAME
+  - name: ZITADEL_DEFAULTINSTANCE_SMTPCONFIGURATION_SMTP_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-smtp-vars
+        key: SMTP_PASSWORD
+  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-superuser
+        key: password
+  - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-superuser
+        key: username
+  - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-app
+        key: password
+  - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: zitadel-postgres-app
+        key: username
+
+# Enable ingress
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+  hosts:
+    - host: auth.${BURGDEV_HOST}
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: auth.${WODORE_HOST}
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: auth.${CRUXLI_HOST}
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: zitadel-${ENVIRONMENT}-tls
+      hosts:
+        - auth.${BURGDEV_HOST}
+        - auth.${WODORE_HOST}
+        - auth.${CRUXLI_HOST}
+
+# Login UI ingress - Disabled as Zitadel v4+ has login built-in
+# The login UI is served by the main Zitadel application at /ui/v2/login/
+login:
+  ingress:
+    enabled: true
+    className: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+
+# Override kubectl image version for setup job sidecars
+# The chart uses cluster k8s version but alpine/k8s may not have that exact tag
+# Use KUBE_TOOLS_VERSION from cluster settings
+setupJob:
+  machinekeyWriter:
+    image:
+      tag: "${KUBE_TOOLS_VERSION}"
+  machineUserPATWriter:
+    image:
+      tag: "${KUBE_TOOLS_VERSION}"
+  loginUserPATWriter:
+    image:
+      tag: "${KUBE_TOOLS_VERSION}"
+
+# Override kubectl image version for cleanup job
+cleanupJob:
+  kubectl:
+    image:
+      tag: "${KUBE_TOOLS_VERSION}"

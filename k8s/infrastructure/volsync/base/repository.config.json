@@ -1,0 +1,6 @@
+{
+  "enableActions": true,
+  "actionCommandTimeout": "10m",
+  "ecc": "REED-SOLOMON",
+  "eccOverheadPercent": 2
+}

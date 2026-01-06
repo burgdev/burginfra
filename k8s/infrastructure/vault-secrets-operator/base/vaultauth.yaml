@@ -1,0 +1,110 @@
+# VaultAuth resources for OpenBao policies
+# Each policy with OPENBAO_ACCESS: kubernetes needs a corresponding VaultAuth resource
+# The VaultAuth name and role should match the policy name
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: openbao-admin
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: openbao-admin
+    serviceAccount: openbao-config-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: apps-kv-staging
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: apps-kv-staging
+    serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: apps-kv-production
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: apps-kv-production
+    serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: apps-kv-all
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: apps-kv-all
+    serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: apps-kv-flux
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: apps-kv-flux
+    serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: infra-kv-staging
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: infra-kv-staging
+    serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: infra-kv-system
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: infra-kv-system
+    serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: infra-kv-all
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: infra-kv-all
+    serviceAccount: vault-secrets-operator-controller-manager
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: configs-kv-all
+spec:
+  method: kubernetes
+  mount: kubernetes
+  vaultConnectionRef: openbao-${ENVIRONMENT}
+  kubernetes:
+    role: configs-kv-all
+    serviceAccount: vault-secrets-operator-controller-manager

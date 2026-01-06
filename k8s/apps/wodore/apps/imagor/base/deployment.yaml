@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-imagor
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 60
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: wd-imagor
+  template:
+    metadata:
+      labels:
+        app: wd-imagor
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+        - name: wd-imagor
+          image: shumc/imagor:${IMAGOR_TAG:-latest}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsUser: 1001
+            runAsGroup: 1001
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "8000"
+            - name: DEBUG
+              value: "0"
+            - name: IMAGOR_UNSAFE
+              value: "0"
+            - name: IMAGOR_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: wd-imagor-config-secret
+                  key: IMAGOR_SECRET
+            - name: IMAGOR_AUTO_WEBP
+              value: "1"
+            - name: IMAGOR_AUTO_ACIF
+              value: "1"
+            - name: IMAGOR_SIGNER_TYPE
+              value: "sha256"
+            - name: FILE_LOADER_BASE_DIR
+              value: "/mnt/data/source"
+            - name: FILE_STORAGE_BASE_DIR
+              value: "/mnt/data/storage"
+            - name: FILE_RESULT_STORAGE_BASE_DIR
+              value: "/mnt/data/result"
+            - name: FILE_STORAGE_MKDIR_PERMISSION
+              value: "0755"
+            - name: FILE_STORAGE_WRITE_PERMISSION
+              value: "0666"
+            - name: FILE_RESULT_STORAGE_MKDIR_PERMISSION
+              value: "0755"
+            - name: FILE_RESULT_STORAGE_WRITE_PERMISSION
+              value: "0666"
+            - name: IMAGOR_RESULT_STORAGE_PATH_STYLE
+              value: "size"
+          volumeMounts:
+            - name: backend-media
+              mountPath: /mnt/data/source/wd
+              readOnly: true
+            - name: imagor-storage
+              mountPath: /mnt/data/storage
+            - name: imagor-result
+              mountPath: /mnt/data/result
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 256Mi
+      volumes:
+        # Shared PVC with backend - defined in backend/base/pvcs.yaml
+        - name: backend-media
+          persistentVolumeClaim:
+            claimName: wd-backend-media-v1
+        - name: imagor-storage
+          persistentVolumeClaim:
+            claimName: wd-imagor-storage-v1
+        - name: imagor-result
+          persistentVolumeClaim:
+            claimName: wd-imagor-result-v1

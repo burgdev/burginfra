@@ -1,31 +1,37 @@
 #!/bin/bash
+set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-cd $SCRIPT_DIR
+ROOT_DIR="$(realpath $SCRIPT_DIR/../../)"
+. $ROOT_DIR/scripts/_base.sh
+ENV=${1:-local}
+IMMICH_K8S_DIR="$ROOT_DIR/k8s/immich"
+cd $IMMICH_K8S_DIR/
 
 TEMPLATE=immich-values.patch.template.yaml
-BASE=../../base/immich-values.template.yaml
+BASE=$IMMICH_K8S_DIR/base/immich-values.template.yaml
 CONFIG=.immich-values.yaml
 
 set -a
-source base/.env.template
+source $IMMICH_K8S_DIR/base/.env.template
 set +a
 
 for ENV in $(ls overlays/); do
-    echo "Updating '$ENV'"
-    cd overlays/$ENV
+    section "Updating '$ENV'"
+    cd $IMMICH_K8S_DIR/overlays/$ENV
+    REL_BASE=$(realpath --relative-to="." $BASE)
     if [ ! -f .env ]; then
-        echo "No .env file found in '$ENV'"
+        warn "No .env file found in '$ENV'"
         break
     fi
     set -a
     source .env
     set +a
     if [ ! -f $TEMPLATE ]; then
-        echo "No $TEMPLATE file found in '$ENV'"
+        warn "No $TEMPLATE file found in '$ENV'"
         cp $BASE $CONFIG.merge
     else
         # merge with the file in the base
-        echo "Merging $BASE and $TEMPLATE"
+        info "Merging $(s yellow $REL_BASE) and $(s yellow $TEMPLATE)"
         yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' $BASE $TEMPLATE > $CONFIG.merge
     fi
     # Create a temporary file with the header
@@ -35,9 +41,8 @@ for ENV in $(ls overlays/); do
     # Process the template and append to the file
     envsubst < "$CONFIG.merge" | sed '/^\s*\(#\|\/\)/d' >> "$CONFIG"
 
-    echo "Updated '$CONFIG' from template '$TEMPLATE' at $(date)"
+    info "Updated $(s d $CONFIG) from template $(s yellow $TEMPLATE) at $(s blue $(date))"
     rm $CONFIG.merge
-    
-    cd -
 
+    cd -
 done

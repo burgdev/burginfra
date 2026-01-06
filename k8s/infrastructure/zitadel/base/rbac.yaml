@@ -1,0 +1,24 @@
+# Role to allow openbao-secrets-manager to read secrets in the namespace
+# This is needed by the sync-to-openbao-job to read the zitadel-service-admin secret
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openbao-secrets-reader
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+# Bind the role to the openbao-secrets-manager ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openbao-secrets-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: openbao-secrets-reader
+subjects:
+  - kind: ServiceAccount
+    name: openbao-secrets-manager
+    namespace: burginfra-${ENVIRONMENT}

@@ -1,0 +1,8 @@
+# this is not managed by flux, apply this manuelly!
+namespace: flux-system
+secretGenerator:
+  - name: rclone-webdav-credentials
+    envs:
+      - .env.secret
+    options:
+      disableNameSuffixHash: true

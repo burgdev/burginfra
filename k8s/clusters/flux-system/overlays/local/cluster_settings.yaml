@@ -1,0 +1,33 @@
+# you need to apply any changes made here!
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-settings
+  namespace: flux-system
+data:
+  # TODO: you need to MANUALLY apply any changes made here!
+  #       k-localhost; kubectl apply -f k8s/clusters/flux-system/overlays/local/cluster_settings.yaml
+  #       k-infra-vps1; kubectl apply -f k8s/clusters/flux-system/overlays/burginfra/cluster_settings.yaml
+  CRUXLI_HOST: "crux.local.gd"
+  CRUXLI_EMAIL: "tobias@burgdev.ch"
+  BURGDEV_HOST: "burgdev.local.gd"
+  BURGDEV_EMAIL: "tobias@burgdev.ch"
+  WODORE_HOST: "wodore.local.gd"
+  WODORE_EMAIL: "tb@wodore.com"
+  WODO_HOST: "wodo.re.local.gd"
+  WODO_EMAIL: "tb@wodo.re"
+  BURGINFRA_HOST: "infra.local.gd"
+  CLUSTER: "local"
+  KUBE_VERSION: "1.33.5" # Server version: v1.33.5+k3s1
+  KUBE_TOOLS_VERSION: "1.33.5" # alpine/k8s image tag version
+  CERT_ISSUER_STAGING: "local-ca-issuer"
+  CERT_ISSUER_PROD: "local-ca-issuer"
+  IMMICH_LIBRARY_STORAGE_SIZE: "5Gi"
+  IMMICH_EXTERNAL_STORAGE_SIZE: "5Gi"
+  IMMICH_DB_STORAGE_SIZE: "2Gi"
+  WD_IMAGOR_STORAGE_SIZE: "2Gi"
+  WD_BACKEND_MEDIA_STORAGE_SIZE: "5Gi"
+  WD_BACKEND_PY_CACHE_STORAGE_SIZE: "1Gi"
+  WD_BACKEND_DB_STORAGE_SIZE: "2Gi"
+  WD_CRON_AVAILABILITY_SUSPEND: "true" # do not run cron job on local cluster
+  IMAGE_AUTOMATION_SUSPEND: "true" # do not run image automation on local cluster

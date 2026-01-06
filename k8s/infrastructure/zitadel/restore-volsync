@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("burginfra-system")
+
+# Source the helper: sets RESTORE_YAML and provides wait_for_restore()
+source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
+
+# --- Scenario-specific steps ---
+section "Scaling down deployment zitadel..."
+kubectl scale deployment zitadel -n "$SRC_NAMESPACE" --replicas=0 2>/dev/null || info "Note: Zitadel deployment not found"
+
+section "Applying restore manifest..."
+echo "$RESTORE_YAML" | kubectl apply -f -
+
+wait_for_restore
+
+section "Scaling deployment zitadel back up..."
+kubectl scale deployment zitadel -n "$SRC_NAMESPACE" --replicas=1 2>/dev/null || info "Note: Zitadel deployment not found"
+
+section "Waiting for deployment to be ready..."
+kubectl wait --for=condition=available --timeout=300s deployment/zitadel -n "$SRC_NAMESPACE" || true
+
+success "Restore scenario completed successfully."

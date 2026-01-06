@@ -1,0 +1,7 @@
+# https://github.com/k8up-io/k8up/blob/master/charts/k8up/values.yaml
+k8up:
+  #envVars:
+  #  - name: BACKUP_OPERATOR_NAMESPACE
+  #    value: "default" 
+  skipWithoutAnnotation: true
+  timezone: "Europe/Zurich"

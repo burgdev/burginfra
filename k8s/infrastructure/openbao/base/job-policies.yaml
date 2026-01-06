@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openbao-configure-policies
+  labels:
+    app.kubernetes.io/version: "1.0"
+spec:
+  ttlSecondsAfterFinished: 30 # deleted after 3 min, flux runs it again every 3 hours
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: openbao-config-manager
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: quay.io/openbao/openbao:latest
+          command: ["/bin/sh", "/scripts/configure-policies.sh"]
+          env:
+            - name: OPENBAO_ADDR
+              value: "http://openbao.${NAMESPACE}.svc.cluster.local:8200"
+            - name: OPENBAO_FAIL_SLEEP
+              value: "30"
+          volumeMounts:
+            - name: config-script
+              mountPath: /scripts
+            - name: policies
+              mountPath: /policies
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+      volumes:
+        - name: config-script
+          secret:
+            secretName: openbao-config-script
+            defaultMode: 0755
+        - name: policies
+          configMap:
+            name: openbao-policies

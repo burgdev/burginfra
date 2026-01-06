@@ -1,0 +1,30 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: openbao
+  namespace: flux-system
+spec:
+  type: "oci"
+  interval: 1h0s
+  url: oci://ghcr.io/openbao/charts/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: openbao
+spec:
+  chart:
+    spec:
+      chart: openbao
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: openbao
+      version: "0.21.x"
+  install:
+    createNamespace: false
+  valuesFrom:
+    - kind: ConfigMap
+      name: openbao-values
+      valuesKey: values.yaml
+  interval: 1h0s

@@ -1,0 +1,50 @@
+# this is used by flux, do not include in any app kustomization.yaml file!
+# TODO: add to k8s/flux/*/kustomization.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: helm-csi-driver-rclone-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/infrastructure/csi-driver-rclone/helm/overlays/system"
+  prune: true
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute: # use the same values for all kustomizations
+      NAME: "csi-driver-rclone"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-csi-driver-rclone-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/infrastructure/csi-driver-rclone/system"
+  prune: true
+  dependsOn:
+    - name: helm-csi-driver-rclone-system
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAME: "csi-driver-rclone"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+    substituteFrom:
+      - kind: Secret
+        name: rclone-webdav-credentials
+        optional: false
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings

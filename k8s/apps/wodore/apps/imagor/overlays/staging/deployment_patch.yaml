@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-imagor
+spec:
+  template:
+    spec:
+      containers:
+        - name: wd-imagor
+          env:
+            - name: PORT
+              value: "8000"
+            - name: DEBUG
+              value: "1"
+            - name: IMAGOR_UNSAFE
+              value: "1"
+            - name: IMAGOR_AUTO_WEBP
+              value: "1"
+            - name: IMAGOR_AUTO_ACIF
+              value: "1"
+            - name: IMAGOR_SIGNER_TYPE
+              value: "sha256"

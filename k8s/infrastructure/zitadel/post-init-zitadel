@@ -1,0 +1,270 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+# Default values
+NAMESPACE="burginfra-system"
+CLUSTER=""
+ENVIRONMENT="system"
+WAIT_TIMEOUT=300
+
+usage() {
+	cat <<EOF
+Usage: $0 -c CLUSTER [-n NAMESPACE] [-e ENVIRONMENT] [-t TIMEOUT]
+
+This script syncs the Zitadel service admin JWT to OpenBao:
+  1. Waits for the zitadel-service-admin secret to be created
+  2. Extracts the JWT from the Kubernetes secret
+  3. Stores it in OpenBao at kv/infrastructure/zitadel/\$NAMESPACE
+  4. Uses the ZITADEL_ADMIN_JWT key name for the JWT
+
+This should be run AFTER Zitadel has been deployed and initialized.
+
+Requirements:
+  - Zitadel must be deployed and have created the service admin secret
+  - OpenBao must be deployed and initialized
+  - The openbao-secrets-manager service account must exist
+  - The openbao-secrets-manager policy and role must be configured in OpenBao
+
+Options:
+    -c CLUSTER      Cluster context name (required)
+    -n NAMESPACE    Kubernetes namespace where Zitadel runs (default: $NAMESPACE)
+    -e ENVIRONMENT  Environment (staging/production) (default: $ENVIRONMENT)
+    -t TIMEOUT      Wait timeout in seconds (default: $WAIT_TIMEOUT)
+    -h              Show this help message
+
+Example:
+    $0 -c local
+    $0 -c burginfra-system -n burginfra-production -e production
+    $0 -c local -t 600  # Wait up to 10 minutes
+EOF
+	exit 1
+}
+
+while getopts "n:c:e:t:h" opt; do
+	case $opt in
+	n) NAMESPACE="$OPTARG" ;;
+	c) CLUSTER="$OPTARG" ;;
+	e) ENVIRONMENT="$OPTARG" ;;
+	t) WAIT_TIMEOUT="$OPTARG" ;;
+	h) usage ;;
+	*) usage ;;
+	esac
+done
+
+# Validate required arguments
+if [ -z "$CLUSTER" ]; then
+	error "-c CLUSTER is required"
+	usage
+fi
+
+title "Zitadel Service Admin JWT Sync to OpenBao"
+info "This script will sync the Zitadel service admin JWT to OpenBao"
+info "Target namespace: $NAMESPACE"
+info "Environment: $ENVIRONMENT"
+echo ""
+
+cluster_check "$CLUSTER"
+
+# Check if namespace exists
+if ! kubectl get namespace "$NAMESPACE" &>/dev/null; then
+	error "Namespace '$NAMESPACE' does not exist"
+	exit 1
+fi
+success "Namespace '$NAMESPACE' exists"
+
+# Determine the OpenBao namespace based on environment
+OPENBAO_NAMESPACE="burginfra-system"
+if [ "$ENVIRONMENT" = "staging" ]; then
+	OPENBAO_NAMESPACE="burginfra-staging"
+fi
+
+# Check if OpenBao is running
+info "Checking OpenBao in namespace '$OPENBAO_NAMESPACE'..."
+OPENBAO_POD=$(kubectl get pod -n "$OPENBAO_NAMESPACE" -l app.kubernetes.io/name=openbao -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+
+if [ -z "$OPENBAO_POD" ]; then
+	error "Could not find OpenBao pod in namespace '$OPENBAO_NAMESPACE'"
+	info "Make sure OpenBao is deployed with label 'app.kubernetes.io/name=openbao'"
+	exit 1
+fi
+success "Found OpenBao pod: $OPENBAO_POD"
+
+# Check if service account exists
+SERVICE_ACCOUNT="openbao-secrets-manager"
+if ! kubectl get serviceaccount "$SERVICE_ACCOUNT" -n "$OPENBAO_NAMESPACE" &>/dev/null; then
+	error "ServiceAccount '$SERVICE_ACCOUNT' does not exist in namespace '$OPENBAO_NAMESPACE'"
+	info "Please deploy OpenBao base resources first which includes this service account"
+	exit 1
+fi
+success "ServiceAccount '$SERVICE_ACCOUNT' exists"
+
+# Determine the OpenBao path
+OPENBAO_PATH="infrastructure/zitadel/$NAMESPACE"
+
+# Use the OpenBao wrapper script
+BAO_WRAPPER="$SCRIPT_DIR/../openbao/bao"
+
+if [ ! -x "$BAO_WRAPPER" ]; then
+	error "OpenBao wrapper script not found or not executable: $BAO_WRAPPER"
+	exit 1
+fi
+
+echo ""
+title "Waiting for Zitadel Service Admin Secret"
+
+SECRET_NAME="zitadel-service-admin"
+SECRET_KEY="zitadel-service-admin.json"
+
+info "Waiting for secret '$SECRET_NAME' in namespace '$NAMESPACE'..."
+info "Timeout: ${WAIT_TIMEOUT}s"
+
+# Wait for the secret with timeout
+ELAPSED=0
+WAIT_INTERVAL=5
+
+while [ $ELAPSED -lt $WAIT_TIMEOUT ]; do
+	if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
+		success "Secret '$SECRET_NAME' found!"
+		break
+	fi
+
+	sleep $WAIT_INTERVAL
+	ELAPSED=$((ELAPSED + WAIT_INTERVAL))
+
+	if [ $((ELAPSED % 30)) -eq 0 ]; then
+		info "Still waiting... (${ELAPSED}s elapsed)"
+	fi
+done
+
+if [ $ELAPSED -ge $WAIT_TIMEOUT ]; then
+	error "Timeout waiting for secret '$SECRET_NAME'"
+	echo ""
+	warn "The secret was not created within ${WAIT_TIMEOUT}s"
+	info "Possible reasons:"
+	echo "  • Zitadel is not fully initialized yet"
+	echo "  • Zitadel setup job failed"
+	echo "  • Secret name or namespace is incorrect"
+	echo ""
+	info "Check Zitadel setup job status:"
+	echo "  kubectl get jobs -n $NAMESPACE -l app.kubernetes.io/name=zitadel"
+	echo "  kubectl logs -n $NAMESPACE -l app.kubernetes.io/name=zitadel,job-name=zitadel-setup"
+	exit 1
+fi
+
+echo ""
+title "Extracting JWT from Secret"
+
+info "Reading secret key '$SECRET_KEY'..."
+SECRET_VALUE=$(kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" \
+	-o jsonpath="{.data.zitadel-service-admin\.json}" 2>/dev/null | base64 -d)
+
+if [ -z "$SECRET_VALUE" ]; then
+	error "Secret key '$SECRET_KEY' is empty or not found"
+	echo ""
+	info "Available keys in secret:"
+	kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" -o jsonpath='{.data}' | jq -r 'keys[]' 2>/dev/null || echo "  (could not list keys)"
+	exit 1
+fi
+
+success "JWT extracted successfully"
+
+# Basic validation that it looks like a JSON key
+if ! echo "$SECRET_VALUE" | jq -e . >/dev/null 2>&1; then
+	warn "The extracted value does not appear to be valid JSON"
+	warn "This might cause issues when applications try to use it"
+	echo ""
+	read -rp "Do you want to continue anyway? (yes/no): " confirm
+	if [ "$confirm" != "yes" ]; then
+		info "Operation cancelled by user"
+		exit 0
+	fi
+fi
+
+echo ""
+title "Storing JWT in OpenBao"
+
+info "OpenBao path: kv/$OPENBAO_PATH"
+info "Key name: ZITADEL_ADMIN_JWT"
+info "Using kv patch to preserve existing keys (e.g., ZITADEL_MASTERKEY)..."
+echo ""
+
+# Write JWT to a temporary file to avoid shell escaping issues
+TEMP_JWT_FILE=$(mktemp)
+trap "rm -f $TEMP_JWT_FILE" EXIT
+printf '%s' "$SECRET_VALUE" >"$TEMP_JWT_FILE"
+
+# Get OpenBao pod name
+OPENBAO_POD=$(kubectl get pod -n "$OPENBAO_NAMESPACE" -l app.kubernetes.io/name=openbao -o jsonpath='{.items[0].metadata.name}')
+
+# Get service account token
+info "Getting service account token..."
+SA_TOKEN=$(kubectl create token "$SERVICE_ACCOUNT" -n "$OPENBAO_NAMESPACE" --duration=10m 2>/dev/null)
+if [ -z "$SA_TOKEN" ]; then
+	error "Failed to get service account token for '$SERVICE_ACCOUNT'"
+	exit 1
+fi
+
+# Copy JWT file to OpenBao pod
+info "Copying JWT to OpenBao pod..."
+kubectl cp "$TEMP_JWT_FILE" "$OPENBAO_NAMESPACE/$OPENBAO_POD:/tmp/jwt-data.json"
+
+# Authenticate and store the JWT directly in the pod
+info "Authenticating and storing JWT..."
+if kubectl exec -n "$OPENBAO_NAMESPACE" "$OPENBAO_POD" -- sh -c "
+	export BAO_ADDR='http://localhost:8200'
+	BAO_TOKEN=\$(bao write -field=token auth/kubernetes/login role=openbao-secrets-manager jwt='$SA_TOKEN')
+	if [ -z \"\$BAO_TOKEN\" ]; then
+		echo 'Failed to authenticate' >&2
+		exit 1
+	fi
+	export BAO_TOKEN
+	bao kv patch kv/$OPENBAO_PATH ZITADEL_ADMIN_JWT=@/tmp/jwt-data.json
+	rm -f /tmp/jwt-data.json
+"; then
+
+	echo ""
+	success "JWT synced to OpenBao successfully!"
+
+	# Verify the secret was stored
+	info "Verifying JWT in OpenBao..."
+	if "$BAO_WRAPPER" -c "$CLUSTER" -n "$OPENBAO_NAMESPACE" -- kv get "kv/$OPENBAO_PATH" | grep -q "ZITADEL_ADMIN_JWT"; then
+		success "JWT verified in OpenBao!"
+	else
+		warn "Could not verify JWT, but it may have been stored correctly"
+	fi
+
+	echo ""
+	success "Zitadel service admin JWT sync completed!"
+	echo ""
+	info "Next steps:"
+	echo "  1. Apps can now use VaultStaticSecret to pull the JWT from OpenBao"
+	echo "  2. The JWT is available at: kv/$OPENBAO_PATH"
+	echo "  3. Key name: ZITADEL_ADMIN_JWT"
+	echo ""
+	info "Example VaultStaticSecret usage:"
+	cat <<EOF
+  apiVersion: secrets.hashicorp.com/v1beta1
+  kind: VaultStaticSecret
+  metadata:
+    name: zitadel-admin-jwt
+  spec:
+    vaultAuthRef: infra-kv-$NAMESPACE
+    mount: kv
+    type: kv-v2
+    path: $OPENBAO_PATH
+    refreshAfter: 1h
+    destination:
+      create: true
+      name: zitadel-admin-jwt
+EOF
+	echo ""
+	info "To view the JWT in OpenBao:"
+	echo "  $BAO_WRAPPER -c $CLUSTER -n $OPENBAO_NAMESPACE -- kv get kv/$OPENBAO_PATH"
+else
+	error "Failed to store JWT in OpenBao"
+	exit 1
+fi

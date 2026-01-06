@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("production" "staging")
+
+TARGETS=("media" "postgres")
+
+TARGET=$(choose_option "Choose restore target:" "${TARGETS[@]}")
+TEMPLATE_FILE="configs/restore_volsync_${TARGET}.template.yaml"
+
+# Source the helper: sets RESTORE_YAML and provides wait_for_restore()
+source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
+
+# --- Scenario-specific steps ---
+section "Suspending Flux reconciliation for wodore..."
+flux suspend kustomization app-wodore-${SRC_NAMESPACE}
+
+section "Scaling down deployment wodore backend..."
+kubectl scale deployment wd-backend --replicas=0 -n "$SRC_NAMESPACE"
+
+# Scale down postgres cluster if restoring database
+if [[ "$TARGET" == "postgres" ]]; then
+	section "Scaling down postgres cluster..."
+	kubectl annotate cluster wd-backend-postgres cnpg.io/hibernation=on --overwrite -n "$SRC_NAMESPACE"
+	info "Waiting for postgres cluster to hibernate..."
+	sleep 5
+fi
+
+section "Applying restore manifest..."
+echo "$RESTORE_YAML" | kubectl apply -f -
+
+wait_for_restore
+
+# Scale up postgres cluster if it was scaled down
+if [[ "$TARGET" == "postgres" ]]; then
+	section "Scaling up postgres cluster..."
+	kubectl annotate cluster wd-backend-postgres cnpg.io/hibernation=off --overwrite -n "$SRC_NAMESPACE"
+	info "Waiting for postgres cluster to be ready..."
+	kubectl wait --for=condition=Ready --timeout=300s cluster/wd-backend-postgres -n "$SRC_NAMESPACE" || true
+fi
+
+section "Scaling deployment wodore backend back up..."
+kubectl scale deployment wd-backend --replicas=1 -n "$SRC_NAMESPACE"
+
+section "Waiting for deployment to be ready..."
+kubectl wait --for=condition=available --timeout=300s deployment/wd-backend -n "$SRC_NAMESPACE" || true
+
+section "Resuming Flux reconciliation for all apps..."
+flux resume kustomization app-wodore-${SRC_NAMESPACE}
+
+success "Restore scenario completed successfully."

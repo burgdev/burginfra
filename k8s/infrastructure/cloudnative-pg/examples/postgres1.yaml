@@ -1,0 +1,91 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cloudnative-pg-postgres1
+  namespace: development
+spec:
+  instances: 1
+  storage:
+    storageClass: fast-local-data-v1
+    size: 500Mi
+
+  # Bootstrap with database and users
+  bootstrap:
+    initdb:
+      database: example
+      owner: example
+      # Note: CNPG will read the password from this secret during init
+      # The secret must exist before the cluster is created
+      #secret:
+      #  name: zitadel-postgres-credentials
+      #postInitSQL:
+      #  # Grant privileges needed for Zitadel to manage its schema
+      #  - ALTER USER zitadel WITH CREATEROLE CREATEDB;
+
+  ## Managed roles - CNPG will sync password from secret automatically
+  #managed:
+  #  roles:
+  #    - name: zitadel
+  #      ensure: present
+  #      login: true
+  #      passwordSecret:
+  #        name: zitadel-postgres-credentials
+
+  #superuserSecret:
+  #  name: zidatel-postgres-superuser
+  #enableSuperuserAccess: true
+
+  # Resource limits - optimized for single node
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # PostgreSQL Configuration - optimized for small deployments
+  postgresql:
+    parameters:
+      # Connection settings
+      max_connections: "50"
+
+      # Memory settings (conservative for 512Mi limit)
+      shared_buffers: "128MB"
+      effective_cache_size: "256MB"
+      maintenance_work_mem: "32MB"
+      work_mem: "2MB"
+
+      # WAL settings
+      wal_buffers: "4MB"
+      min_wal_size: "256MB"
+      max_wal_size: "1GB"
+      checkpoint_completion_target: "0.9"
+
+      # Query planner
+      default_statistics_target: "100"
+      random_page_cost: "1.1" # SSD optimized
+      effective_io_concurrency: "200"
+
+      # Logging (minimal for performance)
+      log_checkpoints: "on"
+      log_connections: "off"
+      log_disconnections: "off"
+      log_lock_waits: "on"
+
+  # Backup configuration (optional, can be added later)
+  # backup:
+  #   barmanObjectStore:
+  #     destinationPath: s3://your-bucket/zitadel-postgres
+  #     s3Credentials:
+  #       accessKeyId:
+  #         name: backup-credentials
+  #         key: ACCESS_KEY_ID
+  #       secretAccessKey:
+  #         name: backup-credentials
+  #         key: SECRET_ACCESS_KEY
+  #     wal:
+  #       compression: gzip
+  #     data:
+  #       compression: gzip
+  #   retentionPolicy: "30d"

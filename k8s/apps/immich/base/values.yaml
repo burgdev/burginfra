@@ -1,0 +1,186 @@
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          tag: v2.4.1
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        env:
+          IMMICH_MEDIA_LOCATION: /data
+          DB_HOSTNAME:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-superuser
+                key: host
+          DB_USERNAME:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-superuser
+                key: user
+          DB_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-superuser
+                key: password
+          #DB_DATABASE_NAME:
+          #  valueFrom:
+          #    secretKeyRef:
+          #      name: immich-postgres-superuser
+          #      key: dbname
+valkey:
+  enabled: true
+  persistence:
+    data:
+      type: persistentVolumeClaim
+      storageClassName: fast-local-data-v3
+
+machine-learning:
+  resources:
+    requests:
+      memory: "1.5Gi"
+      cpu: "500m"
+    limits:
+      memory: "3Gi"
+      cpu: "2000m"
+  persistence:
+    cache:
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      storageClassName: fast-local-data-v3
+
+server:
+  persistence:
+    external:
+      enabled: true
+      type: persistentVolumeClaim
+      mountPath: /mnt/external
+      readOnly: true
+      existingClaim: immich-external-pvc-v2
+  ingress:
+    main:
+      enabled: true
+      annotations:
+        cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+      tls:
+        - secretName: immich-${ENVIRONMENT}-tls
+          hosts:
+            - pix.${ENV_SUBDOMAIN}${CRUXLI_HOST}
+      hosts:
+        - host: pix.${ENV_SUBDOMAIN}${CRUXLI_HOST}
+          paths:
+            - path: "/"
+              service:
+                identifier: main
+
+immich:
+  persistence:
+    library:
+      existingClaim: immich-library-pvc-v2
+  configuration:
+    backup:
+      database:
+        cronExpression: "0 02 * * *"
+        enabled: true
+        keepLastAmount: 7
+    image:
+      colorspace: p3
+      extractEmbedded: false
+      fullsize:
+        enabled: false
+        format: webp
+        quality: 80
+      preview:
+        format: webp
+        quality: 65
+        size: 1440
+      thumbnail:
+        format: webp
+        quality: 50
+        size: 250
+    library:
+      scan:
+        #  m h d M d   # e.g. 0/10 * * * * every 10 minutes
+        cronExpression: "* 0 * * *" # every day
+        enabled: true
+      watch: # experimental
+        enabled: false
+    logging:
+      enabled: true
+      level: log
+    machineLearning:
+      enabled: true
+      clip:
+        enabled: true
+        modelName: "ViT-L-16-SigLIP2-256__webli"
+      duplicateDetection:
+        enabled: true
+        maxDistance: 0.01
+      facialRecognition:
+        enabled: true
+        maxDistance: 0.5
+        minFaces: 5
+        minScore: 0.7
+        modelName: "buffalo_l"
+    server:
+      externalDomain: https://pix.${ENV_SUBDOMAIN}${CRUXLI_HOST}
+      loginPageMessage: <div>${WELCOME_TEXT_HTML}</div>
+      publicUsers: true
+    map:
+      enabled: true
+      darkStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=${MAPTILER_KEY}
+      lightStyle: https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=${MAPTILER_KEY}
+    metadata:
+      faces:
+        import: true
+    newVersionCheck:
+      enabled: false
+    nightlyTasks:
+      clusterNewFaces: true
+      databaseCleanup: true
+      generateMemories: true
+      missingThumbnails: true
+      startTime: "02:30"
+      syncQuotaUsage: true
+    notifications:
+      smtp:
+        enabled: true
+        from: "Cruxli Pix <${SMTP_SENDER}>"
+        replyTo: "${BURGDEV_EMAIL}"
+        transport:
+          host: ${SMTP_HOST}
+          ignoreCert: false
+          password: ${SMTP_PASSWORD}
+          port: ${SMTP_PORT}
+          username: ${SMTP_USERNAME}
+          secure: ${SMTP_TLS_BOOL}
+    storageTemplate:
+      enabled: true
+      hashVerificationEnabled: true
+      template: "{{#if album}}{{album-startDate-y}}/{{album-startDate-yy}}{{album-startDate-MM}}_{{{album}}}{{else}}{{y}}/_{{yy}}{{MM}}_NoAlbum{{/if}}/{{yy}}{{MM}}{{dd}}{{hh}}{{mm}}_{{filetype}}_{{assetIdShort}}"
+    templates:
+      email:
+        albumInviteTemplate: ""
+        albumUpdateTemplate: ""
+        welcomeTemplate: ""
+        #    theme:
+        #      customCss: |
+        #        .dark {
+        #          --immich-ui-light: 40 44 52
+        #          --immich-ui-dark: 229 231 235
+        #        }
+        #        :root, .light {
+        #          --immich-ui-dark: 20 22 26
+        #          --immich-ui-light: 240 244 248
+        #        }
+        #
+    trash:
+      days: 30
+      enabled: true
+    user:
+      deleteDelay: 7

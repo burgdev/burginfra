@@ -1,0 +1,11 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cloudnative-pg-postgres2
+  namespace: development
+spec:
+  instances: 1
+  storage:
+    storageClass: fast-local-data-v1
+    size: 500Mi
+  enableSuperuserAccess: true

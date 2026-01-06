@@ -1,0 +1,31 @@
+# WD-BACKEND POSTGRES - volsync
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationDestination
+metadata:
+  name: ${CLUSTER}-wd-backend-postgres # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  trigger:
+    manual: restore-wd-backend-postgres-${TIMESTAMP}
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+
+    destinationPVC: wd-backend-postgres-1
+    copyMethod: Direct
+    enableFileDeletion: false
+
+    # Cache configuration to avoid emptyDir on root filesystem
+    cacheCapacity: 10Gi
+    cacheAccessModes:
+      - ReadWriteOnce
+
+    sourceIdentity:
+      sourceName: ${SRC_CLUSTER}-wd-backend-postgres
+      sourceNamespace: ${SRC_NAMESPACE}
+
+    moverSecurityContext:
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+---
+

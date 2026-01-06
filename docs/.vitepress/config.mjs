@@ -15,12 +15,13 @@ const vitePressOptions = {
     ['link', { rel: 'icon', href: '/assets/logo_web.png' }],
     ['link', { rel: 'apple-touch-icon', href: '/assets/logo_web.png', sizes: '180x180' }],
     ['link', { rel: 'mask-icon', href: '/assets/logo_only.svg', color: '#ffffff' }],
-    ['meta', { name: 'theme-color', content: '#ffffff' }]
+    ['meta', { name: 'theme-color', content: '#ffffff' }],
+    ['link', { rel: 'stylesheet', href: '/theme/custom.css' }]
   ],
   
   // Site metadata
   title: 'BurgInfra',
-  description: 'Infrastructure documentation for BurgDev',
+  description: 'Management documentation for BurgDev',
   
   // Vite configuration
   vite: {
@@ -43,7 +44,7 @@ const vitePressOptions = {
     langMenuLabel: 'Change language',
     editLink: {
       pattern: 'https://github.com/burgdev/burginfra/edit/main/docs/:path',
-      text: 'Edit this page'
+      text: 'Edit'
     },
     docFooter: {
       prev: 'Previous page',
@@ -55,27 +56,30 @@ const vitePressOptions = {
       { text: 'Home', link: '/' },
       { text: 'Services',
         items: [
-          { text: 'pix.crux.li', link: '/services/pix.crux.li' },
-          { text: 'wodo.re', link: '/services/wodo.re' },
+          { text: 'pix.crux.li', link: '/Services/pix.crux.li' },
+          { text: 'wodo.re', link: '/Services/wodo.re' },
         ]
       },
       { text: 'Documentation',
         items: [
-          { text: 'Applications', link: '/apps/' },
-          { text: 'Infrastructure', items: [
-            { text: 'Docker', link: '/infrastructure/docker/' },
-            { text: 'Kubernetes', link: '/infrastructure/kubernetes/' },
-          ] },
-          { text: 'Scripts', link: '/scripts/' }
+          { text: 'Applications', link: '/Applications/' },
+          { text: 'Scripts', link: '/Management/Scripts/' },
+          { items: [
+            { text: 'Linux', link: '/Management/Linux/' },
+            { text: 'Kubernetes', link: '/Management/Kubernetes/' },
+            { text: 'Docker', link: '/Management/Docker/' },
+          ]},
         ]
       },
-      {
-        text: 'Links',
-        items: [
-          { text: 'GitHub', link: 'https://github.com/burgdev/burginfra' },
-        ]
-      }
+      //{
+      //  text: 'Links',
+      //  items: [
+      //    { text: 'GitHub', link: 'https://github.com/burgdev/burginfra' },
+      //  ]
+      //}
     ],
+    
+    outline: [2,4],
 
     // Social links
     socialLinks: [
@@ -121,15 +125,22 @@ const vitePressSidebarOptions = {
   documentRootPath: '/docs',
   collapsed: true,
   collapseDepth: 2,
-  capitalizeFirst: true,
+  capitalizeFirst: false,
   excludeByGlobPattern: ['README.md'],
   useTitleFromFrontmatter: true,
+  useTitleFromFileHeading: true,
   sortMenusByFrontmatterOrder: true,
   frontmatterOrderDefaultValue: 100,
   excludeFilesByFrontmatterFieldName: 'exclude',
   excludeByFolderDepth: 6,
-  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md"],
-  includeFolderIndexFile: true
+  manualSortFileNameByPriority: ["index.md", "overview.md", "setup.md", "Overview", "Installation", "Applications", "Management", "Infrastructure", "Scripts", "Linux", "Kubernetes", "Docker"],
+  includeFolderIndexFile: true,
+  useFolderTitleFromIndexFile: false,
+  //removePrefixAfterOrdering: true,
+  //prefixSeparator: /[0-9]{2}_/g,
+  //prefixSeparator: '_',
+  keepMarkdownSyntaxFromTitle: true,
+  //sortMenusOrderNumericallyFromLink: true
 };
 
 export default defineConfig(withSidebar(vitePressOptions, vitePressSidebarOptions))

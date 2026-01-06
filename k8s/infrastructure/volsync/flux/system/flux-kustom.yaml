@@ -1,0 +1,49 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: helm-volsync-system
+  namespace: flux-system # do not change!
+#dependsOn:
+#- name: base-configs  # optional, only if you have one
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/infrastructure/volsync/helm/overlays/staging"
+  prune: true
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAME: "volsync"
+      NAMESPACE: "burginfra-system"
+      ENVIRONMENT: "system"
+      REPO_INTERVAL: "1h0s"
+      SOURCE_INTERVAL: "1h0s"
+      CHART_VERSION: "0.17.x"
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-volsync-burginfra-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
+  path: "./k8s/infrastructure/volsync/base"
+  dependsOn:
+    - name: helm-volsync-system
+    - name: infra-openebs-system
+  prune: true
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAME: "volsync"
+      NAMESPACE: "burginfra-system"
+      COMPONENT: "backup"
+      ENVIRONMENT: "system"

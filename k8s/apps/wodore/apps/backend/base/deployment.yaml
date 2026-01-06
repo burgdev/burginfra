@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-backend
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 120
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: wd-backend
+  template:
+    metadata:
+      labels:
+        app: wd-backend
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: "OnRootMismatch"
+      terminationGracePeriodSeconds: 60
+      containers:
+        # Django backend container
+        - name: backend
+          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
+          imagePullPolicy: Always
+          command:
+            - gunicorn
+            - -b
+            - 0.0.0.0:8008
+            - -w
+            - "3"
+            - --preload
+            - server.wsgi:application
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            fsGroup: 1001
+          ports:
+            - name: http
+              containerPort: 8008
+              protocol: TCP
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
+          env:
+            # Imagor settings
+            - name: IMAGOR_URL
+              value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
+            - name: IMAGOR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wd-imagor-config-secret
+                  key: IMAGOR_SECRET
+            # E-Mail (smtp settings in secrets.yaml)
+            - name: DEFAULT_FROM_EMAIL
+              value: "Wodore Info <info@${WODORE_HOST}>"
+            - name: DJANGO_ADMIN_EMAILS
+              value: "Wodore Admin <${WODORE_EMAIL}>"
+            - name: EMAIL_ADMIN_FROM_EMAIL
+              value: "Wodore Admin <info@${WODORE_HOST}>"
+            - name: EMAIL_DEFAULT_FROM_EMAIL
+              value: "Wodore Info <info@${WODORE_HOST}>"
+            # Database connection (CNPG service)
+            - name: DJANGO_DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: host
+            - name: DJANGO_DATABASE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: dbname
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: password
+          envFrom:
+            - secretRef:
+                name: "wd-backend-envvars"
+            - secretRef:
+                name: "wd-backend-smtp-envvars"
+          volumeMounts:
+            - name: media
+              mountPath: /code/media
+            - name: py-cache
+              mountPath: /tmp/py_file_cache/joblib
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 3
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              memory: 600Mi
+        # Nginx static media server container
+        - name: media
+          image: flashspys/nginx-static:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+            runAsGroup: 0
+            fsGroup: 0
+          ports:
+            - name: media
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: media
+              mountPath: /static/media
+              readOnly: true
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: wd-backend-media-v1
+        - name: py-cache
+          persistentVolumeClaim:
+            claimName: wd-backend-py-cache-v1

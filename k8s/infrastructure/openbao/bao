@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+
+# Default values
+NAMESPACE="burginfra-system"
+CLUSTER=""
+OPENBAO_POD=""
+ROLE="openbao-secrets-manager"
+SERVICE_ACCOUNT="openbao-secrets-manager"
+
+usage() {
+	cat <<EOF
+Usage: $0 -c CLUSTER [-n NAMESPACE] [-r ROLE] [-s SA_NAME] -- BAO_COMMAND [ARGS...]
+
+Wrapper script to execute OpenBao commands using Kubernetes authentication.
+This script authenticates using a service account token and runs bao commands
+inside the OpenBao pod.
+
+Options:
+    -c CLUSTER      Cluster context name (required)
+    -n NAMESPACE    Kubernetes namespace where OpenBao is running (default: $NAMESPACE)
+    -r ROLE         OpenBao role to use for authentication (default: $ROLE)
+    -s SA_NAME      Service account name to use for authentication (default: $SERVICE_ACCOUNT)
+    -h              Show this help message
+
+Arguments after '--':
+    BAO_COMMAND     The bao command to execute (e.g., kv put, kv get, etc.)
+    [ARGS...]       Arguments for the bao command
+
+Examples:
+    # List secrets
+    $0 -c local -- kv list kv/infrastructure
+
+    # Get a secret
+    $0 -c local -- kv get kv/infrastructure/zitadel/burginfra-staging
+
+    # Put a secret
+    $0 -c local -- kv put kv/infrastructure/example/staging key1=value1 key2=value2
+
+    # Delete a secret
+    $0 -c local -- kv delete kv/infrastructure/example/staging
+
+    # Use staging namespace
+    $0 -c local -n burginfra-staging -r openbao-secrets-manager -- kv list kv/infrastructure
+EOF
+	exit 1
+}
+
+# Parse options before --
+BAO_ARGS=()
+while [[ $# -gt 0 ]]; do
+	case $1 in
+	-c)
+		CLUSTER="$2"
+		shift 2
+		;;
+	-n)
+		NAMESPACE="$2"
+		shift 2
+		;;
+	-r)
+		ROLE="$2"
+		shift 2
+		;;
+	-s)
+		SERVICE_ACCOUNT="$2"
+		shift 2
+		;;
+	-h)
+		usage
+		;;
+	--)
+		shift
+		BAO_ARGS=("$@")
+		break
+		;;
+	*)
+		error "Unknown option: $1"
+		usage
+		;;
+	esac
+done
+
+# Validate required arguments
+if [ -z "$CLUSTER" ]; then
+	error "-c CLUSTER is required"
+	usage
+fi
+
+if [ ${#BAO_ARGS[@]} -eq 0 ]; then
+	error "No bao command specified after '--'"
+	usage
+fi
+
+cluster_check "$CLUSTER"
+
+# Check if namespace exists
+if ! kubectl get namespace "$NAMESPACE" &>/dev/null; then
+	error "Namespace '$NAMESPACE' does not exist"
+	exit 1
+fi
+
+# Check if service account exists
+if ! kubectl get serviceaccount "$SERVICE_ACCOUNT" -n "$NAMESPACE" &>/dev/null; then
+	error "ServiceAccount '$SERVICE_ACCOUNT' does not exist in namespace '$NAMESPACE'"
+	info "Please create it first or specify a different service account with -s"
+	exit 1
+fi
+
+# Find OpenBao pod
+OPENBAO_POD=$(kubectl get pod -n "$NAMESPACE" -l app.kubernetes.io/name=openbao -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+
+if [ -z "$OPENBAO_POD" ]; then
+	error "Could not find OpenBao pod in namespace '$NAMESPACE'"
+	info "Make sure OpenBao is deployed with label 'app.kubernetes.io/name=openbao'"
+	exit 1
+fi
+
+# Check if we can exec into the pod
+if ! kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- echo "test" &>/dev/null; then
+	error "Cannot exec into OpenBao pod - pod may not be running yet"
+	info "Current pod status:"
+	kubectl get pod "$OPENBAO_POD" -n "$NAMESPACE"
+	exit 1
+fi
+
+# Get service account token (minimum 10 minutes required by Kubernetes)
+SA_TOKEN=$(kubectl create token "$SERVICE_ACCOUNT" -n "$NAMESPACE" --duration=10m 2>&1)
+TOKEN_EXIT=$?
+if [ $TOKEN_EXIT -ne 0 ]; then
+	error "Failed to get service account token for '$SERVICE_ACCOUNT'"
+	error "Output: $SA_TOKEN"
+	exit 1
+fi
+if [ -z "$SA_TOKEN" ]; then
+	error "Service account token is empty"
+	exit 1
+fi
+
+# Create a temporary script to run inside the pod
+TEMP_SCRIPT=$(mktemp)
+trap "rm -f $TEMP_SCRIPT" EXIT
+
+# Escape arguments for shell
+escape_arg() {
+	printf '%s\n' "$1" | sed "s/'/'\\\\''/g; 1s/^/'/; \$s/\$/'/"
+}
+
+# Build the bao command with escaped arguments
+BAO_CMD="bao"
+for arg in "${BAO_ARGS[@]}"; do
+	BAO_CMD="$BAO_CMD $(escape_arg "$arg")"
+done
+
+cat >"$TEMP_SCRIPT" <<EOFSCRIPT
+#!/bin/sh
+set -e
+
+export BAO_ADDR="http://localhost:8200"
+
+# Authenticate using Kubernetes service account token
+echo "DEBUG: Authenticating to OpenBao..." >&2
+echo "DEBUG: Role: $ROLE" >&2
+BAO_TOKEN=\$(bao write -field=token auth/kubernetes/login role="$ROLE" jwt="$SA_TOKEN" 2>&1)
+AUTH_EXIT=\$?
+if [ \$AUTH_EXIT -ne 0 ]; then
+	echo "ERROR: Failed to authenticate to OpenBao (exit code: \$AUTH_EXIT)" >&2
+	echo "ERROR: Authentication output:" >&2
+	echo "\$BAO_TOKEN" >&2
+	exit 1
+fi
+
+if [ -z "\$BAO_TOKEN" ]; then
+	echo "ERROR: Authentication succeeded but token is empty" >&2
+	exit 1
+fi
+
+echo "DEBUG: Authentication successful" >&2
+export BAO_TOKEN
+
+# Execute the bao command
+echo "DEBUG: Executing command: $BAO_CMD" >&2
+$BAO_CMD
+CMD_EXIT=\$?
+if [ \$CMD_EXIT -ne 0 ]; then
+	echo "ERROR: Command failed with exit code: \$CMD_EXIT" >&2
+	exit \$CMD_EXIT
+fi
+EOFSCRIPT
+
+# Copy script to pod and execute it
+COPY_OUTPUT=$(kubectl cp "$TEMP_SCRIPT" "$NAMESPACE/$OPENBAO_POD:/tmp/bao-wrapper.sh" 2>&1)
+COPY_EXIT=$?
+if [ $COPY_EXIT -ne 0 ]; then
+	error "Failed to copy script to OpenBao pod (exit code: $COPY_EXIT)"
+	error "Output: $COPY_OUTPUT"
+	exit 1
+fi
+
+# Execute the script and capture all output
+EXEC_OUTPUT=$(kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- sh /tmp/bao-wrapper.sh 2>&1)
+EXIT_CODE=$?
+
+# Clean up script from pod
+kubectl exec -n "$NAMESPACE" "$OPENBAO_POD" -- rm -f /tmp/bao-wrapper.sh >/dev/null 2>&1 || true
+
+# Display output
+echo "$EXEC_OUTPUT"
+
+# Exit with the command's exit code
+if [ $EXIT_CODE -ne 0 ]; then
+	error "Command failed with exit code: $EXIT_CODE"
+fi
+
+exit $EXIT_CODE

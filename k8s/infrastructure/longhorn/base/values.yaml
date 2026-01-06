@@ -1,0 +1,33 @@
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 1
+  reclaimPolicy: Delete
+defaultSettings:
+  defaultDataPath: /mnt/kubernetes/longhorn
+  defaultReplicaCount: "1"
+  # privacy
+  allowCollectingLonghornUsageMetrics: false
+  # how much space to use
+  storageOverProvisioningPercentage: "100" # Allows 100% overprovisioning
+  storageMinimalAvailablePercentage: "15" # Only require 5% free space
+  storageReservedPercentageForDefaultDisk: "5" # Only reserve 5% for system
+  # these are for single-node stability
+  replicaSoftAntiAffinity: true # Allow scheduling on same node
+  replicaAutoBalance: "disabled" # Don't rebalance replicas
+  #replicaReplenishmentWaitInterval: "0" # Don't try to recreate replicas
+  allowNodeDrainWithLastReplica: true # Safe drain with 1 replica
+  schedulingCheckForVolumeDegraded: false # Prevent "not enough nodes" errors
+  defaultDataLocality: "best-effort" # Keep data on same node
+  guaranteedEngineManagerCPU: 0 # Disable CPU reservations
+  guaranteedReplicaManagerCPU: 0 # Disable CPU reservations
+csi:
+  attacherReplicaCount: 1
+  provisionerReplicaCount: 1
+  resizerReplicaCount: 1
+  snapshotterReplicaCount: 1
+longhornUI:
+  replicas: 1
+
+# disable ingress unless you really need it
+# ingress:
+#   enabled: false

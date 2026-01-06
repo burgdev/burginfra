@@ -1,0 +1,17 @@
+# ImagePolicy for staging environment - uses latest sha-tagged image
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: wd-backend-${NAMESPACE}
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: wd-backend
+    namespace: flux-system # Reference shared ImageRepository in flux-system
+  filterTags:
+    pattern: "^(?P<timestamp>[0-9]{8}T[0-9]{4})-sha-[a-f0-9]+-alpine$" # Match YYYYMMDDTHHmm-sha-abc123-alpine pattern
+    extract: "$timestamp"
+  policy:
+    alphabetical:
+      order: asc # Sort alphabetically (latest selected)
+

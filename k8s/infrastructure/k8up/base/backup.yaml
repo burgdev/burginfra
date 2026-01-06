@@ -1,0 +1,22 @@
+apiVersion: k8up.io/v1
+kind: Backup
+metadata:
+  name: backup-local-test
+  namespace: podinfo-image-local
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  backend:
+    repoPasswordSecretRef:
+      name: restic-password-secret
+      key: RESTIC_PASSWORD
+    local:
+      mountPath: /backups
+      #name: backup-storage
+    volumeMounts:
+      - mountPath: /backups
+        name: backup-storage
+  volumes:
+    - name: backup-storage
+      persistentVolumeClaim:
+        claimName: rclone-remote-backup-pvc

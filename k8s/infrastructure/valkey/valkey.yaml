@@ -1,0 +1,51 @@
+# IMMICH NAMESPACE ================================= immich ==
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: valkey
+---
+# PRESISTEND VOLUME ===========================================
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: valkey-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  hostPath:
+    #path: /home/tobias/mnt/k8s/valkey
+    path: /mnt/kubernetes/volumes/valkey/data
+    type: DirectoryOrCreate
+---
+# PRESISTEND VOLUME CLAIM =====================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: valkey-data
+  namespace: valkey
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path # or whatever StorageClass you use in k3s
+  volumeName: valkey-data-pv
+---
+# VALKEY HELM ====
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: valkey
+  namespace: valkey
+spec:
+  chart: valkey
+  repo: https://valkey.io/valkey-helm
+  version: 0.7.4
+  targetNamespace: valkey
+  valuesContent: "" # Will be replaced by kustomize, changes are made in `valkey-values.yaml`
+---
+

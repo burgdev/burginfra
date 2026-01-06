@@ -1,0 +1,32 @@
+# you need to apply any changes made here!
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-settings
+  namespace: flux-system
+data:
+  # TODO: you need to MANUALLY apply any changes made here!
+  #       k-localhost; kubectl apply -f k8s/clusters/flux-system/overlays/local/cluster_settings.yaml
+  #       k-infra-vps1; kubectl apply -f k8s/clusters/flux-system/overlays/burginfra/cluster_settings.yaml
+  CRUXLI_HOST: "crux.li"
+  CRUXLI_EMAIL: "tobias@burgdev.ch"
+  BURGDEV_HOST: "burgdev.ch"
+  BURGDEV_EMAIL: "tobias@burgdev.ch"
+  BURGINFRA_HOST: "infra.burgdev.ch"
+  WODORE_HOST: "wodore.com"
+  WODORE_EMAIL: "info@wodore.com"
+  WODO_HOST: "wodo.re"
+  WODO_EMAIL: "info@wodo.re"
+  CLUSTER: "burginfra"
+  KUBE_VERSION: "1.33.6" # Server version: v1.33.6+k3s1
+  KUBE_TOOLS_VERSION: "1.33.7" # alpine/k8s image tag version (1.33.6 doesn't exist)
+  CERT_ISSUER_STAGING: "letsencrypt-staging"
+  CERT_ISSUER_PROD: "letsencrypt-prod"
+  IMMICH_LIBRARY_STORAGE_SIZE: "200Gi"
+  IMMICH_EXTERNAL_STORAGE_SIZE: "100Gi"
+  IMMICH_DB_STORAGE_SIZE: "10Gi"
+  WD_IMAGOR_STORAGE_SIZE: "30Gi"
+  WD_BACKEND_MEDIA_STORAGE_SIZE: "40Gi"
+  WD_BACKEND_PY_CACHE_STORAGE_SIZE: "5Gi"
+  WD_BACKEND_DB_STORAGE_SIZE: "10Gi"
+  IMAGE_AUTOMATION_SUSPEND: "false" # enable image automation on burginfra cluster

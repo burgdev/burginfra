@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ${NAMESPACE}
+commonLabels:
+  app.kubernetes.io/name: openbao
+  app.kubernetes.io/component: secrets
+  app.kubernetes.io/part-of: infrastructure
+  app.kubernetes.io/environment: ${ENVIRONMENT}
+  app.kubernetes.io/managed-by: flux
+resources:
+  - helmrelease.yaml
+  - serviceaccount.yaml
+  - ingress.yaml
+  - rbac.yaml
+  - job-policies.yaml
+  # - certificate.yaml # not used
+secretGenerator: # use secret, this way variables are not replaced
+  - name: openbao-config-script
+    files:
+      - configure-policies.sh
+    options:
+      disableNameSuffixHash: true
+configMapGenerator:
+  - name: openbao-values
+    files:
+      - values.yaml=values.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: openbao-policies
+    files:
+      # NOTE: When adding a new policy, also add a VaultAuth resource in:
+      # k8s/infrastructure/vault-secrets-operator/base/vaultauth.yaml
+      - policies/openbao-admin.hcl
+      - policies/openbao-secrets-manager.hcl
+      - policies/apps-kv-staging.hcl
+      - policies/apps-kv-production.hcl
+      - policies/apps-kv-all.hcl
+      - policies/apps-kv-flux.hcl
+      - policies/infra-kv-staging.hcl
+      - policies/infra-kv-system.hcl
+      - policies/infra-kv-all.hcl
+      - policies/configs-kv-all.hcl
+    options:
+      disableNameSuffixHash: true

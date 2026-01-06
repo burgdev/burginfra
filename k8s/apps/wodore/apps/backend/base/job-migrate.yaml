@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wd-backend-migrate
+  annotations:
+    # This annotation tells Flux to recreate the job on each reconciliation
+    kustomize.toolkit.fluxcd.io/force: "enabled"
+spec:
+  # Auto-cleanup completed jobs after 5 minutes
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: wd-backend-migrate
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+        - name: migrate
+          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
+          imagePullPolicy: Always
+          command:
+            - python
+            - manage.py
+            - migrate
+            - --noinput
+          env:
+            # Database connection (CNPG service)
+            - name: DJANGO_DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: host
+            - name: DJANGO_DATABASE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: dbname
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: password
+          envFrom:
+            - secretRef:
+                name: "wd-backend-envvars"
+            - secretRef:
+                name: "wd-backend-smtp-envvars"
+          volumeMounts:
+            - name: media
+              mountPath: /code/media
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: wd-backend-media-v1

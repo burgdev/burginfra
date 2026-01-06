@@ -1,0 +1,39 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: ${CLUSTER}-openbao-data # 'username' for kopia
+  namespace: ${NAMESPACE}
+spec:
+  sourcePVC: data-openbao-0
+  trigger:
+    schedule: "*/60 * * * *" # every 30 minutes
+    #manual: backup-01
+  kopia:
+    repository: volsync-kopia-webdav-secrets
+    policyConfig:
+      configMapName: kopia-policies
+
+    # Overwrite Retention Policy
+    retain:
+      hourly: 24
+      daily: 4
+      weekly: 2
+      monthly: 1
+      yearly: 0
+
+    #actions:
+    #  beforeSnapshot: |
+    #    echo "[Auto] Start at $(date)" >> /data/backup.log
+
+    #  afterSnapshot: |
+    #    echo "[Auto] Finished at $(date)" >> /data/backup.log
+
+    # Use snapshot for point-in-time consistency
+    # Snapshot is not supported yet https://github.com/openebs/openebs/issues/4071
+    # copyMethod: Snapshot
+    copyMethod: Direct
+
+    moverSecurityContext:
+      runAsUser: 100
+      runAsGroup: 1000
+      fsGroup: 1000

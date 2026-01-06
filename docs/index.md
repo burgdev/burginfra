@@ -14,13 +14,13 @@ hero:
       text: Applications
       link: /apps/
     - theme: alt
-      text: Infrastructure
+      text: Management
       link: /infrastructure/
 features:
   #- title: Applications
   #  details: Documentation for individual applications and services
   #  link: /apps/
-  #- title: Infrastructure
+  #- title: Management
   #  details: Docker, Kubernetes, and networking configurations
   #  link: /infrastructure/
   #- title: Scripts

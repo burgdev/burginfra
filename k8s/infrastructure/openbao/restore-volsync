@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("burginfra-system" "burginfra-staging")
+
+# Source the helper: sets RESTORE_YAML and provides wait_for_restore()
+source "${ROOT_DIR}/scripts/k8s/_restore_volsync.sh"
+
+# --- Scenario-specific steps ---
+section "Scaling down StatefulSet openbao..."
+kubectl scale statefulset openbao --replicas=0 -n "$SRC_NAMESPACE"
+
+section "Applying restore manifest..."
+echo "$RESTORE_YAML" | kubectl apply -f -
+
+# check for unseal keys:
+title "Check for unseal key"
+./set-unseal-keys -n "$SRC_NAMESPACE" -c "$CLUSTER"
+
+wait_for_restore
+
+section "Scaling StatefulSet openbao back up..."
+kubectl scale statefulset openbao --replicas=1 -n "$SRC_NAMESPACE"
+
+section "Waiting for StatefulSet to be ready..."
+kubectl wait --for=jsonpath='{.status.readyReplicas}'=1 --timeout=300s statefulset/openbao -n "$SRC_NAMESPACE" || true
+
+section "Update kubernetes config..."
+# Prompt for root token if not set
+if [ -z "${BAO_TOKEN:-}" ]; then
+	read -rsp "Enter OpenBao root token: " BAO_TOKEN
+	echo
+	export BAO_TOKEN
+fi
+
+kubectl -n $SRC_NAMESPACE exec -it openbao-0 -- sh -c "
+export BAO_TOKEN='$BAO_TOKEN'
+bao login \"\$BAO_TOKEN\" >/dev/null 2>&1 || { echo 'Failed to login to OpenBao'; exit 1; }
+bao write auth/kubernetes/config \
+  token_reviewer_jwt=\"\$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" \
+  kubernetes_host=\"https://kubernetes.default.svc:443\" \
+  kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+"
+
+success "Restore scenario completed successfully."

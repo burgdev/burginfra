@@ -1,0 +1,14 @@
+[Unit]
+Description=Sync Kubernetes Local CA Certificates Timer
+Requires=k8s-local-ca-sync.service
+
+[Timer]
+# Run on boot
+OnBootSec=2min
+# Run every hour
+OnUnitActiveSec=1h
+# Run if the system was powered off during a scheduled run
+Persistent=true
+
+[Install]
+WantedBy=timers.target

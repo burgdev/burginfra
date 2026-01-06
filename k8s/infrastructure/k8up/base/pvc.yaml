@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rclone-remote-backup-pvc
+  namespace: podinfo-image-local
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: remote-data
+  resources:
+    requests:
+      storage: 10Gi

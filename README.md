@@ -12,6 +12,29 @@
 ---
 <!-- # --8<-- [start:readme_index] <!-- -->
 
+## Initial Setup
+
+### Local
+
+```bash
+just flux bootstrap
+kubectl get pods -n flux-system # wait until ready
+just flux create-deploy-key local
+# add deploy key to github
+just flux deploy local
+```
+
+Check connection:
+
+```bash
+just flux gitrepos
+```
+
+Force uodate:
+
+```bash
+just flux reconcile
+```
 
 <!-- # --8<-- [end:readme_index] <!-- -->
 

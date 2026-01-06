@@ -1,0 +1,20 @@
+# https://github.com/openebs/openebs/blob/develop/charts/values.yaml
+engines:
+  local:
+    zfs:
+      enabled: false
+    rawfile:
+      enabled: false
+  replicated:
+    mayastor:
+      enabled: false
+loki:
+  enabled: false
+alloydb:
+  enabled: false
+lvm-localpv:
+  storageCapacity: false  # Disable capacity tracking to allow thin provisioning over-commitment
+  crds:
+    csi:
+      volumeSnapshots:
+        enabled: false

@@ -1,0 +1,124 @@
+#!/bin/bash
+# Note: Continue even if validation fails to send error heartbeat
+set +e
+
+# ============================================================================
+# Generic PostgreSQL Post-Snapshot Validation Script for CloudNativePG
+# ============================================================================
+# This script validates the backup and sends optional heartbeat notifications.
+#
+# Usage:
+#   bash /kopia-config/post-snapshot-postgres.sh -c <config_file>
+#
+# Parameters:
+#   -c config_file: Path to config file (default: /tmp/backup-config.env)
+#
+# Required configuration (loaded from config file):
+# - NAMESPACE: Kubernetes namespace
+# - CNPG_CLUSTER_NAME: CloudNativePG cluster name
+# - BACKUP_FILENAME: SQL dump filename
+# - MIN_DUMP_SIZE: Minimum valid dump size in bytes
+# - MAX_DUMP_AGE: Maximum age in seconds
+# - HEARTBEAT_URL: Optional heartbeat URL (leave empty to skip)
+# ============================================================================
+
+# Parse parameters
+CONFIG_FILE="/tmp/backup-config.env"
+while getopts "c:" opt; do
+	case $opt in
+	c) CONFIG_FILE="$OPTARG" ;;
+	*)
+		echo "ERROR: Invalid option" >&2
+		exit 1
+		;;
+	esac
+done
+
+# Load configuration from pre-snapshot
+if [ ! -f "$CONFIG_FILE" ]; then
+	echo "ERROR: Configuration file $CONFIG_FILE not found"
+	exit 1
+fi
+. "$CONFIG_FILE"
+
+echo "==> [$(date)] Post-backup validation starting for $CNPG_CLUSTER_NAME..."
+
+# Source kubectl (adds kubectl to PATH)
+. /kopia-config/source-kubectl.sh
+
+VALIDATION_FAILED=0
+ERROR_MSG=""
+
+# Find postgres pod dynamically
+echo "==> Finding postgres pod..."
+POSTGRES_POD=$(kubectl get pods -n "$NAMESPACE" -l cnpg.io/cluster=$CNPG_CLUSTER_NAME -o jsonpath='{.items[0].metadata.name}')
+if [ -z "$POSTGRES_POD" ]; then
+	echo "ERROR: Could not find pod for cluster: $CNPG_CLUSTER_NAME"
+	VALIDATION_FAILED=1
+	ERROR_MSG="Postgres pod not found"
+fi
+
+# Helper function to execute commands in postgres pod
+postgres_exec() {
+	kubectl exec -n "$NAMESPACE" "$POSTGRES_POD" -c postgres -- sh -c "$1"
+}
+
+# Validate SQL dump exists (check inside postgres pod)
+if [ $VALIDATION_FAILED -eq 0 ]; then
+	echo "==> Validating backup file in postgres pod..."
+	if ! postgres_exec "test -f \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null; then
+		echo "ERROR: Backup file not found at \$PGDATA/$BACKUP_FILENAME"
+		ERROR_MSG="Backup file not found"
+		VALIDATION_FAILED=1
+	fi
+fi
+
+# Validate dump file size (check inside postgres pod)
+if [ $VALIDATION_FAILED -eq 0 ]; then
+	DUMP_SIZE=$(postgres_exec "stat -c%s \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null || echo 0)
+	if [ "$DUMP_SIZE" -lt $MIN_DUMP_SIZE ]; then
+		echo "ERROR: Backup file too small ($DUMP_SIZE bytes)"
+		ERROR_MSG="Backup file too small: $DUMP_SIZE bytes"
+		VALIDATION_FAILED=1
+	else
+		echo "==> Backup file size: $(numfmt --to=iec-i --suffix=B $DUMP_SIZE)"
+	fi
+fi
+
+# Validate dump file age (created during this backup run, check inside postgres pod)
+if [ $VALIDATION_FAILED -eq 0 ]; then
+	CURRENT_TIME=$(date +%s)
+	DUMP_MTIME=$(postgres_exec "stat -c%Y \"\$PGDATA/$BACKUP_FILENAME\"" 2>/dev/null || echo 0)
+	DUMP_AGE=$((CURRENT_TIME - DUMP_MTIME))
+
+	if [ $DUMP_AGE -gt $MAX_DUMP_AGE ]; then
+		echo "ERROR: Backup file is too old ($DUMP_AGE seconds)"
+		ERROR_MSG="Backup file is stale: $DUMP_AGE seconds old"
+		VALIDATION_FAILED=1
+	else
+		echo "==> Backup file age: $DUMP_AGE seconds (recent)"
+	fi
+fi
+
+# Send heartbeat using helper script
+if [ "$VALIDATION_FAILED" = "0" ]; then
+	bash /kopia-config/send-heartbeat.sh -u "$HEARTBEAT_URL"
+else
+	bash /kopia-config/send-heartbeat.sh -u "$HEARTBEAT_URL" -f
+fi
+
+# Log backup result to data volume
+if [ $VALIDATION_FAILED -eq 0 ]; then
+	echo "[$(date)] Backup completed successfully - size: $(numfmt --to=iec-i --suffix=B $DUMP_SIZE)" >>/data/backup.log
+else
+	echo "[$(date)] Backup FAILED - $ERROR_MSG" >>/data/backup.log
+fi
+
+# Cleanup old logs (keep last 100 lines)
+if [ -f /data/backup.log ]; then
+	tail -n 100 /data/backup.log >/data/backup.log.tmp
+	mv /data/backup.log.tmp /data/backup.log
+fi
+
+echo "==> Post-backup complete"
+exit 0 # Always exit 0 to not fail the VolSync job

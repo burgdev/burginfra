@@ -1,0 +1,17 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-local-media-retain-v3
+provisioner: local.csi.openebs.io
+parameters: # any change here needs a new file and version!
+  storageType: lvm
+  volgroup: ${VG_NAME:-openebs-vg}
+  thinPoolName: ${THINPOOL_NAME:-openebs-vg_thinpool} # Explicitly specify thin pool name
+  fsType: xfs
+  shared: yes
+  thinProvision: "yes" # Enable thin provisioning for snapshot support
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+mountOptions:
+  - noatime

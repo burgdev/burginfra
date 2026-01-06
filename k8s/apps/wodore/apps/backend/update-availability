@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOT_DIR=$(realpath "$SCRIPT_DIR/../../../../../")
+. "$ROOT_DIR/scripts/_base.sh"
+cd "$SCRIPT_DIR"
+
+NAMESPACES=("production" "staging")
+
+# Choose namespace
+NAMESPACE=$(choose_option "Choose namespace:" "${NAMESPACES[@]}")
+
+# Ask if update all
+UPDATE_ALL=$(ask_yes_no "Update all availability records?" "n")
+UPDATE_ALL_FLAG=""
+if [[ "$UPDATE_ALL" == "y" ]]; then
+	UPDATE_ALL_FLAG="--all"
+	info "Will update all availability records"
+else
+	info "Will update only necessary availability records"
+fi
+
+section "Getting wd-backend pod in namespace ${NAMESPACE}..."
+POD_NAME=$(kubectl get pods -n "$NAMESPACE" -l app=wd-backend -o jsonpath='{.items[0].metadata.name}')
+
+if [[ -z "$POD_NAME" ]]; then
+	error "No wd-backend pod found in namespace ${NAMESPACE}"
+	exit 1
+fi
+
+info "Found pod: ${POD_NAME}"
+
+section "Running update_availability command..."
+kubectl exec -it -n "$NAMESPACE" "$POD_NAME" -- ./manage.py update_availability --request-interval 0.01 $UPDATE_ALL_FLAG
+
+success "Availability update completed successfully."

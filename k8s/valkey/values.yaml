@@ -1,9 +1,0 @@
-image:
-  tag: "8.1.4-alpine3.22"
-
-# Persistent storage configuration
-#dataStorage:
-#  # Enable persistent volume claim creation
-#  enabled: true
-#  # Use existing PVC by name (skip dynamic provisioning if set)
-#  persistentVolumeClaimName: "valkey-data-pvc"
