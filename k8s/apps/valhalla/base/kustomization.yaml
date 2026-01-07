@@ -14,3 +14,10 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+
+configMapGenerator:
+  - name: valhalla-download-scripts
+    files:
+      - scripts/download-osm.sh
+      - scripts/download-gtfs.sh
+      - scripts/download-elevation.sh

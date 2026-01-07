@@ -21,41 +21,8 @@ spec:
       initContainers:
         # 1. Download and merge OSM PBF files
         - name: download-osm
-          image: alpine:3.19
-          command: ["/bin/sh"]
-          args:
-            - -c
-            - |
-              set -e
-              apk add --no-cache wget osmium-tool
-
-              echo "=== Downloading OSM data ==="
-              cd /custom_files
-
-              # Parse comma-separated URLs
-              IFS=',' read -ra URLS <<< "$OSM_URLS"
-
-              for url in "$${URLS[@]}"; do
-                url=$(echo "$url" | xargs)  # trim whitespace
-                filename=$(basename "$url")
-                echo "Downloading: $filename"
-                wget -c "$url" -O "$filename" || exit 1
-              done
-
-              # Merge if multiple files exist
-              pbf_count=$(ls -1 *.pbf 2>/dev/null | wc -l)
-              if [ "$pbf_count" -gt 1 ]; then
-                echo "=== Merging $pbf_count PBF files ==="
-                osmium merge *.pbf -o merged.osm.pbf
-                # Keep only merged file
-                find . -name "*.pbf" ! -name "merged.osm.pbf" -delete
-                echo "Merged into: merged.osm.pbf"
-              else
-                echo "Single PBF file, no merge needed"
-              fi
-
-              ls -lh /custom_files/*.pbf
-              echo "=== OSM download complete ==="
+          image: debian:12-slim
+          command: ["/bin/bash", "/scripts/download-osm.sh"]
           env:
             - name: OSM_URLS
               valueFrom:
@@ -65,6 +32,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /custom_files
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -74,52 +44,8 @@ spec:
 
         # 2. Download GTFS transit data
         - name: download-gtfs
-          image: alpine:3.19
-          command: ["/bin/sh"]
-          args:
-            - -c
-            - |
-              set -e
-              apk add --no-cache wget unzip
-
-              echo "=== Downloading GTFS data ==="
-              mkdir -p /custom_files/gtfs_feeds
-              cd /custom_files/gtfs_feeds
-
-              # Parse comma-separated URLs
-              IFS=',' read -ra URLS <<< "$GTFS_URLS"
-
-              index=1
-              for url in "$${URLS[@]}"; do
-                url=$(echo "$url" | xargs)  # trim whitespace
-                feed_dir="feed_$index"
-                mkdir -p "$feed_dir"
-                cd "$feed_dir"
-
-                echo "Downloading GTFS feed $index from: $url"
-
-                if wget -q --spider "$url"; then
-                  wget -O gtfs.zip "$url" || exit 1
-
-                  # Check if it's actually a zip file
-                  if file gtfs.zip | grep -q "Zip"; then
-                    unzip -q gtfs.zip
-                    rm gtfs.zip
-                    echo "GTFS feed $index extracted successfully"
-                  else
-                    echo "WARNING: Downloaded file is not a zip archive, keeping as-is"
-                    mv gtfs.zip gtfs_data
-                  fi
-                else
-                  echo "WARNING: Could not download GTFS feed from $url"
-                fi
-
-                cd ..
-                index=$((index + 1))
-              done
-
-              ls -lhR /custom_files/gtfs_feeds/
-              echo "=== GTFS download complete ==="
+          image: debian:12-slim
+          command: ["/bin/bash", "/scripts/download-gtfs.sh"]
           env:
             - name: GTFS_URLS
               valueFrom:
@@ -129,6 +55,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /custom_files
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -138,70 +67,8 @@ spec:
 
         # 3. Download elevation data
         - name: download-elevation
-          image: alpine:3.19
-          command: ["/bin/sh"]
-          args:
-            - -c
-            - |
-              set -e
-              apk add --no-cache wget unzip file
-
-              echo "=== Downloading elevation data (SRTM HGT) ==="
-              mkdir -p /custom_files/elevation_data
-              cd /custom_files/elevation_data
-
-              # Parse bounds: "45,46,47,48:5,6,7,8,9,10,11" -> lat_range:lon_range
-              LAT_RANGE=$(echo "$ELEVATION_BOUNDS" | cut -d':' -f1)
-              LON_RANGE=$(echo "$ELEVATION_BOUNDS" | cut -d':' -f2)
-
-              IFS=',' read -ra LATS <<< "$LAT_RANGE"
-              IFS=',' read -ra LONS <<< "$LON_RANGE"
-
-              echo "Latitude range: ${LATS[@]}"
-              echo "Longitude range: ${LONS[@]}"
-
-              total=0
-              downloaded=0
-
-              for lat in "$${LATS[@]}"; do
-                lat=$(echo "$lat" | xargs)  # trim whitespace
-                mkdir -p "N$lat"
-
-                for lon in "$${LONS[@]}"; do
-                  lon=$(echo "$lon" | xargs | awk '{printf "%03d", $1}')  # pad to 3 digits
-                  total=$((total + 1))
-
-                  tile="N$${lat}E$${lon}"
-                  echo "Attempting to download: $tile"
-
-                  # Try viewfinderpanoramas.org (high quality, SRTM voids filled)
-                  if wget -q -O "N$lat/${tile}.hgt.zip" \
-                    "http://viewfinderpanoramas.org/dem3/$${tile}.hgt.zip" 2>/dev/null; then
-
-                    if file "N$lat/$${tile}.hgt.zip" | grep -q "Zip"; then
-                      unzip -q -o "N$lat/${tile}.hgt.zip" -d "N$lat/"
-                      rm "N$lat/$${tile}.hgt.zip"
-                      downloaded=$((downloaded + 1))
-                      echo "✓ Downloaded: $tile"
-                    else
-                      rm "N$lat/$${tile}.hgt.zip"
-                      echo "✗ Invalid zip: $tile"
-                    fi
-                  else
-                    echo "✗ Not available: $tile"
-                  fi
-                done
-              done
-
-              echo "=== Elevation download complete ==="
-              echo "Downloaded $downloaded out of $total tiles"
-              ls -lhR /custom_files/elevation_data/
-
-              # Valhalla needs at least some elevation data
-              if [ $downloaded -eq 0 ]; then
-                echo "ERROR: No elevation tiles downloaded!"
-                exit 1
-              fi
+          image: debian:12-slim
+          command: ["/bin/bash", "/scripts/download-elevation.sh"]
           env:
             - name: ELEVATION_BOUNDS
               valueFrom:
@@ -211,6 +78,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /custom_files
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -220,8 +90,8 @@ spec:
 
       containers:
         - name: complete
-          image: alpine:3.19
-          command: ["sh", "-c"]
+          image: debian:12-slim
+          command: ["bash", "-c"]
           args:
             - |
               echo "=== Download Job Complete ==="
@@ -242,3 +112,8 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: valhalla-data
+        - name: scripts
+          configMap:
+            name: valhalla-download-scripts
+            defaultMode: 0555 # rx for all users
+

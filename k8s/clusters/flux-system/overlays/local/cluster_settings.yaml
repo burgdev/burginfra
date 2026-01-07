@@ -7,7 +7,6 @@ metadata:
 data:
   # TODO: you need to MANUALLY apply any changes made here!
   #       k-localhost; kubectl apply -f k8s/clusters/flux-system/overlays/local/cluster_settings.yaml
-  #       k-infra-vps1; kubectl apply -f k8s/clusters/flux-system/overlays/burginfra/cluster_settings.yaml
 
   # === CLUSTER SETTINGS ===
   CLUSTER: "local"
@@ -58,6 +57,6 @@ data:
   VALHALLA_REPLICAS: "1"
   VALHALLA_STORAGE_SIZE: "10Gi"
   VALHALLA_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
-  VALHALLA_GTFS_URLS: "https://opentransportdata.swiss/de/dataset/timetable-2025-gtfs2020/permalink"
+  VALHALLA_GTFS_URLS: "https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
   VALHALLA_ELEVATION_BOUNDS: "45,46,47,48:5,6,7,8,9,10,11" # lat_range:lon_range for Switzerland
 

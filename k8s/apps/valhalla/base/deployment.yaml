@@ -79,7 +79,13 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /custom_files
+            - name: gtfs
+              mountPath: /gtfs_feeds
+              subPath: gtfs_feeds
       volumes:
         - name: data
+          persistentVolumeClaim:
+            claimName: valhalla-data
+        - name: gtfs
           persistentVolumeClaim:
             claimName: valhalla-data
