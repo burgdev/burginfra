@@ -1,5 +1,6 @@
 controllers:
   main:
+    replicas: ${IMMICH_SERVER_REPLICAS}
     containers:
       main:
         image:
@@ -41,6 +42,7 @@ valkey:
       storageClassName: fast-local-data-v3
 
 machine-learning:
+  replicas: ${IMMICH_ML_REPLICAS}
   resources:
     requests:
       memory: "1.5Gi"

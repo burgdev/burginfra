@@ -3,7 +3,7 @@ kind: Cluster
 metadata:
   name: umami-postgres
 spec:
-  instances: 1
+  instances: ${UMAMI_REPLICAS}  # Scale DB with app
 
   storage:
     storageClass: fast-local-data-v3

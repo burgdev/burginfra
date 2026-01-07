@@ -3,7 +3,7 @@ kind: Cluster
 metadata:
   name: wd-backend-postgres
 spec:
-  instances: 1
+  instances: ${WODORE_REPLICAS}
 
   storage:
     storageClass: fast-local-data-v3
