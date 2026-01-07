@@ -42,6 +42,7 @@ data:
   # === UMAMI (Analytics) ===
   UMAMI_FLUX_SUSPEND: "false"
   UMAMI_REPLICAS: "1"
+  UMAMI_POSTGRES_HIBERNATE: "off" # Keep postgres running in production
 
   # === WODORE (Application) ===
   WODORE_FLUX_SUSPEND: "false"

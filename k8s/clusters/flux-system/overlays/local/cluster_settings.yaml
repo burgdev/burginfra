@@ -35,6 +35,7 @@ data:
   IMMICH_FLUX_SUSPEND: "false"
   IMMICH_SERVER_REPLICAS: "1" # Stopped by default on local to save memory
   IMMICH_ML_REPLICAS: "0" # Stopped by default on local to save memory
+  IMMICH_POSTGRES_HIBERNATE: "off" # Keep running when server is up
   IMMICH_LIBRARY_STORAGE_SIZE: "5Gi"
   IMMICH_EXTERNAL_STORAGE_SIZE: "5Gi"
   IMMICH_DB_STORAGE_SIZE: "2Gi"
@@ -42,6 +43,7 @@ data:
   # === UMAMI (Analytics) ===
   UMAMI_FLUX_SUSPEND: "false"
   UMAMI_REPLICAS: "0" # Stopped by default on local to save memory
+  UMAMI_POSTGRES_HIBERNATE: "on" # Hibernate postgres when not in use
 
   # === WODORE (Application) ===
   WODORE_FLUX_SUSPEND: "false"

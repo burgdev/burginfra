@@ -2,8 +2,10 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: umami-postgres
+  annotations:
+    cnpg.io/hibernation: "${UMAMI_POSTGRES_HIBERNATE:-off}"
 spec:
-  instances: ${UMAMI_REPLICAS}  # Scale DB with app
+  instances: 1
 
   storage:
     storageClass: fast-local-data-v3
