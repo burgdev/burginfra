@@ -17,6 +17,10 @@ resources:
 
 configMapGenerator:
   - name: valhalla-download-scripts
+    options:
+      disableNameSuffixHash: false
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
     files:
       - scripts/download-osm.sh
       - scripts/download-gtfs.sh
