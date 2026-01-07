@@ -8,5 +8,5 @@ metadata:
 spec:
   interval: 30s
   ref:
-    #branch: main
-    branch: flux
+    branch: main
+    #branch: staging

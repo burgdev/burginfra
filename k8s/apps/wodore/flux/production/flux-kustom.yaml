@@ -28,8 +28,7 @@ spec:
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       WD_BACKEND_TAG: "0.1.11-alpine" # {"$imagepolicy": "flux-system:wd-backend-production:tag"}
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
-      WD_FRONTEND_TAG: "sha-2d77fda-pwa" # TODO
-      # {"$imagepolicy": "flux-system:wd-frontend-production:tag"}
+      WD_FRONTEND_TAG: "0.0.4-pwa" # {"$imagepolicy": "flux-system:wd-frontend-production:tag"}
       IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
       WD_AVAILABILITY_CRON: "0 0,1,6-23 * * *" # Every hour, except in the night
     substituteFrom:
