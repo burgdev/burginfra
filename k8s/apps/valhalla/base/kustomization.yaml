@@ -20,6 +20,7 @@ configMapGenerator:
     options:
       disableNameSuffixHash: true
     files:
+      - scripts/job-functions.sh
       - scripts/download-osm.sh
       - scripts/download-gtfs.sh
       - scripts/download-elevation.sh

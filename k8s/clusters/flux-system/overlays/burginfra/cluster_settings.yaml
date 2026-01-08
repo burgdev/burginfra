@@ -59,6 +59,7 @@ data:
   VALHALLA_FLUX_SUSPEND: "true" # Disabled on burginfra during development
   VALHALLA_REPLICAS: "0" # Set to 0 when suspended
   VALHALLA_STORAGE_SIZE: "30Gi"
+  VALHALLA_INIT_JOB: "check" # Init job mode: download|auto|check|bypass (bypass = use data copied from local)
   VALHALLA_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
   VALHALLA_GTFS_URLS: "https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
   VALHALLA_ELEVATION_BOUNDS: "45,46,47,48:5,6,7,8,9,10,11" # lat_range:lon_range for Switzerland

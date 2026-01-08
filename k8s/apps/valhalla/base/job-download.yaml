@@ -24,8 +24,12 @@ spec:
           image: debian:12-slim
           command: ["/bin/bash", "/scripts/download-osm.sh"]
           env:
+            - name: VALHALLA_INIT_JOB
+              value: ${VALHALLA_INIT_JOB}
             - name: OSM_URLS
               value: ${VALHALLA_OSM_URLS}
+            - name: TARGET_DIR
+              value: /custom_files
           volumeMounts:
             - name: data
               mountPath: /custom_files
@@ -44,8 +48,12 @@ spec:
           image: debian:12-slim
           command: ["/bin/bash", "/scripts/download-gtfs.sh"]
           env:
+            - name: VALHALLA_INIT_JOB
+              value: ${VALHALLA_INIT_JOB}
             - name: GTFS_URLS
               value: ${VALHALLA_GTFS_URLS}
+            - name: TARGET_DIR
+              value: /custom_files
           volumeMounts:
             - name: data
               mountPath: /custom_files
@@ -64,8 +72,12 @@ spec:
           image: debian:12-slim
           command: ["/bin/bash", "/scripts/download-elevation.sh"]
           env:
+            - name: VALHALLA_INIT_JOB
+              value: ${VALHALLA_INIT_JOB}
             - name: ELEVATION_BOUNDS
               value: ${VALHALLA_ELEVATION_BOUNDS}
+            - name: TARGET_DIR
+              value: /custom_files
           volumeMounts:
             - name: data
               mountPath: /custom_files

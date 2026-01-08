@@ -1,6 +1,24 @@
 #!/bin/bash
 set -e
 
+# Source shared functions
+source /scripts/job-functions.sh
+
+# Check if we should skip based on init job mode
+if ! handle_download_mode; then
+    echo "Skipping OSM download based on mode"
+    exit 0
+fi
+
+# If check failed and we're in check mode, we would have exited already
+# So if we're here, we need to download
+if check_osm_data; then
+    echo "OSM data already exists, skipping download"
+    exit 0
+fi
+
+echo "=== Starting OSM Download ==="
+
 # Default to Switzerland OSM data if not set
 if [ -z "$OSM_URLS" ]; then
 	OSM_URLS="https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"

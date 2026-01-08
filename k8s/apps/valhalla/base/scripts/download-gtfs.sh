@@ -1,6 +1,23 @@
 #!/bin/bash
 set -e
 
+# Source shared functions
+source /scripts/job-functions.sh
+
+# Check if we should skip based on init job mode
+if ! handle_download_mode; then
+    echo "Skipping GTFS download based on mode"
+    exit 0
+fi
+
+# If we're here, check if data already exists
+if check_gtfs_data; then
+    echo "GTFS data already exists, skipping download"
+    exit 0
+fi
+
+echo "=== Starting GTFS Download ==="
+
 # Default to Swiss GTFS feeds if not set
 if [ -z "$GTFS_URLS" ]; then
 	GTFS_URLS="https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"

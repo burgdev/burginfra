@@ -18,6 +18,37 @@ spec:
         runAsGroup: 1000
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
+      initContainers:
+        # Check if we should build based on mode
+        - name: check-build-mode
+          image: debian:12-slim
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              source /scripts/job-functions.sh
+              if ! handle_build_mode; then
+                echo "Skipping build based on mode"
+                exit 0
+              fi
+              echo "Proceeding with build"
+          env:
+            - name: VALHALLA_INIT_JOB
+              value: ${VALHALLA_INIT_JOB}
+            - name: TARGET_DIR
+              value: /custom_files
+          volumeMounts:
+            - name: data
+              mountPath: /custom_files
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+
       containers:
         - name: build-tiles
           image: ghcr.io/valhalla/valhalla-scripted:latest
@@ -56,3 +87,7 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: valhalla-data
+        - name: scripts
+          configMap:
+            name: valhalla-download-scripts
+            defaultMode: 0555

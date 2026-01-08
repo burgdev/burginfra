@@ -1,6 +1,23 @@
 #!/bin/bash
 set -e
 
+# Source shared functions
+source /scripts/job-functions.sh
+
+# Check if we should skip based on init job mode
+if ! handle_download_mode; then
+    echo "Skipping elevation download based on mode"
+    exit 0
+fi
+
+# If we're here, check if data already exists
+if check_elevation_data; then
+    echo "Elevation data already exists, skipping download"
+    exit 0
+fi
+
+echo "=== Starting Elevation Download ==="
+
 # Default to Switzerland elevation bounds if not set
 # Switzerland: lat 45-48°N, lon 5-11°E
 if [ -z "$ELEVATION_BOUNDS" ]; then
