@@ -3,8 +3,12 @@ set -e
 
 # Default to Switzerland elevation bounds if not set
 # Switzerland: lat 45-48°N, lon 5-11°E
-: ${ELEVATION_BOUNDS:=45,46,47,48:5,6,7,8,9,10,11}
-: ${TARGET_DIR:=/custom_files}
+if [ -z "$ELEVATION_BOUNDS" ]; then
+	ELEVATION_BOUNDS="45,46,47,48:5,6,7,8,9,10,11"
+fi
+if [ -z "$TARGET_DIR" ]; then
+	TARGET_DIR="/custom_files"
+fi
 
 # Install dependencies (skip if already installed for local testing)
 if command -v apt-get >/dev/null 2>&1; then
@@ -19,20 +23,18 @@ cd $TARGET_DIR/elevation_data
 LAT_RANGE=$(echo "$ELEVATION_BOUNDS" | cut -d':' -f1)
 LON_RANGE=$(echo "$ELEVATION_BOUNDS" | cut -d':' -f2)
 
-IFS=',' read -ra LATS <<<"$LAT_RANGE"
-IFS=',' read -ra LONS <<<"$LON_RANGE"
-
-echo "Latitude range: ${LATS[@]}"
-echo "Longitude range: ${LONS[@]}"
+echo "Latitude range: $LAT_RANGE"
+echo "Longitude range: $LON_RANGE"
 
 total=0
 downloaded=0
 
-for lat in "${LATS[@]}"; do
+IFS=','
+for lat in $LAT_RANGE; do
 	lat=$(echo "$lat" | xargs) # trim whitespace
 	mkdir -p "N$lat"
 
-	for lon in "${LONS[@]}"; do
+	for lon in $LON_RANGE; do
 		lon_raw=$(echo "$lon" | xargs)         # raw value without padding
 		lon_padded=$(printf "%03d" "$lon_raw") # 3-digit padded version
 		total=$((total + 1))

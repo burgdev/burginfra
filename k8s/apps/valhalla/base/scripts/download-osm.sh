@@ -2,8 +2,12 @@
 set -e
 
 # Default to Switzerland OSM data if not set
-: ${OSM_URLS:=https://download.geofabrik.de/europe/switzerland-latest.osm.pbf}
-: ${TARGET_DIR:=/custom_files}
+if [ -z "$OSM_URLS" ]; then
+	OSM_URLS="https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
+fi
+if [ -z "$TARGET_DIR" ]; then
+	TARGET_DIR="/custom_files"
+fi
 
 # Install dependencies (skip if already installed for local testing)
 if command -v apt-get >/dev/null 2>&1; then
@@ -14,9 +18,8 @@ echo "=== Downloading OSM data ==="
 cd "$TARGET_DIR"
 
 # Parse comma-separated URLs
-IFS=',' read -ra URLS <<<"$OSM_URLS"
-
-for url in "${URLS[@]}"; do
+IFS=','
+for url in $OSM_URLS; do
 	url=$(echo "$url" | xargs) # trim whitespace
 	filename=$(basename "$url")
 	echo "Downloading: $filename"

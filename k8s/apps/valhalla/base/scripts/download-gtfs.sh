@@ -2,8 +2,12 @@
 set -e
 
 # Default to Swiss GTFS feeds if not set
-: ${GTFS_URLS:=https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip}
-: ${TARGET_DIR:=/custom_files}
+if [ -z "$GTFS_URLS" ]; then
+	GTFS_URLS="https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
+fi
+if [ -z "$TARGET_DIR" ]; then
+	TARGET_DIR="/custom_files"
+fi
 
 # Install dependencies (skip if already installed for local testing)
 if command -v apt-get >/dev/null 2>&1; then
@@ -15,10 +19,9 @@ mkdir -p $TARGET_DIR/gtfs_feeds
 cd $TARGET_DIR/gtfs_feeds
 
 # Parse comma-separated URLs
-IFS=',' read -ra URLS <<<"$GTFS_URLS"
-
+IFS=','
 index=1
-for url in "${URLS[@]}"; do
+for url in $GTFS_URLS; do
 	url=$(echo "$url" | xargs) # trim whitespace
 	feed_dir="feed_$index"
 	mkdir -p "$feed_dir"
