@@ -25,10 +25,7 @@ spec:
           command: ["/bin/bash", "/scripts/download-osm.sh"]
           env:
             - name: OSM_URLS
-              valueFrom:
-                configMapKeyRef:
-                  name: cluster-settings
-                  key: VALHALLA_OSM_URLS
+              value: ${VALHALLA_OSM_URLS}
           volumeMounts:
             - name: data
               mountPath: /custom_files
@@ -48,10 +45,7 @@ spec:
           command: ["/bin/bash", "/scripts/download-gtfs.sh"]
           env:
             - name: GTFS_URLS
-              valueFrom:
-                configMapKeyRef:
-                  name: cluster-settings
-                  key: VALHALLA_GTFS_URLS
+              value: ${VALHALLA_GTFS_URLS}
           volumeMounts:
             - name: data
               mountPath: /custom_files
@@ -71,10 +65,7 @@ spec:
           command: ["/bin/bash", "/scripts/download-elevation.sh"]
           env:
             - name: ELEVATION_BOUNDS
-              valueFrom:
-                configMapKeyRef:
-                  name: cluster-settings
-                  key: VALHALLA_ELEVATION_BOUNDS
+              value: ${VALHALLA_ELEVATION_BOUNDS}
           volumeMounts:
             - name: data
               mountPath: /custom_files
