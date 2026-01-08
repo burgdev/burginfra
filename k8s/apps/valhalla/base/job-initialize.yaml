@@ -70,7 +70,7 @@ spec:
             - name: build_tar
               value: "true" # Create tarball for fast loading
             - name: server_threads
-              value: "2"
+              value: "1" # Use 1 thread to reduce memory usage
             - name: use_tiles_ignore_pbf
               value: "false" # Build from PBF
             - name: ERROR_SLEEP
@@ -82,10 +82,10 @@ spec:
               mountPath: /gtfs_feeds
           resources:
             requests:
-              cpu: ${VALHALLA_BUILD_CPU}
-              memory: ${VALHALLA_BUILD_MEMORY}
+              cpu: ${VALHALLA_BUILD_CPU:-2}
+              memory: ${VALHALLA_BUILD_MEMORY:-8Gi}
             limits:
-              memory: ${VALHALLA_BUILD_MEMORY}
+              memory: ${VALHALLA_BUILD_MEMORY:-8Gi}
 
       volumes:
         - name: data
