@@ -68,13 +68,15 @@ spec:
             - name: build_transit
               value: "true"
             - name: build_tar
-              value: "true" # Create tarball for fast loading
+              value: "force" # Create tarball for fast loading
             - name: server_threads
-              value: "1" # Use 1 thread to reduce memory usage
+              value: "2" # Use 1 thread to reduce memory usage
             - name: use_tiles_ignore_pbf
               value: "false" # Build from PBF
             - name: ERROR_SLEEP
               value: "180"
+            - name: FINISH_SLEEP
+              value: "60"
           volumeMounts:
             - name: data
               mountPath: /custom_files
