@@ -4,7 +4,7 @@ metadata:
   name: valhalla-build
   namespace: ${NAMESPACE}
 spec:
-  backoffLimit: 1
+  backoffLimit: 0 # Don't retry, keep failed pod for debugging
   ttlSecondsAfterFinished: 86400 # Keep for 24h for debugging
   template:
     metadata:
@@ -12,7 +12,7 @@ spec:
         app: valhalla
         job: build
     spec:
-      restartPolicy: OnFailure
+      restartPolicy: Never # Don't restart, keep failed container for inspection
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -79,9 +79,9 @@ spec:
           resources:
             requests:
               cpu: 2
-              memory: 6Gi
+              memory: 8Gi
             limits:
-              memory: 8Gi # Half of cluster RAM, no CPU limit to avoid throttling
+              memory: 12Gi # Allow more headroom for tile building
 
       volumes:
         - name: data
