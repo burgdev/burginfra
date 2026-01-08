@@ -32,7 +32,7 @@ spec:
             - name: ERROR_SLEEP
               value: "180"
             - name: FINISH_SLEEP
-              value: "60"
+              value: "0"
           volumeMounts:
             - name: data
               mountPath: /custom_files
@@ -56,27 +56,23 @@ spec:
           env:
             # Tile building configuration
             - name: serve_tiles
-              value: "false" # Don't start server, just build
+              value: "False" # Don't start server, just build
             - name: force_rebuild
-              value: "true" # Always rebuild when job runs
+              value: "True" # Always rebuild when job runs
             - name: build_elevation
-              value: "true"
+              value: "True"
             - name: build_admins
-              value: "true"
+              value: "True"
             - name: build_time_zones
-              value: "true"
+              value: "True"
             - name: build_transit
-              value: "true"
+              value: "True"
             - name: build_tar
-              value: "force" # Create tarball for fast loading
+              value: "Force" # Create tarball for fast loading
             - name: server_threads
               value: "2" # Use 1 thread to reduce memory usage
             - name: use_tiles_ignore_pbf
-              value: "false" # Build from PBF
-            - name: ERROR_SLEEP
-              value: "180"
-            - name: FINISH_SLEEP
-              value: "60"
+              value: "False" # Build from PBF
           volumeMounts:
             - name: data
               mountPath: /custom_files
