@@ -89,7 +89,7 @@ The download and build jobs are included in the kustomization but won't automati
 
 #### On Local Cluster
 
-1. **Apply cluster settings** (if changed):
+1. **Apply cluster settings**:
 
    ```bash
    kubectl apply -f k8s/clusters/flux-system/overlays/local/cluster_settings.yaml

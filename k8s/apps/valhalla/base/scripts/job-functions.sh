@@ -6,8 +6,10 @@ TARGET_DIR="${TARGET_DIR:-/custom_files}"
 # Check if OSM PBF files exist
 check_osm_data() {
     if ls "$TARGET_DIR"/*.pbf >/dev/null 2>&1; then
-        local pbf_file=$(ls "$TARGET_DIR"/*.pbf | head -n1)
-        local size=$(du -h "$pbf_file" | cut -f1)
+        local pbf_file
+        pbf_file=$(ls "$TARGET_DIR"/*.pbf 2>/dev/null | head -n1)
+        local size
+        size=$(du -h "$pbf_file" | cut -f1)
         echo "✓ Found OSM PBF: $(basename "$pbf_file") ($size)"
         return 0
     else

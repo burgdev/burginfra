@@ -58,7 +58,7 @@ for lat in $LAT_RANGE; do
 
 		tile_lat="N$lat"
 		tile_lon="E$lon_padded"
-		tile="$title_lat$title_lon"
+		tile="$tile_lat$tile_lon"
 		echo "Attempting to download: $tile"
 
 		# Try multiple sources in order of preference

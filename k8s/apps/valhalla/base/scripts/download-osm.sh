@@ -33,7 +33,17 @@ if command -v apt-get >/dev/null 2>&1; then
 fi
 
 echo "=== Downloading OSM data ==="
-cd "$TARGET_DIR"
+
+# Ensure target directory exists and is accessible
+if [ ! -d "$TARGET_DIR" ]; then
+    echo "ERROR: Target directory $TARGET_DIR does not exist"
+    exit 1
+fi
+
+cd "$TARGET_DIR" || {
+    echo "ERROR: Cannot access target directory $TARGET_DIR"
+    exit 1
+}
 
 # Parse comma-separated URLs
 IFS=','
