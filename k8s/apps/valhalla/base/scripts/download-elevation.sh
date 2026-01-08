@@ -6,14 +6,14 @@ source /scripts/job-functions.sh
 
 # Check if we should skip based on init job mode
 if ! handle_download_mode; then
-    echo "Skipping elevation download based on mode"
-    exit 0
+	echo "Skipping elevation download based on mode"
+	exit 0
 fi
 
 # If we're here, check if data already exists
 if check_elevation_data; then
-    echo "Elevation data already exists, skipping download"
-    exit 0
+	echo "Elevation data already exists, skipping download"
+	exit 0
 fi
 
 echo "=== Starting Elevation Download ==="
@@ -25,6 +25,9 @@ if [ -z "$ELEVATION_BOUNDS" ]; then
 fi
 if [ -z "$TARGET_DIR" ]; then
 	TARGET_DIR="/custom_files"
+fi
+if [ -z "$ERROR_SLEEP" ]; then
+	ERROR_SLEEP=30
 fi
 
 # Install dependencies (skip if already installed for local testing)
@@ -116,5 +119,6 @@ chmod -R g+rw $TARGET_DIR/elevation_data 2>/dev/null || true
 # Valhalla needs at least some elevation data
 if [ $downloaded -eq 0 ]; then
 	echo "ERROR: No elevation tiles downloaded!"
+	sleep $ERROR_SLEEP
 	exit 1
 fi

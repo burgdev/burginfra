@@ -73,6 +73,8 @@ spec:
               value: "2" # Conservative for 16GB RAM cluster
             - name: use_tiles_ignore_pbf
               value: "false" # Build from PBF, don't skip
+            - name: ERROR_SLEEP
+              value: "180"
           volumeMounts:
             - name: data
               mountPath: /custom_files

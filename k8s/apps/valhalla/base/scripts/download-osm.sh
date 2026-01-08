@@ -6,15 +6,15 @@ source /scripts/job-functions.sh
 
 # Check if we should skip based on init job mode
 if ! handle_download_mode; then
-    echo "Skipping OSM download based on mode"
-    exit 0
+	echo "Skipping OSM download based on mode"
+	exit 0
 fi
 
 # If check failed and we're in check mode, we would have exited already
 # So if we're here, we need to download
 if check_osm_data; then
-    echo "OSM data already exists, skipping download"
-    exit 0
+	echo "OSM data already exists, skipping download"
+	exit 0
 fi
 
 echo "=== Starting OSM Download ==="
@@ -26,6 +26,9 @@ fi
 if [ -z "$TARGET_DIR" ]; then
 	TARGET_DIR="/custom_files"
 fi
+if [ -z "$ERROR_SLEEP" ]; then
+	ERROR_SLEEP=30
+fi
 
 # Install dependencies (skip if already installed for local testing)
 if command -v apt-get >/dev/null 2>&1; then
@@ -36,13 +39,15 @@ echo "=== Downloading OSM data ==="
 
 # Ensure target directory exists and is accessible
 if [ ! -d "$TARGET_DIR" ]; then
-    echo "ERROR: Target directory $TARGET_DIR does not exist"
-    exit 1
+	echo "ERROR: Target directory $TARGET_DIR does not exist"
+	sleep $ERROR_SLEEP
+	exit 1
 fi
 
 cd "$TARGET_DIR" || {
-    echo "ERROR: Cannot access target directory $TARGET_DIR"
-    exit 1
+	echo "ERROR: Cannot access target directory $TARGET_DIR"
+	sleep $ERROR_SLEEP
+	exit 1
 }
 
 # Parse comma-separated URLs

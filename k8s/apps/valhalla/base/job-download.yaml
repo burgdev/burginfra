@@ -28,6 +28,8 @@ spec:
               value: ${VALHALLA_OSM_URLS}
             - name: TARGET_DIR
               value: /custom_files
+            - name: ERROR_SLEEP
+              value: "180"
           volumeMounts:
             - name: data
               mountPath: /custom_files
@@ -51,10 +53,12 @@ spec:
             - name: GTFS_URLS
               value: ${VALHALLA_GTFS_URLS}
             - name: TARGET_DIR
-              value: /custom_files
+              value: /gtfs_feeds
+            - name: ERROR_SLEEP
+              value: "180"
           volumeMounts:
-            - name: data
-              mountPath: /custom_files
+            - name: gtfs-feeds-data
+              mountPath: /gtfs_feeds
             - name: scripts
               mountPath: /scripts
               readOnly: true
@@ -76,6 +80,8 @@ spec:
               value: ${VALHALLA_ELEVATION_BOUNDS}
             - name: TARGET_DIR
               value: /custom_files
+            - name: ERROR_SLEEP
+              value: "180"
           volumeMounts:
             - name: data
               mountPath: /custom_files
@@ -113,6 +119,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: valhalla-data
+        - name: gtfs-feeds-data
+          persistentVolumeClaim:
+            claimName: gtfs-feeds-data
         - name: scripts
           configMap:
             name: valhalla-download-scripts

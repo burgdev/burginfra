@@ -6,14 +6,14 @@ source /scripts/job-functions.sh
 
 # Check if we should skip based on init job mode
 if ! handle_download_mode; then
-    echo "Skipping GTFS download based on mode"
-    exit 0
+	echo "Skipping GTFS download based on mode"
+	exit 0
 fi
 
 # If we're here, check if data already exists
 if check_gtfs_data; then
-    echo "GTFS data already exists, skipping download"
-    exit 0
+	echo "GTFS data already exists, skipping download"
+	exit 0
 fi
 
 echo "=== Starting GTFS Download ==="
@@ -25,6 +25,9 @@ fi
 if [ -z "$TARGET_DIR" ]; then
 	TARGET_DIR="/custom_files"
 fi
+if [ -z "$ERROR_SLEEP" ]; then
+	ERROR_SLEEP=30
+fi
 
 # Install dependencies (skip if already installed for local testing)
 if command -v apt-get >/dev/null 2>&1; then
@@ -32,8 +35,8 @@ if command -v apt-get >/dev/null 2>&1; then
 fi
 
 echo "=== Downloading GTFS data ==="
-mkdir -p $TARGET_DIR/gtfs_feeds
-cd $TARGET_DIR/gtfs_feeds
+mkdir -p $TARGET_DIR
+cd $TARGET_DIR
 
 # Parse comma-separated URLs
 IFS=','
@@ -61,19 +64,21 @@ for url in $GTFS_URLS; do
 			fi
 		else
 			echo "✗ ERROR: Downloaded file is empty or missing"
+			sleep $ERROR_SLEEP
 			rm -f gtfs.zip
 		fi
 	else
 		echo "✗ WARNING: Could not download GTFS feed from $url"
+		sleep $ERROR_SLEEP
 	fi
 
 	cd ..
 	index=$((index + 1))
 done
 
-ls -lhR $TARGET_DIR/gtfs_feeds/
+ls -lhR $TARGET_DIR
 
 # Set permissions so build job (user 1000) can access files
-chmod -R g+rw $TARGET_DIR/gtfs_feeds 2>/dev/null || true
+chmod -R g+rw $TARGET_DIR 2>/dev/null || true
 
 echo "=== GTFS download complete ==="
