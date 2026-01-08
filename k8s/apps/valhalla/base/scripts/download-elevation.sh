@@ -3,8 +3,8 @@ set -e
 
 # Default to Switzerland elevation bounds if not set
 # Switzerland: lat 45-48°N, lon 5-11°E
-ELEVATION_BOUNDS="${ELEVATION_BOUNDS:-45,46,47,48:5,6,7,8,9,10,11}"
-TARGET_DIR="${TARGET_DIR:-/custom_files}"
+: ${ELEVATION_BOUNDS:=45,46,47,48:5,6,7,8,9,10,11}
+: ${TARGET_DIR:=/custom_files}
 
 # Install dependencies (skip if already installed for local testing)
 if command -v apt-get >/dev/null 2>&1; then
@@ -12,8 +12,8 @@ if command -v apt-get >/dev/null 2>&1; then
 fi
 
 echo "=== Downloading elevation data (SRTM HGT) ==="
-mkdir -p ${TARGET_DIR}/elevation_data
-cd ${TARGET_DIR}/elevation_data
+mkdir -p $TARGET_DIR/elevation_data
+cd $TARGET_DIR/elevation_data
 
 # Parse bounds: "45,46,47,48:5,6,7,8,9,10,11" -> lat_range:lon_range
 LAT_RANGE=$(echo "$ELEVATION_BOUNDS" | cut -d':' -f1)
@@ -93,7 +93,7 @@ done
 
 echo "=== Elevation download complete ==="
 echo "Downloaded $downloaded out of $total tiles"
-tree -fhi ${TARGET_DIR}/elevation_data/
+tree -fhi $TARGET_DIR/elevation_data/
 
 # Valhalla needs at least some elevation data
 if [ $downloaded -eq 0 ]; then

@@ -2,8 +2,8 @@
 set -e
 
 # Default to Switzerland OSM data if not set
-OSM_URLS="${OSM_URLS:-https://download.geofabrik.de/europe/switzerland-latest.osm.pbf}"
-TARGET_DIR="${TARGET_DIR:-/custom_files}"
+: ${OSM_URLS:=https://download.geofabrik.de/europe/switzerland-latest.osm.pbf}
+: ${TARGET_DIR:=/custom_files}
 
 # Install dependencies (skip if already installed for local testing)
 if command -v apt-get >/dev/null 2>&1; then
@@ -35,5 +35,5 @@ else
 	echo "Single PBF file, no merge needed"
 fi
 
-ls -lh ${TARGET_DIR}/*.pbf
+ls -lh $TARGET_DIR/*.pbf
 echo "=== OSM download complete ==="
