@@ -1,0 +1,102 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: valhalla-initialize
+  namespace: ${NAMESPACE}
+spec:
+  backoffLimit: 0 # Don't retry, keep failed pod for debugging
+  ttlSecondsAfterFinished: 86400 # Keep for 24h for debugging
+  template:
+    metadata:
+      labels:
+        app: valhalla
+        job: initialize
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+      
+      initContainers:
+        # PHASE 1: Download all data (OSM, GTFS, elevation)
+        - name: download-data
+          image: debian:12-slim
+          command: ["/bin/bash", "/scripts/download-all.sh"]
+          env:
+            - name: OSM_URLS
+              value: ${VALHALLA_OSM_URLS}
+            - name: GTFS_URLS
+              value: ${VALHALLA_GTFS_URLS}
+            - name: ELEVATION_BOUNDS
+              value: ${VALHALLA_ELEVATION_BOUNDS}
+            - name: ERROR_SLEEP
+              value: "180"
+            - name: FINISH_SLEEP
+              value: "60"
+          volumeMounts:
+            - name: data
+              mountPath: /custom_files
+            - name: gtfs-feeds-data
+              mountPath: /gtfs_feeds
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 2Gi # For merging large OSM regions
+
+      # PHASE 2: Build Valhalla tiles
+      containers:
+        - name: build-tiles
+          image: ghcr.io/valhalla/valhalla-scripted:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            # Tile building configuration
+            - name: serve_tiles
+              value: "false" # Don't start server, just build
+            - name: force_rebuild
+              value: "true" # Always rebuild when job runs
+            - name: build_elevation
+              value: "true"
+            - name: build_admins
+              value: "true"
+            - name: build_time_zones
+              value: "true"
+            - name: build_transit
+              value: "true"
+            - name: build_tar
+              value: "true" # Create tarball for fast loading
+            - name: server_threads
+              value: "2"
+            - name: use_tiles_ignore_pbf
+              value: "false" # Build from PBF
+            - name: ERROR_SLEEP
+              value: "180"
+          volumeMounts:
+            - name: data
+              mountPath: /custom_files
+            - name: gtfs-feeds-data
+              mountPath: /gtfs_feeds
+          resources:
+            requests:
+              cpu: ${VALHALLA_BUILD_CPU}
+              memory: ${VALHALLA_BUILD_MEMORY}
+            limits:
+              memory: ${VALHALLA_BUILD_MEMORY}
+
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: valhalla-data
+        - name: gtfs-feeds-data
+          persistentVolumeClaim:
+            claimName: gtfs-feeds-data
+        - name: scripts
+          configMap:
+            name: valhalla-download-scripts
+            defaultMode: 0555

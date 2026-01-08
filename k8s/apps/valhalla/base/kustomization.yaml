@@ -9,8 +9,7 @@ commonLabels:
   app.kubernetes.io/managed-by: flux
 resources:
   - pvc.yaml
-  - job-download.yaml
-  - job-build.yaml
+  - job-initialize.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
@@ -20,7 +19,4 @@ configMapGenerator:
     options:
       disableNameSuffixHash: true
     files:
-      - scripts/job-functions.sh
-      - scripts/download-osm.sh
-      - scripts/download-gtfs.sh
-      - scripts/download-elevation.sh
+      - scripts/download-all.sh
