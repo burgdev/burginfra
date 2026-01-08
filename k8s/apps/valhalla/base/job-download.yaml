@@ -4,7 +4,7 @@ metadata:
   name: valhalla-download
   namespace: ${NAMESPACE}
 spec:
-  backoffLimit: 2
+  backoffLimit: 0 # Don't retry, keep failed pod for debugging
   ttlSecondsAfterFinished: 86400 # Keep for 24h for debugging
   template:
     metadata:
@@ -12,7 +12,7 @@ spec:
         app: valhalla
         job: download
     spec:
-      restartPolicy: OnFailure
+      restartPolicy: Never # Don't restart, keep failed containers for inspection
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000

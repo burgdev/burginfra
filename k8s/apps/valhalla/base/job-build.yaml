@@ -53,15 +53,6 @@ spec:
         - name: build-tiles
           image: ghcr.io/valhalla/valhalla-scripted:latest
           imagePullPolicy: IfNotPresent
-          command: ["bash", "-c"]
-          args:
-            - |
-              # Run the normal build script
-              /valhalla_build.sh
-
-              # Sleep to allow debugging
-              echo "Build completed. Sleeping for 5 minutes to allow debugging..."
-              sleep 300
           env:
             # Tile building configuration
             - name: serve_tiles
