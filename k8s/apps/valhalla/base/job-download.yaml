@@ -14,9 +14,7 @@ spec:
     spec:
       restartPolicy: Never # Don't restart, keep failed containers for inspection
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
+        fsGroup: 1000 # Files created will be owned by group 1000
         fsGroupChangePolicy: "OnRootMismatch"
       initContainers:
         # 1. Download and merge OSM PBF files
