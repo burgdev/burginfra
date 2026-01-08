@@ -354,9 +354,13 @@ else
 	echo "  (none)"
 fi
 
-# Set permissions for build job (user 1000)
-chmod -R g+rw $${CUSTOM_DIR} 2>/dev/null || true
-chmod -R g+rw $${GTFS_DIR} 2>/dev/null || true
+# Set ownership and permissions for build job (user 1000, group 1000)
+echo ""
+echo "Setting permissions for build job..."
+chown -R 1000:1000 $${CUSTOM_DIR} 2>/dev/null || true
+chown -R 1000:1000 $${GTFS_DIR} 2>/dev/null || true
+chmod -R u+rw,g+rw $${CUSTOM_DIR} 2>/dev/null || true
+chmod -R u+rw,g+rw $${GTFS_DIR} 2>/dev/null || true
 
 echo ""
 echo "=== All downloads complete ==="

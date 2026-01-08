@@ -14,11 +14,9 @@ spec:
     spec:
       restartPolicy: Never
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
-      
+
       initContainers:
         # PHASE 1: Download all data (OSM, GTFS, elevation)
         - name: download-data
