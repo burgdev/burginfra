@@ -25,7 +25,8 @@ spec:
         runAsNonRoot: true
       containers:
         - name: valhalla
-          image: ghcr.io/valhalla/valhalla-scripted:latest
+          #image: ghcr.io/valhalla/valhalla-scripted:latest
+          image: ghcr.io/valhalla/valhalla:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
