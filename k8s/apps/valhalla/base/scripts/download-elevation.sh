@@ -63,48 +63,42 @@ for lat in $LAT_RANGE; do
 
 		# Try multiple sources in order of preference
 		# Note: AWS S3 is most reliable, so prioritize it
-		sources=(
-			"https://elevation-tiles-prod.s3.amazonaws.com/skadi/N$lat/$tile.hgt.gz"
-			"http://viewfinderpanoramas.org/dem3/$tile.hgt.zip"
-		)
-
 		target_file="N$lat/$tile.hgt"
 		success=false
 
-		for url in "$sources[@]"; do
-			echo "  Trying: $url"
+		# Try AWS S3 first
+		url="https://elevation-tiles-prod.s3.amazonaws.com/skadi/N$lat/$tile.hgt.gz"
+		echo "  Trying: $url"
+		temp_file="$target_file.gz"
+		if wget -q -O "$temp_file" "$url" 2>/dev/null; then
+			if file "$temp_file" | grep -q "gzip"; then
+				gunzip -f "$temp_file"
+				downloaded=$((downloaded + 1))
+				echo "✓ Downloaded and extracted: $tile"
+				success=true
+			else
+				rm -f "$temp_file"
+			fi
+		fi
 
-			# Determine file extension from URL
-			if [[ "$url" == *.gz ]]; then
-				temp_file="$target_file.gz"
-				if wget -q -O "$temp_file" "$url" 2>/dev/null; then
-					if file "$temp_file" | grep -q "gzip"; then
-						gunzip -f "$temp_file"
+		# Try viewfinder if AWS failed
+		if [ "$success" = false ]; then
+			url="http://viewfinderpanoramas.org/dem3/$tile.hgt.zip"
+			echo "  Trying: $url"
+			temp_file="$target_file.zip"
+			if wget -q -O "$temp_file" "$url" 2>/dev/null; then
+				if file "$temp_file" | grep -q "Zip"; then
+					unzip -q -o "$temp_file" -d "N$lat/" "$tile.hgt" 2>/dev/null && success=true
+					rm -f "$temp_file"
+					if [ "$success" = true ]; then
 						downloaded=$((downloaded + 1))
 						echo "✓ Downloaded and extracted: $tile"
-						success=true
-						break
-					else
-						rm -f "$temp_file"
 					fi
-				fi
-			else
-				temp_file="$target_file.zip"
-				if wget -q -O "$temp_file" "$url" 2>/dev/null; then
-					if file "$temp_file" | grep -q "Zip"; then
-						unzip -q -o "$temp_file" -d "N$lat/" "$tile.hgt" 2>/dev/null && success=true
-						rm -f "$temp_file"
-						if [ "$success" = true ]; then
-							downloaded=$((downloaded + 1))
-							echo "✓ Downloaded and extracted: $tile"
-							break
-						fi
-					else
-						rm -f "$temp_file"
-					fi
+				else
+					rm -f "$temp_file"
 				fi
 			fi
-		done
+		fi
 
 		if [ "$success" = false ]; then
 			echo "✗ Not available from any source: $tile"
