@@ -101,6 +101,8 @@ spec:
               echo "Data summary:"
               du -sh /custom_files/* 2>/dev/null || true
               echo "Job finished successfully"
+              echo "Sleeping for 5 minutes to allow debugging..."
+              sleep 300
           volumeMounts:
             - name: data
               mountPath: /custom_files
