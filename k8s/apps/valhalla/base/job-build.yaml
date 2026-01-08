@@ -76,17 +76,22 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /custom_files
+            - name: gtfs-feeds-data
+              mountPath: /gtfs_feeds
           resources:
             requests:
-              cpu: 2
-              memory: 8Gi
+              cpu: ${VALHALLA_BUILD_CPU}
+              memory: ${VALHALLA_BUILD_MEMORY}
             limits:
-              memory: 12Gi # Allow more headroom for tile building
+              memory: ${VALHALLA_BUILD_MEMORY}
 
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: valhalla-data
+        - name: gtfs-feeds-data
+          persistentVolumeClaim:
+            claimName: gtfs-feeds-data
         - name: scripts
           configMap:
             name: valhalla-download-scripts

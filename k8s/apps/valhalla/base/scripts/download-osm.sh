@@ -67,4 +67,8 @@ else
 fi
 
 ls -lh $TARGET_DIR/*.pbf
+
+# Set permissions so build job (user 1000) can access files
+chmod -R g+rw $TARGET_DIR/*.pbf 2>/dev/null || true
+
 echo "=== OSM download complete ==="

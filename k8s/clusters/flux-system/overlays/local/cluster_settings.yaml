@@ -59,7 +59,9 @@ data:
   VALHALLA_FLUX_SUSPEND: "false" # Enabled on local for development
   VALHALLA_REPLICAS: "1"
   VALHALLA_STORAGE_SIZE: "10Gi"
-  VALHALLA_INIT_JOB: "download" # Force download mode for initial setup
+  VALHALLA_INIT_JOB: "auto" # Force download mode for initial setup
+  VALHALLA_BUILD_CPU: "8" # CPU cores for build job (local has more resources)
+  VALHALLA_BUILD_MEMORY: "14Gi" # Memory limit for build job
   VALHALLA_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
   VALHALLA_GTFS_URLS: "https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
   VALHALLA_ELEVATION_BOUNDS: "45,46,47,48:5,6,7,8,9,10,11" # lat_range:lon_range for Switzerland

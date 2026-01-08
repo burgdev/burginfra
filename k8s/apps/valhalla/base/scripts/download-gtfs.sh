@@ -72,4 +72,8 @@ for url in $GTFS_URLS; do
 done
 
 ls -lhR $TARGET_DIR/gtfs_feeds/
+
+# Set permissions so build job (user 1000) can access files
+chmod -R g+rw $TARGET_DIR/gtfs_feeds 2>/dev/null || true
+
 echo "=== GTFS download complete ==="

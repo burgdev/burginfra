@@ -10,3 +10,16 @@ spec:
     requests:
       storage: ${VALHALLA_STORAGE_SIZE}
   storageClassName: fast-local-data-v3
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gtfs-feeds-data
+  namespace: ${NAMESPACE}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: fast-local-data-v3

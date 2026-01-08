@@ -110,6 +110,9 @@ echo "=== Elevation download complete ==="
 echo "Downloaded $downloaded out of $total tiles"
 tree -fhi $TARGET_DIR/elevation_data/
 
+# Set permissions so build job (user 1000) can access files
+chmod -R g+rw $TARGET_DIR/elevation_data 2>/dev/null || true
+
 # Valhalla needs at least some elevation data
 if [ $downloaded -eq 0 ]; then
 	echo "ERROR: No elevation tiles downloaded!"
