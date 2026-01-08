@@ -23,11 +23,14 @@ echo "=== Starting OSM Download ==="
 if [ -z "$OSM_URLS" ]; then
 	OSM_URLS="https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
 fi
-if [ -z "$TARGET_DIR" ]; then
-	TARGET_DIR="/custom_files"
+if [ -z "$CUSTOM_DIR" ]; then
+	CUSTOM_DIR="/custom_files"
 fi
 if [ -z "$ERROR_SLEEP" ]; then
 	ERROR_SLEEP=30
+fi
+if [ -z "$FINISH_SLEEP" ]; then
+	FINISH_SLEEP=0
 fi
 
 # Install dependencies (skip if already installed for local testing)
@@ -38,14 +41,14 @@ fi
 echo "=== Downloading OSM data ==="
 
 # Ensure target directory exists and is accessible
-if [ ! -d "$TARGET_DIR" ]; then
-	echo "ERROR: Target directory $TARGET_DIR does not exist"
+if [ ! -d "$CUSTOM_DIR" ]; then
+	echo "ERROR: Target directory $CUSTOM_DIR does not exist"
 	sleep $ERROR_SLEEP
 	exit 1
 fi
 
-cd "$TARGET_DIR" || {
-	echo "ERROR: Cannot access target directory $TARGET_DIR"
+cd "$CUSTOM_DIR" || {
+	echo "ERROR: Cannot access target directory $CUSTOM_DIR"
 	sleep $ERROR_SLEEP
 	exit 1
 }
@@ -71,9 +74,11 @@ else
 	echo "Single PBF file, no merge needed"
 fi
 
-ls -lh $TARGET_DIR/*.pbf
+ls -lh $CUSTOM_DIR/*.pbf
 
 # Set permissions so build job (user 1000) can access files
-chmod -R g+rw $TARGET_DIR/*.pbf 2>/dev/null || true
+chmod -R g+rw $CUSTOM_DIR/*.pbf 2>/dev/null || true
 
 echo "=== OSM download complete ==="
+
+sleep $FINISH_SLEEP

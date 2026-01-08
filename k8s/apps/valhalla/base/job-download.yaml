@@ -26,13 +26,15 @@ spec:
               value: ${VALHALLA_INIT_JOB}
             - name: OSM_URLS
               value: ${VALHALLA_OSM_URLS}
-            - name: TARGET_DIR
-              value: /custom_files
             - name: ERROR_SLEEP
               value: "180"
+            - name: FINISH_SLEEP
+              value: "60"
           volumeMounts:
             - name: data
               mountPath: /custom_files
+            - name: gtfs-feeds-data
+              mountPath: /gtfs_feeds
             - name: scripts
               mountPath: /scripts
               readOnly: true
@@ -52,11 +54,13 @@ spec:
               value: ${VALHALLA_INIT_JOB}
             - name: GTFS_URLS
               value: ${VALHALLA_GTFS_URLS}
-            - name: TARGET_DIR
-              value: /gtfs_feeds
             - name: ERROR_SLEEP
               value: "180"
+            - name: FINISH_SLEEP
+              value: "60"
           volumeMounts:
+            - name: data
+              mountPath: /custom_files
             - name: gtfs-feeds-data
               mountPath: /gtfs_feeds
             - name: scripts
@@ -78,13 +82,15 @@ spec:
               value: ${VALHALLA_INIT_JOB}
             - name: ELEVATION_BOUNDS
               value: ${VALHALLA_ELEVATION_BOUNDS}
-            - name: TARGET_DIR
-              value: /custom_files
             - name: ERROR_SLEEP
               value: "180"
+            - name: FINISH_SLEEP
+              value: "60"
           volumeMounts:
             - name: data
               mountPath: /custom_files
+            - name: gtfs-feeds-data
+              mountPath: /gtfs_feeds
             - name: scripts
               mountPath: /scripts
               readOnly: true
@@ -99,12 +105,20 @@ spec:
         - name: complete
           image: debian:12-slim
           command: ["bash", "-c"]
+          env:
+            - name: FINISH_SLEEP
+              value: "180"
           args:
             - |
               echo "=== Download Job Complete ==="
-              echo "Data summary:"
+              echo "OSM summary:"
               du -sh /custom_files/* 2>/dev/null || true
+              echo "Elevation summary:"
+              du -sh /custom_files/elevation_data/* 2>/dev/null || true
+              echo "GTFS summary:"
+              du -sh /gtfs_feeds/* 2>/dev/null || true
               echo "Job finished successfully"
+              sleep "$FINISH_SLEEP"
           volumeMounts:
             - name: data
               mountPath: /custom_files

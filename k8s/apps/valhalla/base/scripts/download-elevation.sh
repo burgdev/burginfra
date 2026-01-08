@@ -23,11 +23,14 @@ echo "=== Starting Elevation Download ==="
 if [ -z "$ELEVATION_BOUNDS" ]; then
 	ELEVATION_BOUNDS="45,46,47,48:5,6,7,8,9,10,11"
 fi
-if [ -z "$TARGET_DIR" ]; then
-	TARGET_DIR="/custom_files"
+if [ -z "$CUSTOM_DIR" ]; then
+	CUSTOM_DIR="/custom_files"
 fi
 if [ -z "$ERROR_SLEEP" ]; then
 	ERROR_SLEEP=30
+fi
+if [ -z "$FINISH_SLEEP" ]; then
+	FINISH_SLEEP=0
 fi
 
 # Install dependencies (skip if already installed for local testing)
@@ -36,8 +39,8 @@ if command -v apt-get >/dev/null 2>&1; then
 fi
 
 echo "=== Downloading elevation data (SRTM HGT) ==="
-mkdir -p $TARGET_DIR/elevation_data
-cd $TARGET_DIR/elevation_data
+mkdir -p $CUSTOM_DIR/elevation_data
+cd $CUSTOM_DIR/elevation_data
 
 # Parse bounds: "45,46,47,48:5,6,7,8,9,10,11" -> lat_range:lon_range
 LAT_RANGE=$(echo "$ELEVATION_BOUNDS" | cut -d':' -f1)
@@ -111,10 +114,10 @@ done
 
 echo "=== Elevation download complete ==="
 echo "Downloaded $downloaded out of $total tiles"
-tree -fhi $TARGET_DIR/elevation_data/
+tree -fhi $CUSTOM_DIR/elevation_data/
 
 # Set permissions so build job (user 1000) can access files
-chmod -R g+rw $TARGET_DIR/elevation_data 2>/dev/null || true
+chmod -R g+rw $CUSTOM_DIR/elevation_data 2>/dev/null || true
 
 # Valhalla needs at least some elevation data
 if [ $downloaded -eq 0 ]; then
@@ -122,3 +125,5 @@ if [ $downloaded -eq 0 ]; then
 	sleep $ERROR_SLEEP
 	exit 1
 fi
+
+sleep $FINISH_SLEEP

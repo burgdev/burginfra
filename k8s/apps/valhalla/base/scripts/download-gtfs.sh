@@ -22,11 +22,14 @@ echo "=== Starting GTFS Download ==="
 if [ -z "$GTFS_URLS" ]; then
 	GTFS_URLS="https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
 fi
-if [ -z "$TARGET_DIR" ]; then
-	TARGET_DIR="/custom_files"
+if [ -z "$GTFS_DIR" ]; then
+	GTFS_DIR="/gtfs_feeds"
 fi
 if [ -z "$ERROR_SLEEP" ]; then
 	ERROR_SLEEP=30
+fi
+if [ -z "$FINISH_SLEEP" ]; then
+	FINISH_SLEEP=0
 fi
 
 # Install dependencies (skip if already installed for local testing)
@@ -35,8 +38,8 @@ if command -v apt-get >/dev/null 2>&1; then
 fi
 
 echo "=== Downloading GTFS data ==="
-mkdir -p $TARGET_DIR
-cd $TARGET_DIR
+mkdir -p $GTFS_DIR
+cd $GTFS_DIR
 
 # Parse comma-separated URLs
 IFS=','
@@ -76,9 +79,11 @@ for url in $GTFS_URLS; do
 	index=$((index + 1))
 done
 
-ls -lhR $TARGET_DIR
+ls -lhR $GTFS_DIR
 
 # Set permissions so build job (user 1000) can access files
-chmod -R g+rw $TARGET_DIR 2>/dev/null || true
+chmod -R g+rw $GTFS_DIR 2>/dev/null || true
 
 echo "=== GTFS download complete ==="
+
+sleep $FINISH_SLEEP
