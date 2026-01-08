@@ -39,20 +39,22 @@ for lat in $LAT_RANGE; do
 		lon_padded=$(printf "%03d" "$lon_raw") # 3-digit padded version
 		total=$((total + 1))
 
-		tile="N${lat}E${lon_padded}"
+		tile_lat="N$lat"
+		tile_lon="E$lon_padded"
+		tile="$title_lat$title_lon"
 		echo "Attempting to download: $tile"
 
 		# Try multiple sources in order of preference
 		# Note: AWS S3 is most reliable, so prioritize it
 		sources=(
-			"https://elevation-tiles-prod.s3.amazonaws.com/skadi/N${lat}/N${lat}E${lon_padded}.hgt.gz"
-			"http://viewfinderpanoramas.org/dem3/${tile}.hgt.zip"
+			"https://elevation-tiles-prod.s3.amazonaws.com/skadi/N$lat/$tile.hgt.gz"
+			"http://viewfinderpanoramas.org/dem3/$tile.hgt.zip"
 		)
 
-		target_file="N$lat/${tile}.hgt"
+		target_file="N$lat/$tile.hgt"
 		success=false
 
-		for url in "${sources[@]}"; do
+		for url in "$sources[@]"; do
 			echo "  Trying: $url"
 
 			# Determine file extension from URL
@@ -73,7 +75,7 @@ for lat in $LAT_RANGE; do
 				temp_file="$target_file.zip"
 				if wget -q -O "$temp_file" "$url" 2>/dev/null; then
 					if file "$temp_file" | grep -q "Zip"; then
-						unzip -q -o "$temp_file" -d "N$lat/" "${tile}.hgt" 2>/dev/null && success=true
+						unzip -q -o "$temp_file" -d "N$lat/" "$tile.hgt" 2>/dev/null && success=true
 						rm -f "$temp_file"
 						if [ "$success" = true ]; then
 							downloaded=$((downloaded + 1))
