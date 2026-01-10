@@ -58,7 +58,7 @@ spec:
             - name: serve_tiles
               value: "False" # Don't start server, just build
             - name: force_rebuild
-              value: "True" # Always rebuild when job runs
+              value: "False" # Always rebuild when job runs
             - name: build_elevation
               value: "True"
             - name: build_admins
@@ -68,7 +68,7 @@ spec:
             - name: build_transit
               value: "True"
             - name: build_tar
-              value: "Force" # Create tarball for fast loading
+              value: "True" # Create tarball for fast loading
             - name: server_threads
               value: "2" # Use 1 thread to reduce memory usage
             - name: use_tiles_ignore_pbf
