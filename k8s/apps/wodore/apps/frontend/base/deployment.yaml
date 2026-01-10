@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: wd-frontend
 spec:
-  replicas: 1
+  replicas: ${WODORE_REPLICAS}
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 120
   strategy:

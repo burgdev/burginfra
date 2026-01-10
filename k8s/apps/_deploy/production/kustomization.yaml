@@ -9,3 +9,4 @@ resources:
   - ../../immich/flux/production/
   # WODORE
   - ../../wodore/flux/production/
+  - ../../valhalla/overlays/production/

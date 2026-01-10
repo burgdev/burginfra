@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ${NAMESPACE}
+commonLabels:
+  app.kubernetes.io/name: valhalla
+  app.kubernetes.io/component: routing
+  app.kubernetes.io/environment: ${ENVIRONMENT}
+  app.kubernetes.io/part-of: apps
+  app.kubernetes.io/managed-by: flux
+resources:
+  - pvc.yaml
+  - job-initialize.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+configMapGenerator:
+  - name: valhalla-download-scripts
+    options:
+      disableNameSuffixHash: true
+    files:
+      - scripts/download-all.sh

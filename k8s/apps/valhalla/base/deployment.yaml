@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valhalla
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${VALHALLA_REPLICAS}
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 300
+  strategy:
+    type: Recreate # Only one instance can mount RWO PVC
+  selector:
+    matchLabels:
+      app: valhalla
+  template:
+    metadata:
+      labels:
+        app: valhalla
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsNonRoot: true
+      containers:
+        - name: valhalla
+          image: ghcr.io/valhalla/valhalla-scripted:latest
+          #image: ghcr.io/valhalla/valhalla:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsUser: 1000
+            runAsGroup: 1000
+          ports:
+            - name: http
+              containerPort: 8002
+              protocol: TCP
+          env:
+            # Service configuration
+            - name: serve_tiles
+              value: "True" # Start the routing service
+            - name: use_tiles_ignore_pbf
+              value: "True" # Use pre-built tiles, don't rebuild
+            - name: server_threads
+              value: "2" # Match build threads
+            - name: TZ
+              value: "Europe/Zurich"
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: http
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /status
+              port: http
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 30 # Allow up to 5 minutes for tile loading
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              memory: 2Gi # Allow some burst, no CPU limit to avoid throttling
+          volumeMounts:
+            - name: data
+              mountPath: /custom_files
+            - name: gtfs-feeds-data
+              mountPath: /gtfs_feeds
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: valhalla-data
+        - name: gtfs-feeds-data
+          persistentVolumeClaim:
+            claimName: gtfs-feeds-data

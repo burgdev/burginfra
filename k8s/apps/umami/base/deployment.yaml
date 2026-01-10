@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: umami
 spec:
-  replicas: 1
+  replicas: ${UMAMI_REPLICAS}
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 120
   strategy:

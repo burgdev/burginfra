@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: valhalla
+  namespace: ${NAMESPACE}
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  rules:
+    - host: routing.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: valhalla
+                port:
+                  number: 8002
+  tls:
+    - secretName: valhalla-${ENVIRONMENT}-tls
+      hosts:
+        - routing.${ENV_SUBDOMAIN}${WODORE_HOST}

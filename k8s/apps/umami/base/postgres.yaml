@@ -2,6 +2,9 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: umami-postgres
+  annotations: {}
+    # TODO: Fix hibernation annotation - YAML boolean parsing issue
+    # cnpg.io/hibernation: !!str ${UMAMI_POSTGRES_HIBERNATE:-off}
 spec:
   instances: 1
 
