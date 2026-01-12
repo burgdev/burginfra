@@ -9,7 +9,6 @@ resources:
   - ../../immich/flux/production/
   # WODORE
   - ../../wodore/flux/production/
-  - ../../valhalla/overlays/production/
-  - ../../graphhopper/overlays/production/
+  #- ../../valhalla/overlays/production/
+  #- ../../graphhopper/overlays/production/
   - ../../map-data/overlays/production/
-
