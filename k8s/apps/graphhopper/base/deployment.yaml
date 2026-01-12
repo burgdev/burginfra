@@ -34,8 +34,7 @@ spec:
           env:
             - name: JAVA_OPTS
               value: "-Xmx3g -Xms2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
-          command:
-            - /graphhopper.sh
+          args:
             - -c
             - /data/config.yml
           livenessProbe:
@@ -79,6 +78,9 @@ spec:
               mountPath: /data
             - name: srtm-cache
               mountPath: /srtm_cache
+            - name: config
+              mountPath: /data/config.yml
+              subPath: config.yml
 
       volumes:
         - name: osm-data
@@ -93,5 +95,8 @@ spec:
           persistentVolumeClaim:
             claimName: graphhopper-data
         - name: srtm-cache
-          emptyDir:
-            sizeLimit: 2Gi
+          persistentVolumeClaim:
+            claimName: graphhopper-srtm-cache
+        - name: config
+          configMap:
+            name: graphhopper-config

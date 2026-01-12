@@ -26,8 +26,7 @@ spec:
           env:
             - name: JAVA_OPTS
               value: ${GRAPHOPPER_BUILD_MEMORY}
-          command:
-            - /graphhopper.sh
+          args:
             - --import
             - -c
             - /data/config.yml
@@ -42,6 +41,9 @@ spec:
               mountPath: /data
             - name: srtm-cache
               mountPath: /srtm_cache
+            - name: config
+              mountPath: /data/config.yml
+              subPath: config.yml
           resources:
             requests:
               cpu: ${GRAPHOPPER_BUILD_CPU}
@@ -62,5 +64,8 @@ spec:
           persistentVolumeClaim:
             claimName: graphhopper-data
         - name: srtm-cache
-          emptyDir:
-            sizeLimit: 2Gi
+          persistentVolumeClaim:
+            claimName: graphhopper-srtm-cache
+        - name: config
+          configMap:
+            name: graphhopper-config

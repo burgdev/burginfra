@@ -10,3 +10,16 @@ spec:
   resources:
     requests:
       storage: ${GRAPHOPPER_STORAGE_SIZE}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: graphhopper-srtm-cache
+  namespace: ${NAMESPACE}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast-local-data-v3
+  resources:
+    requests:
+      storage: 2Gi
