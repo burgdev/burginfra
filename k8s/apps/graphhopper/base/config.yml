@@ -61,6 +61,13 @@ graphhopper:
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
   graph.dataaccess: RAM_STORE
 
+  # Encoded values to store in the graph for custom models
+  # Required when using custom_model_files in profiles
+  # These values enable elevation-aware routing and hiking-specific features
+  graph.encoded_values: |
+    foot_access, hike_rating, foot_priority, foot_road_access, mtb_rating,
+    road_environment, foot_average_speed, average_slope
+
   # Elevation data configuration
   # SRTM: Shuttle Radar Topography Mission provides global elevation data
   # Automatically downloaded and cached during graph building
