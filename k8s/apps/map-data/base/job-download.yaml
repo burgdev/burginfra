@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: map-data-download
+  namespace: ${NAMESPACE}
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        job-name: map-data-download
+    spec:
+      restartPolicy: Never
+      # Run as root initially to install packages, then chown
+      # Security context is set in the script after installation
+
+      containers:
+        - name: download-data
+          image: debian:12-slim
+          securityContext:
+            allowPrivilegeEscalation: false
+          command: ["/bin/bash", "/scripts/download-all.sh"]
+          env:
+            - name: MAP_DATA_INIT_JOB
+              value: ${MAP_DATA_INIT_JOB:-auto}
+            - name: OSM_URLS
+              value: ${MAP_DATA_OSM_URLS:-https://download.geofabrik.de/europe/switzerland-latest.osm.pbf}
+            - name: GTFS_URLS
+              value: ${MAP_DATA_GTFS_URLS:-https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip}
+            - name: ELEVATION_BOUNDS
+              value: ${MAP_DATA_ELEVATION_BOUNDS:-45,46,47,48:5,6,7,8,9,10,11}
+            - name: OSM_DATA_DIR
+              value: /osm_data
+            - name: GTFS_DATA_DIR
+              value: /gtfs_data
+            - name: ELEVATION_DATA_DIR
+              value: /elevation_data
+            - name: VERBOSE
+              value: "true"
+          volumeMounts:
+            - name: osm-data
+              mountPath: /osm_data
+            - name: gtfs-data
+              mountPath: /gtfs_data
+            - name: elevation-data
+              mountPath: /elevation_data
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+
+      volumes:
+        - name: osm-data
+          persistentVolumeClaim:
+            claimName: map-data-osm
+        - name: gtfs-data
+          persistentVolumeClaim:
+            claimName: map-data-gtfs
+        - name: elevation-data
+          persistentVolumeClaim:
+            claimName: map-data-elevation
+        - name: scripts
+          configMap:
+            name: map-data-scripts
+            defaultMode: 0755

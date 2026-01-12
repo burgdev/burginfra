@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ${NAMESPACE}
+
+resources:
+  - pvc-osm.yaml
+  - pvc-gtfs.yaml
+  - pvc-elevation.yaml
+  - job-download.yaml
+
+configMapGenerator:
+  - name: map-data-scripts
+    files:
+      - download-all.sh
+    options:
+      disableNameSuffixHash: true
+
+commonLabels:
+  app: map-data

@@ -66,3 +66,22 @@ data:
   VALHALLA_GTFS_URLS: "https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
   VALHALLA_ELEVATION_BOUNDS: "45,46,47,48:5,6,7,8,9,10,11" # lat_range:lon_range for Switzerland
 
+  # === GRAPHHOPPER (Routing Engine) ===
+  GRAPHOPPER_FLUX_SUSPEND: "false" # Enabled on local for development
+  GRAPHOPPER_REPLICAS: "1"
+  GRAPHOPPER_STORAGE_SIZE: "10Gi"
+  GRAPHOPPER_INIT_JOB: "auto" # Force download mode for initial setup
+  GRAPHOPPER_BUILD_CPU: "6" # CPU cores for build job (leave room for Valhalla)
+  GRAPHOPPER_BUILD_MEMORY: "12Gi" # Memory limit for build job (leave room for Valhalla)
+  GRAPHOPPER_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
+
+  # === MAP DATA (Shared OSM, GTFS, Elevation) ===
+  MAP_DATA_FLUX_SUSPEND: "false" # Enabled on local for development
+  MAP_DATA_OSM_STORAGE_SIZE: "10Gi"
+  MAP_DATA_GTFS_STORAGE_SIZE: "2Gi"
+  MAP_DATA_ELEVATION_STORAGE_SIZE: "5Gi"
+  MAP_DATA_INIT_JOB: "auto" # Download if data doesn't exist
+  MAP_DATA_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
+  MAP_DATA_GTFS_URLS: "https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
+  MAP_DATA_ELEVATION_BOUNDS: "45,46,47,48:5,6,7,8,9,10,11" # lat_range:lon_range for Switzerland
+
