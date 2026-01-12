@@ -4,7 +4,7 @@ metadata:
   name: valhalla
   namespace: ${NAMESPACE}
 spec:
-  replicas: ${VALHALLA_REPLICAS}
+  replicas: ${VALHALLA_REPLICAS:-0}
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 300
   strategy:

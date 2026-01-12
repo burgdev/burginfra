@@ -6,4 +6,4 @@ resources:
   # WODORE
   - ../../wodore/flux/staging/
   # ROUTING
-  - ../../graphhopper/overlays/staging/
+  # - ../../graphhopper/overlays/staging/
