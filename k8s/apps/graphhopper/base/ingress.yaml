@@ -5,11 +5,8 @@ metadata:
   namespace: ${NAMESPACE}
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - gh.${ENV_SUBDOMAIN}${WODORE_HOST}
