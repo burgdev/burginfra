@@ -1,49 +1,75 @@
+# GraphHopper configuration file
+# Format: YAML (Dropwizard configuration)
+# Documentation: https://github.com/graphhopper/graphhopper/blob/master/config-example.yml
 graphhopper:
-  # Data reader configuration
+  # OSM data input file path (PBF format)
+  # Mounted from map-data-osm PVC via map-data download job
   datareader.file: /osm_data/switzerland-latest.osm.pbf
+
+  # Import all vehicle types during initial graph building
+  # This ensures edges are available for all profiles we might enable later
   import_vehicle: all
 
-  # Graph location
+  # Directory where GraphHopper stores its optimized graph data
+  # This data is created by the initialize job and read by the server deployment
+  # Mounted on graphhopper-data PVC
   graph.location: /data/.gh
 
-  # Profiles to build (testing only foot and hiking)
+  # Routing profiles to build (testing: only foot and hiking)
+  # Each profile defines a routing mode with custom weights and restrictions
   profiles:
+    # Foot profile: General walking routing
+    # Uses foot.json for base weights and foot_elevation.json for elevation-aware routing
     - name: foot
       custom_model_files: [foot.json, foot_elevation.json]
+
+    # Hiking profile: Specialized for hiking trails
+    # Reuses foot models but can be customized separately if needed
     - name: hiking
       custom_model_files: [foot.json, foot_elevation.json]
 
-  # Contraction Hierarchies (disabled for testing)
+  # Contraction Hierarchies (CH) for fast queries
+  # CH preprocesses the graph for O(1) lookup but requires more memory and build time
+  # Disabled for testing with foot/hiking (LM mode or flexible mode will be used)
   profiles_ch: []
 
-  # Landmarks (alternative to CH, disabled for now)
+  # Landmarks (LM) alternative to CH
+  # LM provides fast queries with less memory than CH, good for foot/hiking
+  # Disabled for now (will use flexible mode by default)
   profiles_lm: []
 
-  # Server configuration
+  # Server configuration (Dropwizard HTTP server)
   server:
     application_connectors:
       - type: http
-        port: 8989
-        bind_host: 0.0.0.0
+        port: 8989 # Main HTTP API port
+        bind_host: 0.0.0.0 # Listen on all interfaces
     admin_connectors:
       - type: http
-        port: 8990
-        bind_host: localhost
+        port: 8990 # Admin port (metrics, health checks)
+        bind_host: localhost # Admin only accessible locally
     request_log:
-      appenders: []
+      appenders: [] # Disable request logging to reduce noise
 
-  # Data access
+  # Graph data access method
+  # RAM_STORE: Load entire graph into memory for fastest queries
+  # MMAP: Memory-mapped files for lower memory usage with slight performance cost
   graph.dataaccess: RAM_STORE
 
-  # Elevation (using SRTM)
+  # Elevation data configuration
+  # SRTM: Shuttle Radar Topography Mission provides global elevation data
+  # Automatically downloaded and cached during graph building
   graph.elevation.provider: srtm
+  # Cache directory for downloaded SRTM tiles (persistent across builds)
+  # Mounted on graphhopper-srtm-cache PVC
   graph.elevation.cache_dir: /srtm_cache
 
-  # Logging
+  # Logging configuration
   logging:
-  appenders:
-    - type: console
-      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-  loggers:
-    "com.graphhopper.osm_warnings":
-      level: INFO
+    appenders:
+      - type: console
+        log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    loggers:
+      # Reduce OSM import warning noise to INFO level
+      "com.graphhopper.osm_warnings":
+        level: INFO
