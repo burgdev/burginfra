@@ -155,6 +155,58 @@ spec:
             requests:
               cpu: 50m
               memory: 64Mi
+      initContainers:
+        # Migration check container - ensures no pending migrations before starting
+        - name: migrate-check
+          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
+          imagePullPolicy: Always
+          command:
+            - python
+            - manage.py
+            - migrate
+            - --check
+          env:
+            # Database connection (CNPG service)
+            - name: DJANGO_DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: host
+            - name: DJANGO_DATABASE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: dbname
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: password
+          envFrom:
+            - secretRef:
+                name: "wd-backend-envvars"
+            - secretRef:
+                name: "wd-backend-smtp-envvars"
+          volumeMounts:
+            - name: media
+              mountPath: /code/media
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       volumes:
         - name: media
           persistentVolumeClaim:
