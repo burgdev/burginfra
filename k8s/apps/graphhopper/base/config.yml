@@ -5,6 +5,8 @@ graphhopper:
   # OSM data input file path (PBF format)
   # Mounted from map-data-osm PVC via map-data download job
   datareader.file: /osm_data/switzerland-latest.osm.pbf
+  # GTFS zip files for public transit routing (keep as zip files)
+  gtfs.file: /gtfs_data/*/gtfs.zip
 
   # Import all vehicle types during initial graph building
   # This ensures edges are available for all profiles we might enable later

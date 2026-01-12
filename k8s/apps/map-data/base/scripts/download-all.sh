@@ -194,8 +194,8 @@ for url in $${GTFS_URLS}; do
 	if [ "$skip_download" = false ]; then
 		echo "  Downloading GTFS feed $${index} from: $${url}"
 
-		# Clean directory before re-downloading (except marker files)
-		find . -type f ! -name ".gtfs.*" -delete 2>/dev/null || true
+		# Clean directory before re-downloading (keep markers and gtfs.zip)
+		find . -type f ! -name ".gtfs.*" ! -name "gtfs.zip" -delete 2>/dev/null || true
 
 		if wget --max-redirect=5 -O gtfs.zip "$${url}" 2>&1; then
 			if [ -f gtfs.zip ] && [ -s gtfs.zip ]; then
