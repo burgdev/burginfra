@@ -43,19 +43,6 @@ graphhopper:
   # Disabled for now (will use flexible mode by default)
   profiles_lm: []
 
-  # Server configuration (Dropwizard HTTP server)
-  server:
-    application_connectors:
-      - type: http
-        port: 8989 # Main HTTP API port
-        bind_host: 0.0.0.0 # Listen on all interfaces
-    admin_connectors:
-      - type: http
-        port: 8990 # Admin port (metrics, health checks)
-        bind_host: 0.0.0.0 # Admin reachable inside cluster for probes
-    request_log:
-      appenders: [] # Disable request logging to reduce noise
-
   # Graph data access method
   # RAM_STORE: Load entire graph into memory for fastest queries
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
@@ -85,3 +72,17 @@ graphhopper:
       # Reduce OSM import warning noise to INFO level
       "com.graphhopper.osm_warnings":
         level: INFO
+
+# Server configuration (Dropwizard HTTP server)
+server:
+  application_connectors:
+    - type: http
+      port: 8989 # Main HTTP API port
+      bind_host: 0.0.0.0 # Listen on all interfaces
+  admin_connectors:
+    - type: http
+      port: 8990 # Admin port (tasks/metrics)
+      bind_host: 0.0.0.0 # Admin reachable inside cluster if needed
+  request_log:
+    appenders: [] # Disable request logging to reduce noise
+
