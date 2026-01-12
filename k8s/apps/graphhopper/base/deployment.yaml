@@ -86,7 +86,7 @@ spec:
               if [ -f "/data/config.yml" ]; then
                   echo "Config found: /data/config.yml"
                   echo "Starting GraphHopper web server..."
-                  exec java ${JAVA_OPTS} -jar /graphhopper-web.jar config /data/config.yml server
+                  exec java $${JAVA_OPTS} -jar /graphhopper-web.jar config /data/config.yml server
               else
                   echo "ERROR: Config file not found!"
                   echo "Run the initialize job first"
