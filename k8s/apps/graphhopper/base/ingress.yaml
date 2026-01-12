@@ -12,10 +12,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - routing-gh.${ENV_SUBDOMAIN}${WODORE_HOST}
+        - gh.${ENV_SUBDOMAIN}${WODORE_HOST}
       secretName: graphhopper-tls
   rules:
-    - host: routing-gh.${ENV_SUBDOMAIN}${WODORE_HOST}
+    - host: gh.${ENV_SUBDOMAIN}${WODORE_HOST}
       http:
         paths:
           - path: /

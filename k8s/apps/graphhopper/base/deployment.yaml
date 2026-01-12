@@ -31,6 +31,9 @@ spec:
             - name: http
               containerPort: 8989
               protocol: TCP
+            - name: admin
+              containerPort: 8990
+              protocol: TCP
           # JVM memory settings in JVM format (not Kubernetes quantity format)
           # -Xmx3g: Maximum heap size 3GB (enough for serving routing requests)
           # -Xms2g: Initial heap size 2GB (allow some growth without overhead)
@@ -50,7 +53,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: http
+              port: admin
             initialDelaySeconds: 60 # Wait for graph to load
             periodSeconds: 30 # Check every 30 seconds
             timeoutSeconds: 10
@@ -58,7 +61,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
-              port: http
+              port: admin
             initialDelaySeconds: 30 # Ready sooner than liveness
             periodSeconds: 10
             timeoutSeconds: 5
@@ -66,7 +69,7 @@ spec:
           startupProbe:
             httpGet:
               path: /health
-              port: http
+              port: admin
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 10

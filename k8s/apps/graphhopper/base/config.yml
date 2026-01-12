@@ -52,7 +52,7 @@ graphhopper:
     admin_connectors:
       - type: http
         port: 8990 # Admin port (metrics, health checks)
-        bind_host: localhost # Admin only accessible locally
+        bind_host: 0.0.0.0 # Admin reachable inside cluster for probes
     request_log:
       appenders: [] # Disable request logging to reduce noise
 
