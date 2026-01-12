@@ -7,12 +7,12 @@ set -e
 echo "=== GraphHopper Data Wait and Build ==="
 
 # Configuration
-OSM_DATA_DIR="$$${OSM_DATA_DIR:-/osm_data}"
-GTFS_DATA_DIR="$$${GTFS_DATA_DIR:-/gtfs_data}"
-GRAPH_DIR="$$${GRAPH_DIR:-/data/.gh}"
-CONFIG_FILE="$$${CONFIG_FILE:-/data/config.yml}"
-MAX_WAIT="$$${MAX_WAIT:-3600}"  # Maximum wait time: 1 hour
-CHECK_INTERVAL="$$${CHECK_INTERVAL:-10}"  # Check every 10 seconds
+OSM_DATA_DIR="$${OSM_DATA_DIR:-/osm_data}"
+GTFS_DATA_DIR="$${GTFS_DATA_DIR:-/gtfs_data}"
+GRAPH_DIR="$${GRAPH_DIR:-/data/.gh}"
+CONFIG_FILE="$${CONFIG_FILE:-/data/config.yml}"
+MAX_WAIT="$${MAX_WAIT:-3600}"  # Maximum wait time: 1 hour
+CHECK_INTERVAL="$${CHECK_INTERVAL:-10}"  # Check every 10 seconds
 
 # Colors
 GREEN='\033[0;32m'
@@ -61,7 +61,7 @@ wait_for_data() {
     done
     
     echo ""
-    log_warn "Timeout waiting for $$${data_name} data after $$${MAX_WAIT}s"
+    log_warn "Timeout waiting for $${data_name} data after $${MAX_WAIT}s"
     return 1
 }
 
@@ -69,32 +69,32 @@ wait_for_data() {
 verify_osm_data() {
     log_info "Verifying OSM data..."
     
-    if [ -z "$$${OSM_FILE}" ]; then
+    if [ -z "$${OSM_FILE}" ]; then
         # Find OSM file
-        OSM_FILE=$(find "$$${OSM_DATA_DIR}" -name "*.osm.pbf" -type f | head -n 1)
+        OSM_FILE=$(find "$${OSM_DATA_DIR}" -name "*.osm.pbf" -type f | head -n 1)
     fi
 
-    if [ -z "$$${OSM_FILE}" ] || [ ! -f "$$${OSM_FILE}" ]; then
-        log_error "No OSM PBF file found in $$${OSM_DATA_DIR}"
+    if [ -z "$${OSM_FILE}" ] || [ ! -f "$${OSM_FILE}" ]; then
+        log_error "No OSM PBF file found in $${OSM_DATA_DIR}"
         return 1
     fi
 
-    local size=$(du -h "$$${OSM_FILE}" | cut -f1)
-    log_info "OSM file found: $$${OSM_FILE} ($$${size})"
+    local size=$(du -h "$${OSM_FILE}" | cut -f1)
+    log_info "OSM file found: $${OSM_FILE} ($${size})"
     return 0
 }
 
 verify_gtfs_data() {
     log_info "Verifying GTFS data..."
 
-    if [ ! -d "$$${GTFS_DATA_DIR}" ]; then
+    if [ ! -d "$${GTFS_DATA_DIR}" ]; then
         log_warn "GTFS directory not found, transit support will be disabled"
         return 0  # Not fatal
     fi
 
-    local feed_count=$(find "$$${GTFS_DATA_DIR}" -name "stops.txt" | wc -l)
+    local feed_count=$(find "$${GTFS_DATA_DIR}" -name "stops.txt" | wc -l)
     if [ $feed_count -gt 0 ]; then
-        log_info "GTFS feeds found: $$${feed_count} feed(s)"
+        log_info "GTFS feeds found: $${feed_count} feed(s)"
         return 0
     else
         log_warn "No GTFS data found, transit support will be disabled"
@@ -105,11 +105,11 @@ verify_gtfs_data() {
 # Main execution
 main() {
     log_info "Starting GraphHopper data wait process"
-    log_info "Max wait time: $$${MAX_WAIT}s"
+    log_info "Max wait time: $${MAX_WAIT}s"
     
     # Wait for all data sources
-    wait_for_data "$$${OSM_DATA_DIR}" "OSM"
-    wait_for_data "$$${GTFS_DATA_DIR}" "GTFS"
+    wait_for_data "$${OSM_DATA_DIR}" "OSM"
+    wait_for_data "$${GTFS_DATA_DIR}" "GTFS"
     
     echo ""
     log_info "All data sources ready!"
@@ -123,24 +123,24 @@ main() {
     create_config
     
     log_info "Data ready. GraphHopper can now build graphs."
-    log_info "Run: java -jar /graphhopper-web.jar config $$${CONFIG_FILE} import"
+    log_info "Run: java -jar /graphhopper-web.jar config $${CONFIG_FILE} import"
 }
 
 # Create config function
 create_config() {
     # Find OSM file
-    OSM_FILE=$(find "$$${OSM_DATA_DIR}" -name "*.osm.pbf" -type f | head -n 1)
+    OSM_FILE=$(find "$${OSM_DATA_DIR}" -name "*.osm.pbf" -type f | head -n 1)
 
-    if [ -z "$$${OSM_FILE}" ]; then
+    if [ -z "$${OSM_FILE}" ]; then
         log_error "Cannot find OSM file"
         exit 1
     fi
 
-    log_info "Using OSM file: $$${OSM_FILE}"
+    log_info "Using OSM file: $${OSM_FILE}"
 
     # Check if GTFS data exists
     GTFS_ENABLED="false"
-    if [ -d "$$${GTFS_DATA_DIR}" ] && [ "$(find $$${GTFS_DATA_DIR} -name 'stops.txt' | wc -l)" -gt 0 ]; then
+    if [ -d "$${GTFS_DATA_DIR}" ] && [ "$(find $${GTFS_DATA_DIR} -name 'stops.txt' | wc -l)" -gt 0 ]; then
         GTFS_ENABLED="true"
         log_info "GTFS/transit support: ENABLED"
     else
@@ -148,15 +148,15 @@ create_config() {
     fi
     
     # Create config.yml
-    cat > "$$${CONFIG_FILE}" << EOF
+    cat > "$${CONFIG_FILE}" << EOF
 graphhopper:
   # Data reader configuration
   datareader:
-    file: $$${OSM_FILE}
+    file: $${OSM_FILE}
     import_vehicle: all
 
   # Graph location
-  graph.location: $$${GRAPH_DIR}
+  graph.location: $${GRAPH_DIR}
 
   # Profiles to build
   profiles:
@@ -197,7 +197,7 @@ $(if [ "$${GTFS_ENABLED}" = "true" ]; then
     echo "  # Public transit configuration"
     echo "  pt:"
     echo "    # GTFS data location"
-    echo "    gtfs_file: $$${GTFS_DATA_DIR}/*/gtfs.zip"
+    echo "    gtfs_file: $${GTFS_DATA_DIR}/*/gtfs.zip"
     echo "    # Blocking tours"
     echo "    block_trip_search: true"
     echo "    # Use fuzzy transit search"
@@ -213,8 +213,8 @@ fi)
     level: INFO
 EOF
 
-    log_info "Configuration created: $$${CONFIG_FILE}"
-    log_info "Profiles: car, bike, foot$(if [ "$$${GTFS_ENABLED}" = "true" ]; then echo ", pt (public transit)"; fi)"
+    log_info "Configuration created: $${CONFIG_FILE}"
+    log_info "Profiles: car, bike, foot$(if [ "$${GTFS_ENABLED}" = "true" ]; then echo ", pt (public transit)"; fi)"
 }
 
 # Run main
