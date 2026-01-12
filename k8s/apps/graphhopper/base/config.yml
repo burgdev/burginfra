@@ -10,6 +10,11 @@ graphhopper:
   # This ensures edges are available for all profiles we might enable later
   import_vehicle: all
 
+  # Exclude certain highway types during OSM import to reduce graph size
+  # Empty string means include all highways (needed for foot/hiking profiles)
+  # Required parameter: must be explicitly set even if empty
+  import.osm.ignored_highways: ""
+
   # Directory where GraphHopper stores its optimized graph data
   # This data is created by the initialize job and read by the server deployment
   # Mounted on graphhopper-data PVC
