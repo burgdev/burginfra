@@ -55,7 +55,7 @@ spec:
 
       containers:
         - name: build-graph
-          image: ghcr.io/graphhopper/graphhopper:11.0
+          image: ghcr.io/simonneutert/graphhopper:11.0
           securityContext:
             allowPrivilegeEscalation: false
           env:

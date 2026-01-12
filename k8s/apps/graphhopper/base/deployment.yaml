@@ -66,7 +66,7 @@ spec:
 
       containers:
         - name: graphhopper
-          image: ghcr.io/graphhopper/graphhopper:11.0
+          image: ghcr.io/simonneutert/graphhopper:11.0
           securityContext:
             allowPrivilegeEscalation: false
           ports:
