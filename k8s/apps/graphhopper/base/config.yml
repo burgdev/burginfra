@@ -1,0 +1,54 @@
+graphhopper:
+  # Data reader configuration
+  datareader.file: /osm_data/switzerland-latest.osm.pbf
+  import_vehicle: all
+
+  # Graph location
+  graph.location: /data/.gh
+
+  # Profiles to build
+  profiles:
+    - name: car
+      custom_model_files: [car.json]
+    - name: foot
+      custom_model_files: [foot.json, foot_elevation.json]
+    - name: bike
+      custom_model_files: [bike.json, bike_elevation.json]
+    - name: hiking
+      custom_model_files: [foot.json, foot_elevation.json]
+
+  # Contraction Hierarchies (fast queries) for car profile
+  profiles_ch:
+    - profile: car
+
+  # Landmarks (alternative to CH, disabled for now)
+  profiles_lm: []
+
+  # Server configuration
+  server:
+    application_connectors:
+      - type: http
+        port: 8989
+        bind_host: 0.0.0.0
+    admin_connectors:
+      - type: http
+        port: 8990
+        bind_host: localhost
+    request_log:
+      appenders: []
+
+  # Data access
+  graph.dataaccess: RAM_STORE
+
+  # Elevation (using SRTM)
+  graph.elevation.provider: srtm
+  graph.elevation.cache_dir: /srtm_cache
+
+  # Logging
+  logging:
+  appenders:
+    - type: console
+      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  loggers:
+    "com.graphhopper.osm_warnings":
+      level: INFO

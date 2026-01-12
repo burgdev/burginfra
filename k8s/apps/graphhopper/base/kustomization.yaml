@@ -11,9 +11,9 @@ resources:
   - ingress.yaml
 
 configMapGenerator:
-  - name: graphhopper-scripts
+  - name: graphhopper-config
     files:
-      - scripts/wait-and-build.sh
+      - config.yml
     options:
       disableNameSuffixHash: true
 

@@ -22,48 +22,6 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
         runAsNonRoot: true
 
-      # Init container to ensure data is ready before starting
-      initContainers:
-        - name: wait-for-graph
-          image: debian:12-slim
-          securityContext:
-            allowPrivilegeEscalation: false
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              echo "=== Waiting for GraphHopper graph to be ready ==="
-              MAX_WAIT=3600
-              elapsed=0
-
-              while [ $elapsed -lt $MAX_WAIT ]; do
-                  if [ -f "/data/.gh/nodes" ]; then
-                      echo "✓ Graph found!"
-                      timestamp=$(stat -c %Y /data/.gh/nodes 2>/dev/null || stat -f %m /data/.gh/nodes 2>/dev/null)
-                      date_str=$(date -d @$timestamp 2>/dev/null || date -r $timestamp 2>/dev/null)
-                      echo "  Graph built: $date_str"
-                      exit 0
-                  fi
-
-                  echo -n "."
-                  sleep 10
-                  elapsed=$((elapsed + 10))
-              done
-
-              echo ""
-              echo "✗ Timeout waiting for graph!"
-              echo "  Run the initialize job first:"
-              echo "  kubectl create job --from=job/graphhopper-initialize graphhopper-init -n production"
-              exit 1
-          volumeMounts:
-            - name: graph-data
-              mountPath: /data
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              memory: 128Mi
-
       containers:
         - name: graphhopper
           image: ghcr.io/simonneutert/graphhopper:11.0
@@ -76,22 +34,10 @@ spec:
           env:
             - name: JAVA_OPTS
               value: "-Xmx3g -Xms2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
-            - name: CONFIG_FILE
-              value: /data/config.yml
           command:
-            - /bin/bash
+            - /graphhopper.sh
             - -c
-            - |
-              echo "=== Starting GraphHopper Server ==="
-              if [ -f "/data/config.yml" ]; then
-                  echo "Config found: /data/config.yml"
-                  echo "Starting GraphHopper web server..."
-                  exec java $${JAVA_OPTS} -jar /graphhopper-web.jar config /data/config.yml server
-              else
-                  echo "ERROR: Config file not found!"
-                  echo "Run the initialize job first"
-                  exit 1
-              fi
+            - /data/config.yml
           livenessProbe:
             httpGet:
               path: /health
@@ -131,6 +77,8 @@ spec:
               readOnly: true
             - name: graph-data
               mountPath: /data
+            - name: srtm-cache
+              mountPath: /srtm_cache
 
       volumes:
         - name: osm-data
@@ -144,3 +92,6 @@ spec:
         - name: graph-data
           persistentVolumeClaim:
             claimName: graphhopper-data
+        - name: srtm-cache
+          emptyDir:
+            sizeLimit: 2Gi
