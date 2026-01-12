@@ -5,3 +5,5 @@ resources:
   - ../../podinfo/overlays/staging/
   # WODORE
   - ../../wodore/flux/staging/
+  # ROUTING
+  - ../../graphhopper/overlays/staging/
