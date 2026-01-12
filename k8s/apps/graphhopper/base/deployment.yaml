@@ -1,0 +1,146 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphhopper
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${GRAPHOPPER_REPLICAS}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: graphhopper
+  template:
+    metadata:
+      labels:
+        app: graphhopper
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsNonRoot: true
+
+      # Init container to ensure data is ready before starting
+      initContainers:
+        - name: wait-for-graph
+          image: debian:12-slim
+          securityContext:
+            allowPrivilegeEscalation: false
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "=== Waiting for GraphHopper graph to be ready ==="
+              MAX_WAIT=3600
+              elapsed=0
+
+              while [ $elapsed -lt $MAX_WAIT ]; do
+                  if [ -f "/data/.gh/nodes" ]; then
+                      echo "✓ Graph found!"
+                      timestamp=$(stat -c %Y /data/.gh/nodes 2>/dev/null || stat -f %m /data/.gh/nodes 2>/dev/null)
+                      date_str=$(date -d @$timestamp 2>/dev/null || date -r $timestamp 2>/dev/null)
+                      echo "  Graph built: $date_str"
+                      exit 0
+                  fi
+
+                  echo -n "."
+                  sleep 10
+                  elapsed=$((elapsed + 10))
+              done
+
+              echo ""
+              echo "✗ Timeout waiting for graph!"
+              echo "  Run the initialize job first:"
+              echo "  kubectl create job --from=job/graphhopper-initialize graphhopper-init -n production"
+              exit 1
+          volumeMounts:
+            - name: graph-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+
+      containers:
+        - name: graphhopper
+          image: ghcr.io/graphhopper/graphhopper:11.0
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: http
+              containerPort: 8989
+              protocol: TCP
+          env:
+            - name: JAVA_OPTS
+              value: "-Xmx3g -Xms2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+            - name: CONFIG_FILE
+              value: /data/config.yml
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "=== Starting GraphHopper Server ==="
+              if [ -f "/data/config.yml" ]; then
+                  echo "Config found: /data/config.yml"
+                  echo "Starting GraphHopper web server..."
+                  exec java ${JAVA_OPTS} -jar /graphhopper-web.jar config /data/config.yml server
+              else
+                  echo "ERROR: Config file not found!"
+                  echo "Run the initialize job first"
+                  exit 1
+              fi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 2Gi
+            limits:
+              memory: 4Gi
+          volumeMounts:
+            - name: osm-data
+              mountPath: /osm_data
+              readOnly: true
+            - name: gtfs-data
+              mountPath: /gtfs_data
+              readOnly: true
+            - name: graph-data
+              mountPath: /data
+
+      volumes:
+        - name: osm-data
+          persistentVolumeClaim:
+            claimName: map-data-osm
+            readOnly: true
+        - name: gtfs-data
+          persistentVolumeClaim:
+            claimName: map-data-gtfs
+            readOnly: true
+        - name: graph-data
+          persistentVolumeClaim:
+            claimName: graphhopper-data

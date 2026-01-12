@@ -1,0 +1,144 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: graphhopper-initialize
+  namespace: ${NAMESPACE}
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        job-name: graphhopper-initialize
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsNonRoot: true
+
+      initContainers:
+        - name: wait-for-data
+          image: debian:12-slim
+          securityContext:
+            allowPrivilegeEscalation: false
+          command: ["/bin/bash", "/scripts/wait-and-build.sh"]
+          env:
+            - name: OSM_DATA_DIR
+              value: /osm_data
+            - name: GTFS_DATA_DIR
+              value: /gtfs_data
+            - name: DATA_DIR
+              value: /data
+            - name: MAX_WAIT
+              value: "3600"
+            - name: VERBOSE
+              value: "true"
+          volumeMounts:
+            - name: osm-data
+              mountPath: /osm_data
+              readOnly: true
+            - name: gtfs-data
+              mountPath: /gtfs_data
+              readOnly: true
+            - name: graph-data
+              mountPath: /data
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+
+      containers:
+        - name: build-graph
+          image: ghcr.io/graphhopper/graphhopper:11.0
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: GRAPHOPPER_BUILD_MEMORY
+              value: ${GRAPHOPPER_BUILD_MEMORY}
+            - name: CONFIG_FILE
+              value: /data/config.yml
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "=== Building GraphHopper Graph ==="
+              
+              # Normalize memory units: convert Kubernetes format to JVM format
+              # Kubernetes: 8Gi, 512Mi, 1G  → JVM: 8g, 512m, 1g
+              MEM_RAW="${GRAPHOPPER_BUILD_MEMORY}"
+              echo "Raw memory setting: ${MEM_RAW}"
+              
+              # Extract number and unit
+              MEM_NUM=$(echo "${MEM_RAW}" | sed 's/[^0-9.]//g')
+              MEM_UNIT=$(echo "${MEM_RAW}" | sed 's/[0-9.]//g' | tr '[:lower:]' '[:upper:]')
+              
+              # Convert to JVM format
+              case "${MEM_UNIT}" in
+                GI|G)
+                  JVM_MEM="${MEM_NUM}g"
+                  ;;
+                MI|M)
+                  JVM_MEM="${MEM_NUM}m"
+                  ;;
+                *)
+                  # Assume bytes or already in JVM format, default to g
+                  if [ -z "${MEM_UNIT}" ]; then
+                    JVM_MEM="${MEM_NUM}g"
+                  else
+                    JVM_MEM="${MEM_RAW}"
+                  fi
+                  ;;
+              esac
+              
+              echo "JVM memory: -Xmx${JVM_MEM} -Xms${JVM_MEM}"
+              JAVA_OPTS="-Xmx${JVM_MEM} -Xms${JVM_MEM} -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+              
+              echo "Config file: ${CONFIG_FILE}"
+              if [ -f "${CONFIG_FILE}" ]; then
+                  echo "Configuration found, starting import..."
+                  java ${JAVA_OPTS} -jar /graphhopper-web.jar config ${CONFIG_FILE} import
+                  echo "=== Graph build complete ==="
+              else
+                  echo "ERROR: Config file not found!"
+                  exit 1
+              fi
+          volumeMounts:
+            - name: osm-data
+              mountPath: /osm_data
+              readOnly: true
+            - name: gtfs-data
+              mountPath: /gtfs_data
+              readOnly: true
+            - name: graph-data
+              mountPath: /data
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: ${GRAPHOPPER_BUILD_CPU}
+              memory: ${GRAPHOPPER_BUILD_MEMORY}
+            limits:
+              memory: ${GRAPHOPPER_BUILD_MEMORY}
+
+      volumes:
+        - name: osm-data
+          persistentVolumeClaim:
+            claimName: map-data-osm
+            readOnly: true
+        - name: gtfs-data
+          persistentVolumeClaim:
+            claimName: map-data-gtfs
+            readOnly: true
+        - name: graph-data
+          persistentVolumeClaim:
+            claimName: graphhopper-data
+        - name: scripts
+          configMap:
+            name: graphhopper-scripts
+            defaultMode: 0755

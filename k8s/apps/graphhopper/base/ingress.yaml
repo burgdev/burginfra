@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: graphhopper
+  namespace: ${NAMESPACE}
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - routing-gh.${ENV_SUBDOMAIN}${WODORE_HOST}
+      secretName: graphhopper-tls
+  rules:
+    - host: routing-gh.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: graphhopper
+                port:
+                  number: 8989
