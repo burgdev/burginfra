@@ -12,7 +12,7 @@ resources:
 configMapGenerator:
   - name: map-data-scripts
     files:
-      - download-all.sh
+      - scripts/download-all.sh
     options:
       disableNameSuffixHash: true
 
