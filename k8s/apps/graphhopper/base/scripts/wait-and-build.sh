@@ -61,7 +61,7 @@ wait_for_data() {
     done
     
     echo ""
-    log_warn "Timeout waiting for ${data_name} data after ${MAX_WAIT}s"
+    log_warn "Timeout waiting for $${data_name} data after $${MAX_WAIT}s"
     return 1
 }
 
@@ -105,7 +105,7 @@ verify_gtfs_data() {
 # Main execution
 main() {
     log_info "Starting GraphHopper data wait process"
-    log_info "Max wait time: ${MAX_WAIT}s"
+    log_info "Max wait time: $${MAX_WAIT}s"
     
     # Wait for all data sources
     wait_for_data "$${OSM_DATA_DIR}" "OSM"
@@ -123,7 +123,7 @@ main() {
     create_config
     
     log_info "Data ready. GraphHopper can now build graphs."
-    log_info "Run: java -jar /graphhopper-web.jar config ${CONFIG_FILE} import"
+    log_info "Run: java -jar /graphhopper-web.jar config $${CONFIG_FILE} import"
 }
 
 # Create config function
@@ -213,8 +213,8 @@ fi)
     level: INFO
 EOF
 
-    log_info "Configuration created: ${CONFIG_FILE}"
-    log_info "Profiles: car, bike, foot$(if [ "${GTFS_ENABLED}" = "true" ]; then echo ", pt (public transit)"; fi)"
+    log_info "Configuration created: $${CONFIG_FILE}"
+    log_info "Profiles: car, bike, foot$(if [ "$${GTFS_ENABLED}" = "true" ]; then echo ", pt (public transit)"; fi)"
 }
 
 # Run main
