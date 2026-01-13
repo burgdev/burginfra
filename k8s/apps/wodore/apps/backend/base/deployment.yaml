@@ -161,10 +161,23 @@ spec:
           image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
           imagePullPolicy: Always
           command:
-            - python
-            - manage.py
-            - migrate
-            - --check
+            - /bin/sh
+            - -c
+            - |
+              echo "=========================================="
+              echo "Checking for pending Django migrations..."
+              echo "=========================================="
+              if python manage.py migrate --check; then
+                echo "✓ No pending migrations - database is up to date!"
+                echo "=========================================="
+                exit 0
+              else
+                echo "✗ ERROR: Pending migrations detected!"
+                echo "Please run the migration job first:"
+                echo "  kubectl delete job wd-backend-migrate"
+                echo "=========================================="
+                exit 1
+              fi
           env:
             # Database connection (CNPG service)
             - name: DJANGO_DATABASE_HOST

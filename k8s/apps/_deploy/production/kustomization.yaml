@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - imageupdateautomation.yaml
   # BURGDEV
-  - ../../podinfo/overlays/production/
+  # - ../../podinfo/overlays/production/
   - ../../umami/overlays/production/
   # CRUXLI
   - ../../immich/flux/production/
