@@ -20,7 +20,7 @@ spec:
       ENV_SUBDOMAIN: "stg."
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
-      WD_BACKEND_TAG: "20260113T0022-sha-6e34884-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
+      WD_BACKEND_TAG: "20260113T0042-sha-dd3c3ba-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       WD_FRONTEND_TAG: "20260110T1510-sha-7af9b2a-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
       IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
