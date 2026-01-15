@@ -10,7 +10,7 @@ spec:
 
   storage:
     storageClass: fast-local-data-v3
-    size: ${WODORE_DB_STORAGE_SIZE:-2Gi}
+    size: ${WD_BACKEND_DB_STORAGE_SIZE:-2Gi}
 
   # PostGIS-enabled PostgreSQL 18 (system variant includes Barman Cloud for backups)
   imageName: ghcr.io/cloudnative-pg/postgis:18-3.6-system-trixie
