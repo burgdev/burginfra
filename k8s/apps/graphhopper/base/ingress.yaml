@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: graphhopper
+  namespace: ${NAMESPACE}
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - gh.${ENV_SUBDOMAIN}${WODORE_HOST}
+      secretName: graphhopper-tls
+  rules:
+    - host: gh.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: graphhopper
+                port:
+                  number: 8989

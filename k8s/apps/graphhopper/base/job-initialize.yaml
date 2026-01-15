@@ -1,0 +1,86 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: graphhopper-initialize
+  namespace: ${NAMESPACE}
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        job-name: graphhopper-initialize
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsNonRoot: true
+
+      containers:
+        - name: build-graph
+          image: ghcr.io/simonneutert/graphhopper:11.0
+          securityContext:
+            allowPrivilegeEscalation: false
+          # JVM memory settings in JVM format (not Kubernetes quantity format)
+          # -Xmx: Maximum heap size (12GB for building graphs)
+          # -Xms: Initial heap size (set to same as -Xmx to avoid dynamic resizing overhead)
+          # -XX:+UseG1GC: Use G1 garbage collector for better performance on large heaps
+          env:
+            - name: JAVA_OPTS
+              value: "-Xmx12g -Xms12g -XX:+UseG1GC"
+          # Arguments passed to the entrypoint script (graphhopper.sh)
+          # --import: Run graph import/build mode instead of server mode
+          # -c /data/config.yml: Use this config file (GraphHopper YAML format)
+          # Note: The image has ENTRYPOINT ["./graphhopper.sh"], so we only pass args
+          args:
+            - --import
+            - -c
+            - /data/config.yml
+          volumeMounts:
+            # Read-only mount of OSM PBF data downloaded by map-data job
+            - name: osm-data
+              mountPath: /osm_data
+              readOnly: true
+            # Read-only mount of GTFS public transport data (for future transit profile)
+            - name: gtfs-data
+              mountPath: /gtfs_data
+              readOnly: true
+            # Read-write mount for built GraphHopper graph data
+            - name: graph-data
+              mountPath: /data
+            # Read-write mount for SRTM elevation cache (persistent across restarts)
+            - name: srtm-cache
+              mountPath: /srtm_cache
+            # ConfigMap mount for GraphHopper configuration file
+            # Using subPath to mount only the config.yml file, not the entire volume
+            - name: config
+              mountPath: /data/config.yml
+              subPath: config.yml
+          # Resource limits in Kubernetes quantity format (Gi = Gibibytes)
+          resources:
+            requests:
+              cpu: ${GRAPHOPPER_BUILD_CPU} # 6 cores from cluster settings
+              memory: ${GRAPHOPPER_BUILD_MEMORY} # 12Gi from cluster settings
+            limits:
+              memory: ${GRAPHOPPER_BUILD_MEMORY} # Match request for memory
+
+      volumes:
+        - name: osm-data
+          persistentVolumeClaim:
+            claimName: map-data-osm
+            readOnly: true
+        - name: gtfs-data
+          persistentVolumeClaim:
+            claimName: map-data-gtfs
+            readOnly: true
+        - name: graph-data
+          persistentVolumeClaim:
+            claimName: graphhopper-data
+        - name: srtm-cache
+          persistentVolumeClaim:
+            claimName: graphhopper-srtm-cache
+        - name: config
+          configMap:
+            name: graphhopper-config

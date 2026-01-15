@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphhopper
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${GRAPHOPPER_REPLICAS}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: graphhopper
+  template:
+    metadata:
+      labels:
+        app: graphhopper
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsNonRoot: true
+
+      containers:
+        - name: graphhopper
+          image: ghcr.io/simonneutert/graphhopper:11.0
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: http
+              containerPort: 8989
+              protocol: TCP
+            - name: admin
+              containerPort: 8990
+              protocol: TCP
+          # JVM memory settings in JVM format (not Kubernetes quantity format)
+          # -Xmx3g: Maximum heap size 3GB (enough for serving routing requests)
+          # -Xms2g: Initial heap size 2GB (allow some growth without overhead)
+          # -XX:+UseG1GC: Use G1 garbage collector for better performance
+          # -XX:MaxGCPauseMillis=200: Target 200ms max GC pause for consistent latency
+          env:
+            - name: JAVA_OPTS
+              value: "-Xmx3g -Xms2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+          # Arguments passed to the entrypoint script (graphhopper.sh)
+          # -c /data/config.yml: Use this config file (GraphHopper YAML format)
+          # Note: The image has ENTRYPOINT ["./graphhopper.sh"], so we only pass args
+          # Default mode is "server" when --import is not specified
+          args:
+            - -c
+            - /data/config.yml
+          # Health checks using GraphHopper's /health endpoint
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60 # Wait for graph to load
+            periodSeconds: 30 # Check every 30 seconds
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30 # Ready sooner than liveness
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 30 # Allow 5 minutes for startup (30 * 10s)
+          # Resource limits in Kubernetes quantity format
+          # m = millicores, Gi = Gibibytes
+          resources:
+            requests:
+              cpu: 250m # Quarter core minimum
+              memory: 2Gi
+            limits:
+              memory: 4Gi # Allow headroom for heap + overhead
+          volumeMounts:
+            # Read-only mount of OSM PBF data (not used during serving, but available)
+            - name: osm-data
+              mountPath: /osm_data
+              readOnly: true
+            # Read-only mount of GTFS public transport data (for future transit profile)
+            - name: gtfs-data
+              mountPath: /gtfs_data
+              readOnly: true
+            # Read-write mount for GraphHopper graph data (loaded from here)
+            - name: graph-data
+              mountPath: /data
+            # Read-write mount for SRTM elevation cache (persistent across restarts)
+            - name: srtm-cache
+              mountPath: /srtm_cache
+            # ConfigMap mount for GraphHopper configuration file
+            # Using subPath to mount only the config.yml file, not the entire volume
+            - name: config
+              mountPath: /data/config.yml
+              subPath: config.yml
+
+      volumes:
+        - name: osm-data
+          persistentVolumeClaim:
+            claimName: map-data-osm
+            readOnly: true
+        - name: gtfs-data
+          persistentVolumeClaim:
+            claimName: map-data-gtfs
+            readOnly: true
+        - name: graph-data
+          persistentVolumeClaim:
+            claimName: graphhopper-data
+        - name: srtm-cache
+          persistentVolumeClaim:
+            claimName: graphhopper-srtm-cache
+        - name: config
+          configMap:
+            name: graphhopper-config

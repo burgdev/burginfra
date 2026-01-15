@@ -3,10 +3,12 @@ kind: Kustomization
 resources:
   - imageupdateautomation.yaml
   # BURGDEV
-  - ../../podinfo/overlays/production/
+  # - ../../podinfo/overlays/production/
   - ../../umami/overlays/production/
   # CRUXLI
   - ../../immich/flux/production/
   # WODORE
   - ../../wodore/flux/production/
-  - ../../valhalla/overlays/production/
+  #- ../../valhalla/overlays/production/
+  - ../../graphhopper/overlays/production/
+  - ../../map-data/overlays/production/

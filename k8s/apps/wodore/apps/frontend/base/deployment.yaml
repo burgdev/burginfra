@@ -38,8 +38,8 @@ spec:
               exec:
                 command: ["/bin/sh", "-c", "sleep 5"]
           env:
-            - name: NGINX_CONFIG
-              value: "nginx-proxy.conf"
+            ## - name: NGINX_CONFIG # not needed in kubernetes
+            ##   value: "proxy"
             - name: TMPDIR
               value: "/var/tmp"
           envFrom:
