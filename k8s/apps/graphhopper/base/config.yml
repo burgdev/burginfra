@@ -32,8 +32,6 @@ graphhopper:
       custom_model_files: [bike.json, bike_elevation.json]
     - name: foot
       custom_model_files: [foot.json, foot_elevation.json]
-    - name: hiking
-      custom_model_files: [hiking.json]
 
   # Contraction Hierarchies (CH) for fast queries
   profiles_ch:
