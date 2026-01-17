@@ -35,7 +35,7 @@ spec:
             - -b
             - 0.0.0.0:8008
             - -w
-            - "3"
+            - "${WD_BACKEND_GUNICORN_WORKERS}"
             - --preload
             - server.wsgi:application
           securityContext:

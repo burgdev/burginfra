@@ -50,6 +50,7 @@ data:
   WODORE_REPLICAS: "1"
   WODORE_POSTGRES_HIBERNATE: "off" # TODO: Not working - YAML boolean parsing issue with "on"/"off" values
   WD_CRON_AVAILABILITY_SUSPEND: "false"
+  WD_BACKEND_GUNICORN_WORKERS: "3" # Production uses 3 workers
   WD_IMAGOR_STORAGE_SIZE: "30Gi"
   WD_BACKEND_MEDIA_STORAGE_SIZE: "40Gi"
   WD_BACKEND_PY_CACHE_STORAGE_SIZE: "5Gi"
