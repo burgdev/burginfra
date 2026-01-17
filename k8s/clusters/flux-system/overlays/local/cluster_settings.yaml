@@ -50,7 +50,7 @@ data:
   WODORE_REPLICAS: "1" # Keep running for development
   WODORE_POSTGRES_HIBERNATE: "off" # TODO: Not working - YAML boolean parsing issue with "on"/"off" values
   WD_CRON_AVAILABILITY_SUSPEND: "true" # do not run cron job on local cluster
-  WD_BACKEND_GUNICORN_WORKERS: "1" # Reduce workers on local to save memory (was 3)
+  WD_BACKEND_GUNICORN_WORKERS: '"1"' # Reduce workers on local to save memory (was 3) - double quotes to force string type
   WD_IMAGOR_STORAGE_SIZE: "2Gi"
   WD_BACKEND_MEDIA_STORAGE_SIZE: "5Gi"
   WD_BACKEND_PY_CACHE_STORAGE_SIZE: "1Gi"
