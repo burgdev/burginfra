@@ -50,6 +50,7 @@ data:
   WODORE_REPLICAS: "1"
   WODORE_POSTGRES_HIBERNATE: "off" # TODO: Not working - YAML boolean parsing issue with "on"/"off" values
   WD_CRON_AVAILABILITY_SUSPEND: "false"
+  WD_BACKEND_GUNICORN_WORKERS: '"3"' # Production uses 3 workers
   WD_IMAGOR_STORAGE_SIZE: "30Gi"
   WD_BACKEND_MEDIA_STORAGE_SIZE: "40Gi"
   WD_BACKEND_PY_CACHE_STORAGE_SIZE: "5Gi"
@@ -73,6 +74,7 @@ data:
   GRAPHOPPER_INIT_JOB: "bypass" # Init job mode: download|auto|check|bypass (bypass = use data copied from local)
   GRAPHOPPER_BUILD_CPU: "2" # CPU cores for build job (limited on VPS)
   GRAPHOPPER_BUILD_MEMORY: "8Gi" # Memory limit for build job
+  GRAPHOPPER_JAVA_MEMORY: "8g" # JVM heap size (must match GRAPHOPPER_BUILD_MEMORY)
   GRAPHOPPER_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
 
   # === MAP DATA (Shared OSM, GTFS, Elevation) ===

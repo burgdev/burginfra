@@ -5,8 +5,9 @@ graphhopper:
   # OSM data input file path (PBF format)
   # Mounted from map-data-osm PVC via map-data download job
   datareader.file: /osm_data/switzerland-latest.osm.pbf
-  # GTFS zip files for public transit routing (keep as zip files)
-  gtfs.file: /gtfs_data/*/gtfs.zip
+  # GTFS zip files for public transit routing
+  # Re-enabled with MMAP storage for better memory management
+  gtfs.file: /gtfs_data/feed_1/gtfs.zip
 
   # Import all vehicle types during initial graph building
   # This ensures edges are available for all profiles we might enable later
@@ -22,40 +23,32 @@ graphhopper:
   # Mounted on graphhopper-data PVC
   graph.location: /data/.gh
 
-  # Routing profiles to build (testing: only foot and hiking)
-  # Each profile defines a routing mode with custom weights and restrictions
+  # Routing profiles to build
+  # Use built-in custom model files shipped with the image.
   profiles:
-    # Foot profile: General walking routing
-    # Uses foot.json for base weights and foot_elevation.json for elevation-aware routing
+    - name: car
+      custom_model_files: [car.json]
+    - name: bike
+      custom_model_files: [bike.json, bike_elevation.json]
     - name: foot
       custom_model_files: [foot.json, foot_elevation.json]
 
-    # Hiking profile: Specialized for hiking trails
-    # Reuses foot models but can be customized separately if needed
-    - name: hiking
-      custom_model_files: [foot.json, foot_elevation.json]
-
   # Contraction Hierarchies (CH) for fast queries
-  # CH preprocesses the graph for O(1) lookup but requires more memory and build time
-  # Disabled for testing with foot/hiking (LM mode or flexible mode will be used)
-  profiles_ch: []
-
-  # Landmarks (LM) alternative to CH
-  # LM provides fast queries with less memory than CH, good for foot/hiking
-  # Disabled for now (will use flexible mode by default)
-  profiles_lm: []
+  profiles_ch:
+    - profile: car
 
   # Graph data access method
-  # RAM_STORE: Load entire graph into memory for fastest queries
+  # RAM_STORE: Load entire graph into memory for fastest queries (high memory usage)
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
+  # Using RAM_STORE for better performance (MMAP_STORE was causing slow startup)
   graph.dataaccess: RAM_STORE
 
-  # Encoded values to store in the graph for custom models
-  # Required when using custom_model_files in profiles
-  # These values enable elevation-aware routing and hiking-specific features
+  # Encoded values required by the custom models above
   graph.encoded_values: |
-    foot_access, hike_rating, foot_priority, foot_road_access, mtb_rating,
-    road_environment, foot_average_speed, average_slope
+    car_access, car_average_speed, country, road_class, roundabout, max_speed,
+    foot_access, foot_average_speed, foot_priority, foot_road_access, hike_rating, average_slope,
+    bike_access, bike_average_speed, bike_priority, bike_road_access, bike_network, mtb_rating,
+    road_environment
 
   # Elevation data configuration
   # SRTM: Shuttle Radar Topography Mission provides global elevation data
@@ -87,4 +80,3 @@ server:
       bind_host: 0.0.0.0 # Admin reachable inside cluster if needed
   request_log:
     appenders: [] # Disable request logging to reduce noise
-

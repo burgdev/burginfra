@@ -50,6 +50,7 @@ data:
   WODORE_REPLICAS: "1" # Keep running for development
   WODORE_POSTGRES_HIBERNATE: "off" # TODO: Not working - YAML boolean parsing issue with "on"/"off" values
   WD_CRON_AVAILABILITY_SUSPEND: "true" # do not run cron job on local cluster
+  WD_BACKEND_GUNICORN_WORKERS: '"1"' # Reduce workers on local to save memory (was 3) - double quotes to force string type
   WD_IMAGOR_STORAGE_SIZE: "2Gi"
   WD_BACKEND_MEDIA_STORAGE_SIZE: "5Gi"
   WD_BACKEND_PY_CACHE_STORAGE_SIZE: "1Gi"
@@ -72,7 +73,8 @@ data:
   GRAPHOPPER_STORAGE_SIZE: "10Gi"
   GRAPHOPPER_INIT_JOB: "auto" # Force download mode for initial setup
   GRAPHOPPER_BUILD_CPU: "6" # CPU cores for build job (leave room for Valhalla)
-  GRAPHOPPER_BUILD_MEMORY: "12Gi" # Memory limit for build job (leave room for Valhalla)
+  GRAPHOPPER_BUILD_MEMORY: "12Gi" # Container memory (8Gi for JVM + 4Gi overhead for GTFS/native)
+  GRAPHOPPER_JAVA_MEMORY: "8g" # JVM heap size (keep at 8g as requested)
   GRAPHOPPER_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
 
   # === MAP DATA (Shared OSM, GTFS, Elevation) ===
