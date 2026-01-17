@@ -24,28 +24,29 @@ graphhopper:
   graph.location: /data/.gh
 
   # Routing profiles to build
-  # Keep these to built-in vehicle types to avoid missing custom model files.
+  # Use built-in custom model files shipped with the image.
   profiles:
     - name: car
-      vehicle: car
-      weighting: fastest
+      custom_model_files: [car.json]
     - name: bike
-      vehicle: bike
-      weighting: fastest
+      custom_model_files: [bike.json, bike_elevation.json]
     - name: foot
-      vehicle: foot
-      weighting: fastest
+      custom_model_files: [foot.json, foot_elevation.json]
 
   # Contraction Hierarchies (CH) for fast queries
   profiles_ch:
     - profile: car
-    - profile: bike
-    - profile: foot
 
   # Graph data access method
   # RAM_STORE: Load entire graph into memory for fastest queries
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
   graph.dataaccess: RAM_STORE
+
+  # Encoded values required by the custom models above
+  graph.encoded_values: |
+    car_access, car_average_speed, country, road_class, roundabout, max_speed,
+    foot_access, foot_average_speed, foot_priority, foot_road_access, hike_rating, average_slope,
+    bike_access, bike_average_speed, bike_priority, bike_road_access, bike_network, mtb_rating,
 
   # Elevation data configuration
   # SRTM: Shuttle Radar Topography Mission provides global elevation data
