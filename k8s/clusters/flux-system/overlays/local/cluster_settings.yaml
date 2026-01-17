@@ -72,8 +72,8 @@ data:
   GRAPHOPPER_STORAGE_SIZE: "10Gi"
   GRAPHOPPER_INIT_JOB: "auto" # Force download mode for initial setup
   GRAPHOPPER_BUILD_CPU: "6" # CPU cores for build job (leave room for Valhalla)
-  GRAPHOPPER_BUILD_MEMORY: "8Gi" # Memory limit for build job (reduced with MMAP optimizations)
-  GRAPHOPPER_JAVA_MEMORY: "8g" # JVM heap size (must match GRAPHOPPER_BUILD_MEMORY)
+  GRAPHOPPER_BUILD_MEMORY: "12Gi" # Container memory (10Gi for JVM + 2Gi overhead)
+  GRAPHOPPER_JAVA_MEMORY: "10g" # JVM heap size (leaving room for overhead)
   GRAPHOPPER_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
 
   # === MAP DATA (Shared OSM, GTFS, Elevation) ===
