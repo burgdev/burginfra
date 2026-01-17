@@ -24,12 +24,12 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
           # JVM memory settings in JVM format (not Kubernetes quantity format)
-          # -Xmx: Maximum heap size (12GB for building graphs)
+          # -Xmx: Maximum heap size (from GRAPHOPPER_JAVA_MEMORY cluster setting)
           # -Xms: Initial heap size (set to same as -Xmx to avoid dynamic resizing overhead)
           # -XX:+UseG1GC: Use G1 garbage collector for better performance on large heaps
           env:
             - name: JAVA_OPTS
-              value: "-Xmx12g -Xms12g -XX:+UseG1GC"
+              value: "-Xmx${GRAPHOPPER_JAVA_MEMORY} -Xms${GRAPHOPPER_JAVA_MEMORY} -XX:+UseG1GC"
           # Arguments passed to the entrypoint script (graphhopper.sh)
           # --import: Run graph import/build mode instead of server mode
           # -c /data/config.yml: Use this config file (GraphHopper YAML format)

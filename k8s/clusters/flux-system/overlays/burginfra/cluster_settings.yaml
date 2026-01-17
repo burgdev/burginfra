@@ -73,6 +73,7 @@ data:
   GRAPHOPPER_INIT_JOB: "bypass" # Init job mode: download|auto|check|bypass (bypass = use data copied from local)
   GRAPHOPPER_BUILD_CPU: "2" # CPU cores for build job (limited on VPS)
   GRAPHOPPER_BUILD_MEMORY: "8Gi" # Memory limit for build job
+  GRAPHOPPER_JAVA_MEMORY: "8g" # JVM heap size (must match GRAPHOPPER_BUILD_MEMORY)
   GRAPHOPPER_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
 
   # === MAP DATA (Shared OSM, GTFS, Elevation) ===
