@@ -6,8 +6,8 @@ graphhopper:
   # Mounted from map-data-osm PVC via map-data download job
   datareader.file: /osm_data/switzerland-latest.osm.pbf
   # GTFS zip files for public transit routing
-  # DISABLED to reduce memory usage and avoid corrupted storage issues
-  # gtfs.file: /gtfs_data/feed_1/gtfs.zip
+  # Re-enabled with MMAP storage for better memory management
+  gtfs.file: /gtfs_data/feed_1/gtfs.zip
 
   # Import all vehicle types during initial graph building
   # This ensures edges are available for all profiles we might enable later
@@ -32,6 +32,8 @@ graphhopper:
       custom_model_files: [bike.json, bike_elevation.json]
     - name: foot
       custom_model_files: [foot.json, foot_elevation.json]
+    - name: hiking
+      custom_model_files: [hiking.json]
 
   # Contraction Hierarchies (CH) for fast queries
   profiles_ch:
