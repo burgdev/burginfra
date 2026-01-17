@@ -6,8 +6,8 @@ graphhopper:
   # Mounted from map-data-osm PVC via map-data download job
   datareader.file: /osm_data/switzerland-latest.osm.pbf
   # GTFS zip files for public transit routing
-  # Must point to actual directory containing GTFS files (wildcards not supported)
-  gtfs.file: /gtfs_data/feed_1/gtfs.zip
+  # DISABLED to reduce memory usage and avoid corrupted storage issues
+  # gtfs.file: /gtfs_data/feed_1/gtfs.zip
 
   # Import all vehicle types during initial graph building
   # This ensures edges are available for all profiles we might enable later
@@ -38,9 +38,10 @@ graphhopper:
     - profile: car
 
   # Graph data access method
-  # RAM_STORE: Load entire graph into memory for fastest queries
+  # RAM_STORE: Load entire graph into memory for fastest queries (high memory usage)
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
-  graph.dataaccess: RAM_STORE
+  # Changed to MMAP to reduce memory footprint during graph building
+  graph.dataaccess: MMAP
 
   # Encoded values required by the custom models above
   graph.encoded_values: |
