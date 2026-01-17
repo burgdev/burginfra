@@ -31,17 +31,12 @@ spec:
           image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
           imagePullPolicy: Always
           command:
-            - gunicorn
-            - -b
-            - 0.0.0.0:8008
-            - -w
-            - "${WD_BACKEND_GUNICORN_WORKERS}"
-            - --preload
-            - server.wsgi:application
+            - /bin/sh
+            - -c
+            - gunicorn -b 0.0.0.0:8008 -w $GUNICORN_WORKERS --preload server.wsgi:application
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
-            fsGroup: 1001
           ports:
             - name: http
               containerPort: 8008
@@ -51,6 +46,9 @@ spec:
               exec:
                 command: ["/bin/sh", "-c", "sleep 10"]
           env:
+            # Gunicorn worker count from cluster settings
+            - name: GUNICORN_WORKERS
+              value: "${WD_BACKEND_GUNICORN_WORKERS}"
             # Imagor settings
             - name: IMAGOR_URL
               value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
@@ -139,7 +137,6 @@ spec:
             allowPrivilegeEscalation: false
             runAsUser: 0
             runAsGroup: 0
-            fsGroup: 0
           ports:
             - name: media
               containerPort: 80
