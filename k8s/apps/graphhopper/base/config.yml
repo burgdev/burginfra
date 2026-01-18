@@ -40,8 +40,8 @@ graphhopper:
   # Graph data access method
   # RAM_STORE: Load entire graph into memory for fastest queries (high memory usage)
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
-  # Using MMAP_STORE because RAM_STORE requires too much memory with GTFS (8GB insufficient)
-  graph.dataaccess: MMAP
+  # Using RAM_STORE with 6GB heap for GTFS support (MMAP too slow for GTFS loading)
+  graph.dataaccess: RAM_STORE
 
   # Encoded values required by the custom models above
   graph.encoded_values: |
