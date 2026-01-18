@@ -6,8 +6,8 @@ graphhopper:
   # Mounted from map-data-osm PVC via map-data download job
   datareader.file: /osm_data/switzerland-latest.osm.pbf
   # GTFS zip files for public transit routing
-  # Re-enabled with MMAP storage for better memory management
-  gtfs.file: /gtfs_data/feed_1/gtfs.zip
+  # TEMPORARILY DISABLED due to extremely slow loading with MMAP_STORE
+  # gtfs.file: /gtfs_data/feed_1/gtfs.zip
 
   # Import all vehicle types during initial graph building
   # This ensures edges are available for all profiles we might enable later
