@@ -4,7 +4,7 @@ metadata:
   name: graphhopper-initialize
   namespace: ${NAMESPACE}
 spec:
-  backoffLimit: 0
+  backoffLimit: 3
   template:
     metadata:
       labels:
