@@ -73,7 +73,7 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 10
-            failureThreshold: 30 # Allow 5 minutes for startup (30 * 10s)
+            failureThreshold: 90 # Allow 15 minutes for startup with GTFS (90 * 10s = 900s)
           # Resource limits in Kubernetes quantity format
           # m = millicores, Gi = Gibibytes
           resources:
