@@ -81,7 +81,7 @@ spec:
               cpu: 250m # Quarter core minimum
               memory: 2Gi
             limits:
-              memory: 5Gi # Allow headroom for heap (3GB) + JVM overhead + GTFS data
+              memory: 12Gi # Allow sufficient memory for heap (3GB) + MMAP_STORE + GTFS data + JVM overhead
           volumeMounts:
             # Read-only mount of OSM PBF data (not used during serving, but available)
             - name: osm-data
