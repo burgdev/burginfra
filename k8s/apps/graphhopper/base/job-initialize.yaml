@@ -31,13 +31,20 @@ spec:
             - name: JAVA_OPTS
               value: "-Xmx${GRAPHOPPER_JAVA_MEMORY} -Xms${GRAPHOPPER_JAVA_MEMORY} -XX:+UseG1GC"
           # Arguments passed to the entrypoint script (graphhopper.sh)
+          # Check if graph already exists before importing
           # --import: Run graph import/build mode instead of server mode
           # -c /data/config.yml: Use this config file (GraphHopper YAML format)
           # Note: The image has ENTRYPOINT ["./graphhopper.sh"], so we only pass args
-          args:
-            - --import
+          command:
+            - /bin/sh
             - -c
-            - /data/config.yml
+            - |
+              if [ -d /data/.gh ] && [ "$(ls -A /data/.gh)" ]; then
+                echo "Graph data already exists at /data/.gh, skipping import"
+                exit 0
+              fi
+              echo "No existing graph data found, starting import..."
+              ./graphhopper.sh --import -c /data/config.yml
           volumeMounts:
             # Read-only mount of OSM PBF data downloaded by map-data job
             - name: osm-data
