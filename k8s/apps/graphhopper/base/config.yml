@@ -80,3 +80,4 @@ server:
       bind_host: 0.0.0.0 # Admin reachable inside cluster if needed
   request_log:
     appenders: [] # Disable request logging to reduce noise
+
