@@ -6,7 +6,7 @@ graphhopper:
   # Mounted from map-data-osm PVC via map-data download job
   datareader.file: /osm_data/switzerland-latest.osm.pbf
   # GTFS zip files for public transit routing
-  # Re-enabled with MMAP storage for better memory management
+  # Re-enabled with extended startup timeout (15 minutes)
   gtfs.file: /gtfs_data/feed_1/gtfs.zip
 
   # Import all vehicle types during initial graph building
@@ -40,7 +40,7 @@ graphhopper:
   # Graph data access method
   # RAM_STORE: Load entire graph into memory for fastest queries (high memory usage)
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
-  # Using RAM_STORE for better performance (MMAP_STORE was causing slow startup)
+  # Using RAM_STORE with 6GB heap for GTFS support (MMAP too slow for GTFS loading)
   graph.dataaccess: RAM_STORE
 
   # Encoded values required by the custom models above
@@ -80,3 +80,4 @@ server:
       bind_host: 0.0.0.0 # Admin reachable inside cluster if needed
   request_log:
     appenders: [] # Disable request logging to reduce noise
+

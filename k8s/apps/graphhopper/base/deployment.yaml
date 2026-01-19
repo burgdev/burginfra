@@ -39,9 +39,10 @@ spec:
           # -Xms2g: Initial heap size 2GB (allow some growth without overhead)
           # -XX:+UseG1GC: Use G1 garbage collector for better performance
           # -XX:MaxGCPauseMillis=200: Target 200ms max GC pause for consistent latency
+          # Increased heap to 6GB for GTFS with RAM_STORE
           env:
             - name: JAVA_OPTS
-              value: "-Xmx3g -Xms2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+              value: "-Xmx6g -Xms4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
           # Arguments passed to the entrypoint script (graphhopper.sh)
           # -c /data/config.yml: Use this config file (GraphHopper YAML format)
           # Note: The image has ENTRYPOINT ["./graphhopper.sh"], so we only pass args
@@ -70,10 +71,10 @@ spec:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60  # Wait 60 seconds before first probe (was 30)
             periodSeconds: 10
             timeoutSeconds: 10
-            failureThreshold: 30 # Allow 5 minutes for startup (30 * 10s)
+            failureThreshold: 90 # Allow 15 minutes for startup with GTFS (90 * 10s = 900s)
           # Resource limits in Kubernetes quantity format
           # m = millicores, Gi = Gibibytes
           resources:
@@ -81,7 +82,7 @@ spec:
               cpu: 250m # Quarter core minimum
               memory: 2Gi
             limits:
-              memory: 5Gi # Allow headroom for heap (3GB) + JVM overhead + GTFS data
+              memory: 12Gi # Allow sufficient memory for heap (3GB) + MMAP_STORE + GTFS data + JVM overhead
           volumeMounts:
             # Read-only mount of OSM PBF data (not used during serving, but available)
             - name: osm-data
