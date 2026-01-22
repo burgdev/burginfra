@@ -129,8 +129,8 @@
   },
   "map": {
     "enabled": true,
-    "darkStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=Qw5uULMWH4eI8iOp0mtc",
-    "lightStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=Qw5uULMWH4eI8iOp0mtc"
+    "darkStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=MapTilerKey",
+    "lightStyle": "https://api.maptiler.com/maps/ch-swisstopo-lbm/style.json?key=MapTilerKey"
   },
   "metadata": {
     "faces": {
@@ -156,9 +156,9 @@
       "transport": {
         "host": "mail.infomaniak.com",
         "ignoreCert": false,
-        "password": "Cleat2$Yelling$Overstate",
+        "password": "EmailPassword",
         "port": 465,
-        "username": "tb@wodore.com"
+        "username": "EmailUser"
       }
     }
   },
