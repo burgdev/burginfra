@@ -26,7 +26,7 @@ spec:
       ENV_SUBDOMAIN: ""
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
-      WD_BACKEND_TAG: "0.1.12-alpine" # {"$imagepolicy": "flux-system:wd-backend-production:tag"}
+      WD_BACKEND_TAG: "0.1.13-alpine" # {"$imagepolicy": "flux-system:wd-backend-production:tag"}
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       WD_FRONTEND_TAG: "0.0.6-pwa" # {"$imagepolicy": "flux-system:wd-frontend-production:tag"}
       WD_FRONTEND_APP_NAME: "Wodore"
