@@ -4,3 +4,4 @@ resources:
   - ../../apps/imagor/overlays/production
   - ../../apps/backend/overlays/production
   - ../../apps/frontend/overlays/production
+  - ../../apps/martin/overlays/production

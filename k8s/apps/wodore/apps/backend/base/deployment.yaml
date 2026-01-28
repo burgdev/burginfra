@@ -102,6 +102,8 @@ spec:
               mountPath: /code/media
             - name: py-cache
               mountPath: /tmp/py_file_cache/joblib
+            - name: martin-sync
+              mountPath: /code/martin_sync
           livenessProbe:
             httpGet:
               path: /health/
@@ -224,3 +226,6 @@ spec:
         - name: py-cache
           persistentVolumeClaim:
             claimName: wd-backend-py-cache-v1
+        - name: martin-sync
+          persistentVolumeClaim:
+            claimName: wd-martin-sync-v1
