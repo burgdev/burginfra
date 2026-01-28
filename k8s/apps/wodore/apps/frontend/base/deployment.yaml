@@ -42,6 +42,8 @@ spec:
             ##   value: "proxy"
             - name: TMPDIR
               value: "/var/tmp"
+            - name: WODORE_TILE_SERVER_URL
+              value: https://tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
