@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wd-martin
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+spec:
+  rules:
+    - host: tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-martin
+                port:
+                  number: 3000
+  tls:
+    - secretName: wd-martin-${ENVIRONMENT}-tls
+      hosts:
+        - tiles.${ENV_SUBDOMAIN}${WODORE_HOST}

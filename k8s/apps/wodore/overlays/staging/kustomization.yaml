@@ -4,3 +4,4 @@ resources:
   - ../../apps/imagor/overlays/staging
   - ../../apps/backend/overlays/staging
   - ../../apps/frontend/overlays/staging
+  - ../../apps/martin/overlays/staging
