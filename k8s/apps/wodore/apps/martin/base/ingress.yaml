@@ -4,7 +4,7 @@ metadata:
   name: wd-martin
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
-    traefik.ingress.kubernetes.io/router.middlewares: wodore-system-wd-martin-header@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: wd-martin-header@kubernetescrd
 spec:
   rules:
     - host: tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
@@ -26,7 +26,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: wd-martin-header
-  namespace: wodore-system
 spec:
   headers:
     customResponseHeaders:
