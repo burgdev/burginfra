@@ -4,13 +4,7 @@ metadata:
   name: wd-martin
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
-    # Traefik caching configuration
-    traefik.ingress.kubernetes.io/frontend-entry-points: http,https
-    traefik.ingress.kubernetes.io/response-streaming: "true"
-    # Cache headers for 2 hours (ETag enables conditional requests)
-    traefik.ingress.kubernetes.io/custom-response-headers: |
-      Cache-Control: public, max-age=1800
-      X-Cache-Status: $upstream_cache_status
+    traefik.ingress.kubernetes.io/router.middlewares: wodore-system-wd-martin-header@kubernetescrd
 spec:
   rules:
     - host: tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
@@ -27,3 +21,20 @@ spec:
     - secretName: wd-martin-${ENVIRONMENT}-tls
       hosts:
         - tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: wd-martin-header
+  namespace: wodore-system
+spec:
+  headers:
+    customResponseHeaders:
+      X-Cache-Status: "Traefik"
+      Cache-Control: "public, max-age=1800"
+    accessControlAllowMethods:
+      - GET
+      - OPTIONS
+    accessControlAllowOriginList:
+      - https://${ENV_SUBDOMAIN}${WODORE_HOST}
+    accessControlMaxAge: 100
