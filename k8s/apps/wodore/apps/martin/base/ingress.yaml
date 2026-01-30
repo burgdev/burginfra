@@ -35,5 +35,8 @@ spec:
       - GET
       - OPTIONS
     accessControlAllowOriginList:
-      - https://${ENV_SUBDOMAIN}${WODORE_HOST}
+      - https://stg.${WODORE_HOST}
+      - https://${WODORE_HOST}
+      - https://stg.${WODO_HOST}
+      - https://${WODO_HOST}
     accessControlMaxAge: 100
