@@ -4,6 +4,13 @@ metadata:
   name: wd-martin
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    # Traefik caching configuration
+    traefik.ingress.kubernetes.io/frontend-entry-points: http,https
+    traefik.ingress.kubernetes.io/response-streaming: "true"
+    # Cache headers for 2 hours (ETag enables conditional requests)
+    traefik.ingress.kubernetes.io/custom-response-headers: |
+      Cache-Control: public, max-age=1800
+      X-Cache-Status: $upstream_cache_status
 spec:
   rules:
     - host: tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
