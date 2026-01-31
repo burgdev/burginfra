@@ -4,6 +4,7 @@ metadata:
   name: wd-martin
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-wd-martin-header@kubernetescrd
 spec:
   rules:
     - host: tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
@@ -20,3 +21,22 @@ spec:
     - secretName: wd-martin-${ENVIRONMENT}-tls
       hosts:
         - tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: wd-martin-header
+spec:
+  headers:
+    customResponseHeaders:
+      X-Cache-Status: "Traefik"
+      Cache-Control: "public, max-age=1800"
+    accessControlAllowMethods:
+      - GET
+      - OPTIONS
+    accessControlAllowOriginList:
+      - https://stg.${WODORE_HOST}
+      - https://${WODORE_HOST}
+      - https://stg.${WODO_HOST}
+      - https://${WODO_HOST}
+    accessControlMaxAge: 100
