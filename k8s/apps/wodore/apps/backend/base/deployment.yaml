@@ -92,7 +92,7 @@ spec:
                 secretKeyRef:
                   name: wd-backend-postgres-app
                   key: password
-            - name: MEDIA_URL
+            - name: IMAGOR_MEDIA_URL
               value: "/wd/" # same as imagor uses as source
           envFrom:
             - secretRef:
