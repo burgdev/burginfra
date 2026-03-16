@@ -29,7 +29,8 @@ spec:
             - -c
             - |
               python manage.py migrate --noinput &&
-              python manage.py createcachetable
+              python manage.py createcachetable &&
+              python manage.py martin_sync
           env:
             # Database connection (CNPG service)
             - name: DJANGO_DATABASE_HOST
