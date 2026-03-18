@@ -5,7 +5,7 @@ metadata:
 spec:
   headers:
     customRequestHeaders:
-      User-Agent: "WodoreImageService/1.0 (+https://${WODORE_HOST}; ${WODORE_EMAIL})"
+      User-Agent: "WodoreImagorBot/1.0 (+https://${WODORE_HOST}; ${WODORE_EMAIL})"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
