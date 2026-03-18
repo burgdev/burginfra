@@ -66,6 +66,8 @@ spec:
           volumeMounts:
             - name: media
               mountPath: /code/media
+            - name: martin-sync
+              mountPath: /code/martin_sync
           resources:
             requests:
               cpu: 100m
@@ -77,3 +79,6 @@ spec:
         - name: media
           persistentVolumeClaim:
             claimName: wd-backend-media-v1
+        - name: martin-sync
+          persistentVolumeClaim:
+            claimName: wd-martin-sync-v1
