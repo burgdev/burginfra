@@ -70,6 +70,34 @@ spec:
               value: "size"
             - name: HTTP_LOADER_FORWARD_HEADERS
               value: "User-Agent,Accept"
+            # VIPS Memory Management
+            - name: VIPS_CONCURRENCY
+              value: "2"
+            - name: VIPS_MAX_CACHE_MEM
+              value: "0"
+            - name: VIPS_MAX_CACHE_FILES
+              value: "0"
+            - name: VIPS_MAX_CACHE_SIZE
+              value: "0"
+            # VIPS Image Limits (prevent DoS)
+            - name: VIPS_MAX_WIDTH
+              value: "8000"
+            - name: VIPS_MAX_HEIGHT
+              value: "8000"
+            - name: VIPS_MAX_ANIMATION_FRAMES
+              value: "1"
+            # VIPS Performance & Quality
+            - name: VIPS_STRIP_METADATA
+              value: "1"
+            # VIPS In-memory decoded pixel cache
+            - name: VIPS_CACHE_SIZE
+              value: "104857600"
+            - name: VIPS_CACHE_MAX_WIDTH
+              value: "2400"
+            - name: VIPS_CACHE_MAX_HEIGHT
+              value: "2000"
+            - name: VIPS_CACHE_TTL
+              value: "24h"
           volumeMounts:
             - name: backend-media
               mountPath: /mnt/data/source/wd
@@ -94,9 +122,10 @@ spec:
             periodSeconds: 15
           resources:
             limits:
-              memory: 1Gi
+              memory: 2Gi
             requests:
-              memory: 256Mi
+              memory: 512Mi
+              cpu: 500m
       volumes:
         # Shared PVC with backend - defined in backend/base/pvcs.yaml
         - name: backend-media
