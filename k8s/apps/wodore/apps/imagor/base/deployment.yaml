@@ -68,6 +68,8 @@ spec:
               value: "0666"
             - name: IMAGOR_RESULT_STORAGE_PATH_STYLE
               value: "size"
+            - name: HTTP_LOADER_FORWARD_HEADERS
+              value: "User-Agent,Accept"
           volumeMounts:
             - name: backend-media
               mountPath: /mnt/data/source/wd
