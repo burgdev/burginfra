@@ -22,7 +22,7 @@ spec:
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       WD_BACKEND_TAG: "20260318T2242-sha-df87b51-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
-      WD_FRONTEND_TAG: "20260320T2358-sha-f744016-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
+      WD_FRONTEND_TAG: "20260321T0006-sha-250f704-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
       WD_FRONTEND_APP_NAME: "Beta Wodore"
       IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
       WD_AVAILABILITY_CRON: "30 5 */1 * *" # Every 6 hours at minute 0
