@@ -37,7 +37,7 @@ spec:
                   echo "Starting availability update at $(date)"
 
                   # Run the update command and capture exit status
-                  if ./manage.py update_availability --no-progress --request-interval 1; then
+                  if ./manage.py update_availability --no-progress --request-interval 4; then
                     STATUS=0
                     echo "Availability update completed successfully at $(date)"
                   else
