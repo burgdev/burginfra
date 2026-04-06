@@ -57,6 +57,10 @@ spec:
                 secretKeyRef:
                   name: wd-imagor-config-secret
                   key: IMAGOR_SECRET
+
+            # Martin settings
+            - name: MARTIN_TILE_URL
+              value: "https://tiles.${ENV_SUBDOMAIN}${WODORE_HOST}"
             # E-Mail (smtp settings in secrets.yaml)
             - name: DEFAULT_FROM_EMAIL
               value: "Wodore Info <info@${WODORE_HOST}>"
