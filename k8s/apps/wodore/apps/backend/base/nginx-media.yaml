@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wd-media-nginx-config
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+
+        root /static;
+        autoindex off;
+
+        location /media {
+            expires 30d;
+            add_header Cache-Control "public, immutable" always;
+            try_files $uri $uri/ =404;
+        }
+    }

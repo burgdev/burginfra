@@ -7,13 +7,29 @@ spec:
     customRequestHeaders:
       User-Agent: "WodoreImagorBot/1.0 (+https://${WODORE_HOST}; ${WODORE_EMAIL})"
 ---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: imagor-cors
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - OPTIONS
+    accessControlAllowOriginList:
+      - "https://hub.${ENV_SUBDOMAIN}${WODORE_HOST}"
+      - "https://${ENV_SUBDOMAIN}${WODORE_HOST}"
+      - "https://hub.${ENV_SUBDOMAIN}${WODO_HOST}"
+      - "https://${ENV_SUBDOMAIN}${WODO_HOST}"
+    accessControlMaxAge: 86400
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: wd-imagor
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
-    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-imagor-useragent@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-imagor-useragent@kubernetescrd,${NAMESPACE}-imagor-cors@kubernetescrd
 spec:
   rules:
     - host: img.${ENV_SUBDOMAIN}${WODORE_HOST}
