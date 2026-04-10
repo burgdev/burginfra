@@ -153,6 +153,9 @@ spec:
             - name: media
               mountPath: /static/media
               readOnly: true
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
           resources:
             limits:
               cpu: 500m
@@ -237,3 +240,6 @@ spec:
         - name: martin-sync
           persistentVolumeClaim:
             claimName: wd-martin-sync-v1
+        - name: nginx-config
+          configMap:
+            name: wd-media-nginx-config

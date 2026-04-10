@@ -12,6 +12,7 @@ resources:
   - pvcs.yaml
   - postgres.yaml
   - job-migrate.yaml
+  - nginx-media.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
