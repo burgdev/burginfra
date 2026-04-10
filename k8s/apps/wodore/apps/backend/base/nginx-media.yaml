@@ -3,14 +3,6 @@ kind: ConfigMap
 metadata:
   name: wd-media-nginx-config
 data:
-  cors-map.conf: |
-    map $http_origin $cors_origin {
-        default "";
-        "~^https?://hub\.${ENV_SUBDOMAIN}${WODORE_HOST}"  $http_origin;
-        "~^https?://${ENV_SUBDOMAIN}${WODORE_HOST}"       $http_origin;
-        "~^https?://hub\.${ENV_SUBDOMAIN}${WODO_HOST}"    $http_origin;
-        "~^https?://${ENV_SUBDOMAIN}${WODO_HOST}"         $http_origin;
-    }
   default.conf: |
     server {
         listen 80;
@@ -19,12 +11,9 @@ data:
         root /static;
         autoindex off;
 
-        add_header Access-Control-Allow-Origin $cors_origin always;
-
         location /media {
             expires 30d;
             add_header Cache-Control "public, immutable" always;
-            add_header Access-Control-Allow-Origin $cors_origin always;
             try_files $uri $uri/ =404;
         }
     }

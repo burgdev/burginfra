@@ -1,9 +1,26 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: media-cors
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - OPTIONS
+    accessControlAllowOriginList:
+      - "https://hub.${ENV_SUBDOMAIN}${WODORE_HOST}"
+      - "https://${ENV_SUBDOMAIN}${WODORE_HOST}"
+      - "https://hub.${ENV_SUBDOMAIN}${WODO_HOST}"
+      - "https://${ENV_SUBDOMAIN}${WODO_HOST}"
+    accessControlMaxAge: 86400
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: wd-backend
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-media-cors@kubernetescrd
 spec:
   rules:
     - host: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
