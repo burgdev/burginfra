@@ -14,10 +14,11 @@ spec:
       - "https://${ENV_SUBDOMAIN}${WODO_HOST}"
     accessControlMaxAge: 86400
 ---
+# Media files - served by nginx sidecar with CORS headers
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: wd-backend
+  name: wd-backend-media
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
     traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-media-cors@kubernetescrd
@@ -26,7 +27,6 @@ spec:
     - host: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
       http:
         paths:
-          # Media files served by nginx (higher priority)
           - path: /media
             pathType: Prefix
             backend:
@@ -34,7 +34,23 @@ spec:
                 name: wd-backend-media
                 port:
                   number: 80
-          # Django backend (catch-all)
+  tls:
+    - secretName: wd-backend-${ENVIRONMENT}-tls
+      hosts:
+        - hub.${ENV_SUBDOMAIN}${WODORE_HOST}
+---
+# Django backend API - no CORS middleware (handled by Django)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wd-backend
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+spec:
+  rules:
+    - host: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
           - path: /
             pathType: Prefix
             backend:
