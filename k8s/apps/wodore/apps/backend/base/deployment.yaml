@@ -33,7 +33,9 @@ spec:
           command:
             - /bin/sh
             - -c
-            - gunicorn -b 0.0.0.0:8008 -w $GUNICORN_WORKERS --preload server.wsgi:application
+            - >-
+              gunicorn -b 0.0.0.0:8008 -w $GUNICORN_WORKERS
+              --preload server.wsgi:application
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -164,7 +166,7 @@ spec:
               cpu: 50m
               memory: 64Mi
       initContainers:
-        # Migration check container - ensures no pending migrations before starting
+        # Migration check container - blocks startup on pending migrations
         - name: migrate-check
           image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
           imagePullPolicy: Always
@@ -223,6 +225,8 @@ spec:
           volumeMounts:
             - name: media
               mountPath: /code/media
+            - name: py-cache
+              mountPath: /tmp/py_file_cache/joblib
           resources:
             requests:
               cpu: 100m
