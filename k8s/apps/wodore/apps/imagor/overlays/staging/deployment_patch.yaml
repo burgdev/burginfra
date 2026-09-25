@@ -16,7 +16,7 @@ spec:
               value: "1"
             - name: IMAGOR_AUTO_WEBP
               value: "1"
-            - name: IMAGOR_AUTO_ACIF
+            - name: IMAGOR_AUTO_AVIF
               value: "1"
             - name: IMAGOR_SIGNER_TYPE
               value: "sha256"
