@@ -10,11 +10,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wd-backend-qcluster
-  annotations:
-    # Do not restart on secret/configmap syncs: a restart kills running tasks
-    # (max_attempts=1, timeout 24h — see Q_CLUSTER in the backend settings;
-    # same reasoning as wd-backend-availability).
-    reloader.stakater.com/match: "false"
+  # No Reloader opt-out (cluster runs autoReloadAll=true): env-based secrets
+  # stay fresh via rolling restarts. Accepted trade-off: a rare secret
+  # rotation can kill a running long task (max_attempts=1 → Force Stop +
+  # re-run in the admin task runner).
 spec:
   replicas: ${WD_QCLUSTER_REPLICAS:-0}
   revisionHistoryLimit: 5
