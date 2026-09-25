@@ -12,6 +12,7 @@ spec:
       - "https://${ENV_SUBDOMAIN}${WODORE_HOST}"
       - "https://hub.${ENV_SUBDOMAIN}${WODO_HOST}"
       - "https://${ENV_SUBDOMAIN}${WODO_HOST}"
+      - "https://wodore.github.io"
     accessControlMaxAge: 86400
 ---
 # Media files - served by nginx sidecar with CORS headers
