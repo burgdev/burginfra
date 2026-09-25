@@ -48,7 +48,7 @@ spec:
                   key: IMAGOR_SECRET
             - name: IMAGOR_AUTO_WEBP
               value: "1"
-            - name: IMAGOR_AUTO_ACIF
+            - name: IMAGOR_AUTO_AVIF
               value: "1"
             - name: IMAGOR_SIGNER_TYPE
               value: "sha256"
@@ -70,6 +70,8 @@ spec:
               value: "size"
             - name: HTTP_LOADER_FORWARD_HEADERS
               value: "User-Agent,Accept"
+            - name: HTTP_LOADER_MAX_ALLOWED_SIZE
+              value: "26214400" # 25MiB
             # VIPS Memory Management
             - name: VIPS_CONCURRENCY
               value: "2"
@@ -98,13 +100,13 @@ spec:
               value: "2000"
             - name: VIPS_CACHE_TTL
               value: "24h"
-            # Timeout Settings (prevent OOM)
+            # Timeout Settings (prevent OOM, avoid mid-decode cutoffs)
             - name: IMAGOR_PROCESS_TIMEOUT
-              value: "30s"
+              value: "60s"
             - name: IMAGOR_LOAD_TIMEOUT
-              value: "10s"
+              value: "60s"
             - name: IMAGOR_REQUEST_TIMEOUT
-              value: "35s"
+              value: "90s"
           lifecycle:
             postStart:
               exec:
