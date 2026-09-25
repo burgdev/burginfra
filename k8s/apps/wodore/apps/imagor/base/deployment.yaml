@@ -71,7 +71,7 @@ spec:
             - name: HTTP_LOADER_FORWARD_HEADERS
               value: "User-Agent,Accept"
             - name: HTTP_LOADER_MAX_ALLOWED_SIZE
-              value: "26214400" # 25MiB
+              value: "104857600" # 100MiB
             # VIPS Memory Management
             - name: VIPS_CONCURRENCY
               value: "2"
