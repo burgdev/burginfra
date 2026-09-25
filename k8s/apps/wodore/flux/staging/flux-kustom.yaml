@@ -26,6 +26,9 @@ spec:
       WD_FRONTEND_APP_NAME: "Beta Wodore"
       IMAGOR_TAG: "1.6.7" # https://github.com/cshum/imagor/releases
       WD_AVAILABILITY_CRON: "30 5 */1 * *" # at 05:30 on every day
+      # django-q2 task cluster (staging only for now; production stays at
+      # the WD_QCLUSTER_REPLICAS default of 0 until promoted)
+      WD_QCLUSTER_REPLICAS: "1"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings
