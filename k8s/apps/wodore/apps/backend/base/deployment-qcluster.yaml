@@ -57,7 +57,11 @@ spec:
             # Worker processes per cluster — keep low, tasks are long-running
             # and heavy (read via Q_CLUSTER_WORKERS in the backend settings)
             - name: Q_CLUSTER_WORKERS
-              value: "${WD_QCLUSTER_WORKERS:-3}"
+              # Quotes around the default keep the substituted value a string:
+              # flux re-parses substituted scalars, so a bare 3 would become
+              # an int and fail env schema validation (same as the
+              # WD_BACKEND_GUNICORN_WORKERS '"3"' cluster-settings trick).
+              value: '${WD_QCLUSTER_WORKERS:-"3"}'
             # Imagor settings
             - name: IMAGOR_URL
               value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
