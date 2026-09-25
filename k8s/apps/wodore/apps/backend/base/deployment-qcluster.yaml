@@ -1,0 +1,138 @@
+# Django-Q2 task cluster (ORM broker) — processes background tasks scheduled
+# from the admin (django-admin-runner). It talks to the wd-backend API pods
+# purely through the database (django_q_* tables): no Service or Ingress.
+# Must use the same image tag as wd-backend — tasks reference code by dotted
+# path, so API and workers have to run identical code.
+#
+# Off by default (replicas 0). Enable per environment with WD_QCLUSTER_REPLICAS
+# (staging sets "1" in k8s/apps/wodore/flux/staging/flux-kustom.yaml).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-backend-qcluster
+  # No Reloader opt-out (cluster runs autoReloadAll=true): env-based secrets
+  # stay fresh via rolling restarts. Accepted trade-off: a rare secret
+  # rotation can kill a running long task (max_attempts=1 → Force Stop +
+  # re-run in the admin task runner).
+spec:
+  replicas: ${WD_QCLUSTER_REPLICAS:-0}
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 120
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: wd-backend-qcluster
+  template:
+    metadata:
+      labels:
+        app: wd-backend-qcluster
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: "OnRootMismatch"
+      # On SIGTERM qcluster stops taking new tasks and finishes running ones;
+      # give it room before SIGKILL (a killed task needs a manual Force Stop).
+      terminationGracePeriodSeconds: 600
+      containers:
+        # Django-Q2 cluster process (no HTTP port, no probes — if the process
+        # dies the container exits and Kubernetes restarts the pod)
+        - name: qcluster
+          image: ghcr.io/wodore/wodore-backend:${WD_BACKEND_TAG:-latest-alpine}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - >-
+              python manage.py qcluster
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+          env:
+            # Worker processes per cluster — keep low, tasks are long-running
+            # and heavy (read via Q_CLUSTER_WORKERS in the backend settings)
+            - name: Q_CLUSTER_WORKERS
+              value: "${WD_QCLUSTER_WORKERS:-3}"
+            # Imagor settings
+            - name: IMAGOR_URL
+              value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
+            - name: IMAGOR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wd-imagor-config-secret
+                  key: IMAGOR_SECRET
+            # Martin settings
+            - name: MARTIN_TILE_URL
+              value: "https://tiles.${ENV_SUBDOMAIN}${WODORE_HOST}"
+            # E-Mail (smtp settings in secrets.yaml)
+            - name: DEFAULT_FROM_EMAIL
+              value: "Wodore Info <info@${WODORE_HOST}>"
+            - name: DJANGO_ADMIN_EMAILS
+              value: "Wodore Admin <${WODORE_EMAIL}>"
+            - name: EMAIL_ADMIN_FROM_EMAIL
+              value: "Wodore Admin <info@${WODORE_HOST}>"
+            - name: EMAIL_DEFAULT_FROM_EMAIL
+              value: "Wodore Info <info@${WODORE_HOST}>"
+            # Database connection (CNPG service) — the ORM broker transport
+            - name: DJANGO_DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: host
+            - name: DJANGO_DATABASE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: dbname
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-postgres-app
+                  key: password
+            - name: IMAGOR_MEDIA_URL
+              value: "/wd/" # same as imagor uses as source
+          envFrom:
+            - secretRef:
+                name: "wd-backend-envvars"
+            - secretRef:
+                name: "wd-backend-smtp-envvars"
+          volumeMounts:
+            - name: media
+              mountPath: /code/media
+            - name: py-cache
+              mountPath: /tmp/py_file_cache/joblib
+            - name: martin-sync
+              mountPath: /code/martin_sync
+          resources:
+            # Heavy management commands (update_availability can take hours)
+            requests:
+              cpu: 100m
+              memory: 300Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: wd-backend-media-v1
+        - name: py-cache
+          persistentVolumeClaim:
+            claimName: wd-backend-py-cache-v1
+        - name: martin-sync
+          persistentVolumeClaim:
+            claimName: wd-martin-sync-v1
