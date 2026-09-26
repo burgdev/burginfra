@@ -54,6 +54,8 @@ spec:
               value: "sha256"
             - name: IMAGOR_MODIFIED_TIME_CHECK
               value: "1" # invalidate results when source changes
+            - name: IMAGOR_CACHE_HEADER_TTL
+              value: "8760h" # client max-age 1y (signed URLs immutable)
             - name: FILE_LOADER_BASE_DIR
               value: "/mnt/data/source"
             - name: FILE_STORAGE_BASE_DIR
@@ -65,9 +67,9 @@ spec:
             - name: FILE_STORAGE_WRITE_PERMISSION
               value: "0666"
             - name: FILE_STORAGE_EXPIRATION
-              value: "720h" # stale at retrieval; CronJob deletes >35d
+              value: "4320h" # stale at retrieval; CronJob deletes >180d
             - name: FILE_RESULT_STORAGE_EXPIRATION
-              value: "720h"
+              value: "4320h"
             - name: FILE_RESULT_STORAGE_MKDIR_PERMISSION
               value: "0755"
             - name: FILE_RESULT_STORAGE_WRITE_PERMISSION
@@ -78,7 +80,7 @@ spec:
               value: "size" # short sharded names; default style overflows
               # NAME_MAX on long source URLs (save fails, no caching)
             - name: HTTP_LOADER_MAX_ALLOWED_SIZE
-              value: "209715200" # 200MiB
+              value: "104857600" # 100MiB
             # VIPS Memory Management
             - name: VIPS_CONCURRENCY
               value: "2"
@@ -100,7 +102,7 @@ spec:
               value: "1"
             # VIPS In-memory decoded pixel cache
             - name: VIPS_CACHE_SIZE
-              value: "314572800" # 300MiB
+              value: "209715200" # 200MiB
             - name: VIPS_CACHE_MAX_WIDTH
               value: "3600"
             - name: VIPS_CACHE_MAX_HEIGHT
