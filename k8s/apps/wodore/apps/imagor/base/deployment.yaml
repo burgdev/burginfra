@@ -49,7 +49,7 @@ spec:
             - name: IMAGOR_AUTO_WEBP
               value: "1"
             - name: IMAGOR_AUTO_AVIF
-              value: "1"
+              value: "0" # 1.9.6 fallback path writes gray-bottom images
             - name: IMAGOR_SIGNER_TYPE
               value: "sha256"
             - name: FILE_LOADER_BASE_DIR
