@@ -1,0 +1,23 @@
+# One-time user model bootstrap (wodore-backend #183 auth modernization):
+# existing databases must run `bootstrap_user_model` instead of plain
+# `migrate` - plain migrate fails with InconsistentMigrationHistory on the
+# auth.User -> accounts.User swap. The command creates accounts_user,
+# copies users (pks/passwords/flags preserved), re-points FKs and applies
+# all remaining migrations itself. Idempotent; revert this patch (back to
+# plain migrate in base) once the swap has run in every environment.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wd-backend-migrate
+spec:
+  template:
+    spec:
+      containers:
+        - name: migrate
+          command:
+            - /bin/sh
+            - -c
+            - |
+              python manage.py bootstrap_user_model &&
+              python manage.py createcachetable &&
+              python manage.py martin_sync
