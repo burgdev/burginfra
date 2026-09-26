@@ -5,6 +5,7 @@
 # copies users (pks/passwords/flags preserved), re-points FKs and applies
 # all remaining migrations itself. Idempotent; revert this patch (back to
 # plain migrate in base) once the swap has run in every environment.
+# Production phase-2 runbook: ../PRODUCTION_BOOTSTRAP.md
 apiVersion: batch/v1
 kind: Job
 metadata:
