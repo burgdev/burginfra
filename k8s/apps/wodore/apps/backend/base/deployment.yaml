@@ -33,8 +33,16 @@ spec:
           command:
             - /bin/sh
             - -c
+            # --timeout 120: the default 30s aborted workers on slow external
+            #   image-provider requests (nearby_images -> Wikimedia et al.),
+            #   500-ing whoever was in flight on that worker (3x in 6.5h).
+            # --no-control-socket: same as wodore-backend#170, but the k8s
+            #   command bypasses the entrypoint's GUNICORN_CMD_ARGS, so it
+            #   must be set here to stop the /code/.gunicorn spam.
             - >-
               gunicorn -b 0.0.0.0:8008 -w $GUNICORN_WORKERS
+              --timeout 120
+              --no-control-socket
               --preload server.wsgi:application
           securityContext:
             allowPrivilegeEscalation: false
