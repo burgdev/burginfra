@@ -76,9 +76,10 @@ spec:
               value: "0666"
             - name: HTTP_LOADER_FORWARD_HEADERS
               value: "User-Agent,Accept"
+            - name: IMAGOR_STORAGE_PATH_STYLE
+              value: "digest" # hashed names; immune to NAME_MAX
             - name: IMAGOR_RESULT_STORAGE_PATH_STYLE
-              value: "size" # short sharded names; default style overflows
-              # NAME_MAX on long source URLs (save fails, no caching)
+              value: "digest" # hashed names; immune to NAME_MAX
             - name: HTTP_LOADER_MAX_ALLOWED_SIZE
               value: "104857600" # 100MiB
             # VIPS Memory Management
