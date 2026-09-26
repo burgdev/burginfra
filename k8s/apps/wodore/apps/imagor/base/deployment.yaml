@@ -78,7 +78,7 @@ spec:
               value: "size" # short sharded names; default style overflows
               # NAME_MAX on long source URLs (save fails, no caching)
             - name: HTTP_LOADER_MAX_ALLOWED_SIZE
-              value: "104857600" # 100MiB
+              value: "209715200" # 200MiB
             # VIPS Memory Management
             - name: VIPS_CONCURRENCY
               value: "2"
@@ -100,11 +100,11 @@ spec:
               value: "1"
             # VIPS In-memory decoded pixel cache
             - name: VIPS_CACHE_SIZE
-              value: "104857600"
+              value: "314572800" # 300MiB
             - name: VIPS_CACHE_MAX_WIDTH
-              value: "2400"
+              value: "3600"
             - name: VIPS_CACHE_MAX_HEIGHT
-              value: "2000"
+              value: "3200"
             - name: VIPS_CACHE_TTL
               value: "24h"
             # Process limits (prevent OOM under burst)
