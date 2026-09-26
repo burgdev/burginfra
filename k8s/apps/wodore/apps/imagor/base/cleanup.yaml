@@ -1,0 +1,53 @@
+# FILE_STORAGE_EXPIRATION / FILE_RESULT_STORAGE_EXPIRATION only mark
+# files stale at retrieval; actual deletion is done by this CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wd-imagor-cache-cleanup
+spec:
+  schedule: "30 3 * * *" # daily 03:30
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          containers:
+            - name: cleanup
+              image: busybox:1.37
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -e
+                  du -sm /mnt/data/storage /mnt/data/result
+                  find /mnt/data/storage -type f -mtime +35 -delete
+                  find /mnt/data/result -type f -mtime +35 -delete
+                  echo "cleanup done (retention 35d)"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: imagor-storage
+                  mountPath: /mnt/data/storage
+                - name: imagor-result
+                  mountPath: /mnt/data/result
+          volumes:
+            - name: imagor-storage
+              persistentVolumeClaim:
+                claimName: wd-imagor-storage-v1
+            - name: imagor-result
+              persistentVolumeClaim:
+                claimName: wd-imagor-result-v1
