@@ -1,5 +1,5 @@
 # FILE_STORAGE_EXPIRATION / FILE_RESULT_STORAGE_EXPIRATION only mark
-# files stale at retrieval; actual deletion (180d retention) is done by
+# files stale at retrieval; actual deletion (35d retention) is done by
 # this CronJob.
 apiVersion: batch/v1
 kind: CronJob
@@ -31,9 +31,9 @@ spec:
                 - |
                   set -e
                   du -sm /mnt/data/storage /mnt/data/result
-                  find /mnt/data/storage -type f -mtime +180 -delete
-                  find /mnt/data/result -type f -mtime +180 -delete
-                  echo "cleanup done (retention 180d)"
+                  find /mnt/data/storage -type f -mtime +35 -delete
+                  find /mnt/data/result -type f -mtime +35 -delete
+                  echo "cleanup done (retention 35d)"
               resources:
                 requests:
                   cpu: 50m

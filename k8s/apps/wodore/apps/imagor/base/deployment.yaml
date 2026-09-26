@@ -67,9 +67,9 @@ spec:
             - name: FILE_STORAGE_WRITE_PERMISSION
               value: "0666"
             - name: FILE_STORAGE_EXPIRATION
-              value: "4320h" # stale at retrieval; CronJob deletes >180d
+              value: "720h" # stale at retrieval; CronJob deletes >35d
             - name: FILE_RESULT_STORAGE_EXPIRATION
-              value: "4320h"
+              value: "720h"
             - name: FILE_RESULT_STORAGE_MKDIR_PERMISSION
               value: "0755"
             - name: FILE_RESULT_STORAGE_WRITE_PERMISSION
