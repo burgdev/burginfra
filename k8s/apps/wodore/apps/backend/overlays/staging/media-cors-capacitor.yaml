@@ -1,16 +1,12 @@
-# Staging-only: allow Capacitor app (Android/iOS) WebView origins for
-# media fetches - same two origins as the Django CORS change in
-# wodore-backend (CORS_ALLOWED_ORIGINS in environments/staging.py).
-# JSON6902 add-ops append to the base list (strategic merge would
-# replace it wholesale). Reverted/extended when the app ships.
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: media-cors
-patch: |-
-  - op: add
-    path: /spec/headers/accessControlAllowOriginList/-
-    value: capacitor://localhost
-  - op: add
-    path: /spec/headers/accessControlAllowOriginList/-
-    value: https://localhost
+# Staging-only: append the Capacitor app (Android/iOS) WebView origins to
+# the media-cors middleware origin list - iOS sends capacitor://localhost,
+# Android (scheme https + hostname localhost) sends https://localhost.
+# JSON6902 add-ops append to the base list (a strategic-merge patch would
+# replace it wholesale). Companion to the Django CORS change in
+# wodore-backend (CORS_ALLOWED_ORIGINS, environments/staging.py).
+- op: add
+  path: /spec/headers/accessControlAllowOriginList/-
+  value: capacitor://localhost
+- op: add
+  path: /spec/headers/accessControlAllowOriginList/-
+  value: https://localhost
