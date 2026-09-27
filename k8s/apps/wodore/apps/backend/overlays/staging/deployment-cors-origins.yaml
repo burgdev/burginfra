@@ -1,0 +1,29 @@
+# Staging-only CORS for the Android Capacitor app: its WebView sends
+# Origin: https://localhost (or http://localhost). The backend builds
+# CORS regexes as ^https?://<domain> from DJANGO_TRUSTED_DOMAINS, so
+# adding "localhost" to the list covers it - no backend change needed.
+# This explicit env entry overrides the envFrom (wd-backend-envvars)
+# value entirely (explicit env wins), so the full staging domain list
+# is repeated here with localhost appended. Placeholders are
+# substituted by Flux postBuild like everywhere else. The folded
+# scalar joins lines with spaces; the backend strips around commas.
+# iOS (capacitor://localhost) is NOT expressible this way - it needs
+# the env-driven CORS_ALLOWED_ORIGINS support in the backend when the
+# iOS app is tested.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          env:
+            - name: DJANGO_TRUSTED_DOMAINS
+              value: >-
+                hub.${ENV_SUBDOMAIN}${WODORE_HOST},
+                ${ENV_SUBDOMAIN}${WODORE_HOST},
+                hub.${ENV_SUBDOMAIN}${WODO_HOST},
+                ${ENV_SUBDOMAIN}${WODO_HOST},
+                wodore.github.io,localhost

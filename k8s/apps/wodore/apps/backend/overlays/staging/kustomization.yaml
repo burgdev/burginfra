@@ -8,3 +8,7 @@ patches:
     target:
       kind: Job
       name: wd-backend-migrate
+  - path: deployment-cors-origins.yaml
+    target:
+      kind: Deployment
+      name: wd-backend
