@@ -1,0 +1,17 @@
+# Staging-only: Capacitor app (Android/iOS) WebView origins for the API
+# CORS - the backend reads CORS_ALLOWED_ORIGINS from the environment
+# (comma-separated exact matches, unioned with the trusted-domain
+# regexes). Production sets the same env var when the app ships.
+# Strategic merge appends the env entry (env lists merge by name).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          env:
+            - name: CORS_ALLOWED_ORIGINS
+              value: "capacitor://localhost,https://localhost"
