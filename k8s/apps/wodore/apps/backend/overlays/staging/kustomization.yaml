@@ -8,3 +8,7 @@ patches:
     target:
       kind: Job
       name: wd-backend-migrate
+  - path: media-cors-capacitor.yaml
+    target:
+      kind: Middleware
+      name: media-cors
