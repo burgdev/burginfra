@@ -1,0 +1,84 @@
+# Size-triggered pressure valve: deletes oldest cache files only when a
+# volume exceeds 90% of its nominal size, down to 80%. Does nothing
+# otherwise (content is immutable; no age-based deletion).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wd-imagor-cache-prune
+spec:
+  schedule: "30 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 900
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          containers:
+            - name: prune
+              image: busybox:1.37
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+              env:
+                - name: VOLUME_SIZE
+                  value: "${WD_IMAGOR_STORAGE_SIZE}"
+                - name: PRUNE_TRIGGER_PCT
+                  value: "90"
+                - name: PRUNE_TARGET_PCT
+                  value: "80"
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  TRIGGER=$PRUNE_TRIGGER_PCT
+                  TARGET=$PRUNE_TARGET_PCT
+                  limit_gb=$(printf '%s' "$VOLUME_SIZE" | sed 's/Gi//')
+                  limit_mb=$((limit_gb * 1024))
+                  trigger_mb=$((limit_mb * TRIGGER / 100))
+                  target_mb=$((limit_mb * TARGET / 100))
+                  prune_dir() {
+                    dir=$1
+                    used_mb=$(du -sm "$dir" | cut -f1)
+                    if [ "$used_mb" -lt "$trigger_mb" ]; then
+                      echo "$dir: ${used_mb}MB / ${limit_mb}MB - ok"
+                      return 0
+                    fi
+                    echo "$dir: ${used_mb}MB >= ${trigger_mb}MB - prune"
+                    used=$used_mb
+                    for f in $(find "$dir" -type f -exec stat \
+                      -c '%Y %n' {} + | sort -n | cut -d' ' -f2-); do
+                      if [ "$used" -le "$target_mb" ]; then break; fi
+                      sz=$(du -sm "$f" | cut -f1)
+                      rm -f "$f"
+                      used=$((used - sz))
+                    done
+                    echo "$dir: now ~${used}MB"
+                  }
+                  prune_dir /mnt/data/storage
+                  prune_dir /mnt/data/result
+                  echo "prune check done"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: imagor-storage
+                  mountPath: /mnt/data/storage
+                - name: imagor-result
+                  mountPath: /mnt/data/result
+          volumes:
+            - name: imagor-storage
+              persistentVolumeClaim:
+                claimName: wd-imagor-storage-v1
+            - name: imagor-result
+              persistentVolumeClaim:
+                claimName: wd-imagor-result-v1
