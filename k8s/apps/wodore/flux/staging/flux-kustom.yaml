@@ -29,6 +29,9 @@ spec:
       # django-q2 task cluster (staging only for now; production stays at
       # the cluster-settings default of 0 until promoted)
       WD_QCLUSTER_REPLICAS: "1"
+      # Gunicorn flags for the current image (gunicorn >= 25); production's
+      # pinned 0.1.13 image runs gunicorn 23 and rejects --no-control-socket
+      WODORE_GUNICORN_EXTRA_ARGS: "--timeout 120 --no-control-socket"
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings

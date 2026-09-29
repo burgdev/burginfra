@@ -33,16 +33,17 @@ spec:
           command:
             - /bin/sh
             - -c
-            # --timeout 120: the default 30s aborted workers on slow external
-            #   image-provider requests (nearby_images -> Wikimedia et al.),
-            #   500-ing whoever was in flight on that worker (3x in 6.5h).
-            # --no-control-socket: same as wodore-backend#170, but the k8s
-            #   command bypasses the entrypoint's GUNICORN_CMD_ARGS, so it
-            #   must be set here to stop the /code/.gunicorn spam.
+            # Extra flags come from $GUNICORN_EXTRA_ARGS so each environment
+            # opts in (staging: "--timeout 120 --no-control-socket" - the
+            # default 30s aborted workers on slow external image-provider
+            # requests, and gunicorn 25.x needs the control-socket flag
+            # suppressed when the entrypoint is bypassed). The empty default
+            # keeps older images booting: the pinned production tag runs
+            # gunicorn 23, which rejects --no-control-socket (crash-looped
+            # prod for 2.5 days until this was made per-env).
             - >-
               gunicorn -b 0.0.0.0:8008 -w $GUNICORN_WORKERS
-              --timeout 120
-              --no-control-socket
+              $GUNICORN_EXTRA_ARGS
               --preload server.wsgi:application
           securityContext:
             allowPrivilegeEscalation: false
@@ -59,6 +60,15 @@ spec:
             # Gunicorn worker count from cluster settings
             - name: GUNICORN_WORKERS
               value: "${WD_BACKEND_GUNICORN_WORKERS}"
+            # Extra gunicorn flags per environment (staging sets
+            # "--timeout 120 --no-control-socket"). The default "--timeout 30"
+            # is gunicorn's built-in default - a no-op that keeps the value
+            # non-empty: flux re-parses substituted scalars, and an empty
+            # default renders as null, which the env schema rejects. Gunicorn
+            # 23 (pinned production tag) accepts --timeout but rejects
+            # --no-control-socket (>= 25 only).
+            - name: GUNICORN_EXTRA_ARGS
+              value: '${WODORE_GUNICORN_EXTRA_ARGS:---timeout 30}'
             # Imagor settings
             - name: IMAGOR_URL
               value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
