@@ -47,10 +47,10 @@ spec:
                     dir=$1
                     used_mb=$(du -sm "$dir" | cut -f1)
                     if [ "$used_mb" -lt "$trigger_mb" ]; then
-                      echo "$dir: ${used_mb}MB / ${limit_mb}MB - ok"
+                      echo "$dir: $used_mb MB / $limit_mb MB - ok"
                       return 0
                     fi
-                    echo "$dir: ${used_mb}MB >= ${trigger_mb}MB - prune"
+                    echo "$dir: $used_mb MB >= $trigger_mb MB - prune"
                     used=$used_mb
                     for f in $(find "$dir" -type f -exec stat \
                       -c '%Y %n' {} + | sort -n | cut -d' ' -f2-); do
@@ -59,7 +59,7 @@ spec:
                       rm -f "$f"
                       used=$((used - sz))
                     done
-                    echo "$dir: now ~${used}MB"
+                    echo "$dir: now ~ $used MB"
                   }
                   prune_dir /mnt/data/storage
                   prune_dir /mnt/data/result
