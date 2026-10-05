@@ -20,18 +20,27 @@ spec:
       ENV_SUBDOMAIN: "stg."
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
-      WD_BACKEND_TAG: "20261005T1001-sha-761eace-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
+      WD_BACKEND_TAG: "20261005T1001-sha-761eace-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"} # yamllint disable-line rule:line-length
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
-      WD_FRONTEND_TAG: "20261005T0735-sha-d5b49b2-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
+      WD_FRONTEND_TAG: "20261005T0735-sha-d5b49b2-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"} # yamllint disable-line rule:line-length
       WD_FRONTEND_APP_NAME: "Beta Wodore"
       IMAGOR_TAG: "1.9.6" # https://github.com/cshum/imagor/releases
       WD_AVAILABILITY_CRON: "30 5 */1 * *" # at 05:30 on every day
       # django-q2 task cluster (staging only for now; production stays at
       # the cluster-settings default of 0 until promoted)
       WD_QCLUSTER_REPLICAS: "1"
-      # Gunicorn flags for the current image (gunicorn >= 25); production's
-      # pinned 0.1.13 image runs gunicorn 23 and rejects --no-control-socket
-      WODORE_GUNICORN_EXTRA_ARGS: "--timeout 120 --no-control-socket"
+      # Async API runtime (backend #259 + #263): staging opts in via the
+      # entrypoint patch (deployment-entrypoint.yaml); production keeps
+      # the literal WSGI command until its image is bumped past #263.
+      WODORE_ASGI_ENABLED: "1"
+      WODORE_POSTGRES_POOL: "1" # psycopg3 pool, required with ASGI
+      # Staging: 2 fatter async workers (cluster default is 3); double
+      # quotes force the string type through flux substitution re-parse
+      WD_BACKEND_GUNICORN_WORKERS: '"2"'
+      # (WODORE_GUNICORN_EXTRA_ARGS removed: gunicorn flags now ride in
+      # GUNICORN_CMD_ARGS inside deployment-entrypoint.yaml; the old
+      # --timeout 120 slow-request mitigation is obsolete under uvicorn
+      # workers and --no-control-socket comes from entrypoint.sh)
     substituteFrom:
       - kind: ConfigMap # takes configmap from namespace flux-system
         name: cluster-settings

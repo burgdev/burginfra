@@ -1,0 +1,65 @@
+# Staging adopts the image entrypoint chain (backend #263): tini ->
+# /docker-entrypoint.sh (wait-for-it skipped, --no-control-socket added)
+# -> docker/django/start.sh --no-migrate --port 8008 (DJANGO_ENV guard,
+# no boot migrations - the migrate Job + init container own that).
+#
+# The base deployment keeps the literal `gunicorn ... server.wsgi`
+# command because production's pinned 0.1.13 image has no start.sh (the
+# rename would crash-loop prod). When prod's image is bumped past #263,
+# move command/args/WAIT_FOR_DB into the base and delete this patch -
+# per-env differences stay env-only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-backend
+spec:
+  template:
+    spec:
+      # Long og-map renders (bridged threads, up to ~2min tile fetches
+      # with retries) get room to drain on rolling updates: preStop
+      # sleep 10 + gunicorn graceful_timeout 30 already fit in 60s, but
+      # in-flight renders did not.
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: backend
+          # Keep the image ENTRYPOINT (tini + /docker-entrypoint.sh) and
+          # override args only, per the default CMD added in backend #263.
+          command: ["tini", "--", "/docker-entrypoint.sh"]
+          args:
+            - bash
+            - ./docker/django/start.sh
+            - --no-migrate
+            - --port
+            - "8008"
+          env:
+            # k8s: no boot-time DB wait - readiness probes and the
+            # migrate-check init container own database gating
+            - name: WAIT_FOR_DB
+              value: "0"
+            # Async runtime (backend #259): uvicorn workers on server.asgi
+            - name: ASGI_ENABLED
+              value: "${WODORE_ASGI_ENABLED:-0}"
+            # psycopg3 pool instead of CONN_MAX_AGE - required with ASGI;
+            # budget: workers x POSTGRES_POOL_SIZE (default 10) vs CNPG
+            # max_connections=100
+            - name: POSTGRES_POOL
+              value: "${WODORE_POSTGRES_POOL:-0}"
+            # Replaces WODORE_GUNICORN_EXTRA_ARGS: under uvicorn workers
+            # --timeout is a pure stuck-loop watchdog (slow requests are
+            # no longer killed, so it can be tighter than the old 120s);
+            # --keep-alive 30 cuts Traefik<->pod reconnect churn (uvicorn
+            # inherits gunicorn's 2s default otherwise). --no-control-socket
+            # is appended by entrypoint.sh, not needed here.
+            - name: GUNICORN_CMD_ARGS
+              value: "--preload --timeout 60 --keep-alive 30"
+          # Liveness goes shallow (backend #264): dependency-free - the
+          # deep /health/ (DB + cache + storage) stays on readinessProbe.
+          # A dependency check on liveness restarts healthy pods during a
+          # database hiccup. Requires a backend image containing #264.
+          livenessProbe:
+            httpGet:
+              path: /health/live/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: hub.${ENV_SUBDOMAIN}${WODORE_HOST}

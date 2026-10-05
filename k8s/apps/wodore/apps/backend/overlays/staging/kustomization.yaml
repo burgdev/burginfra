@@ -12,3 +12,9 @@ patches:
     target:
       kind: Deployment
       name: wd-backend
+  # Image entrypoint chain + ASGI runtime (backend #263/#259/#264);
+  # see the file header for the prod-promotion plan
+  - path: deployment-entrypoint.yaml
+    target:
+      kind: Deployment
+      name: wd-backend
