@@ -25,7 +25,7 @@ spec:
       # yamllint enable rule:line-length
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       # yamllint disable rule:line-length
-      WD_FRONTEND_TAG: "20261005T0735-sha-d5b49b2-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
+      WD_FRONTEND_TAG: "20261005T1531-sha-223c0f9-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
       # yamllint enable rule:line-length
       WD_FRONTEND_APP_NAME: "Beta Wodore"
       IMAGOR_TAG: "1.9.6" # https://github.com/cshum/imagor/releases
