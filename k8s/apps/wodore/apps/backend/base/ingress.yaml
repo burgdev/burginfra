@@ -15,6 +15,19 @@ spec:
       - "https://wodore.github.io"
     accessControlMaxAge: 86400
 ---
+# API response compression (gzip via Traefik, negotiated by
+# Accept-Encoding; >=1 KiB bodies only, already-encoded responses are
+# skipped). The geo image endpoints return ~100 KiB GeoJSON that shrinks
+# ~5x. Compressing at Traefik keeps the cost off the Django worker's
+# single sync executor (Python gzip there would serialize behind every
+# sync view).
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: api-compress
+spec:
+  compress: {}
+---
 # Media files - served by nginx sidecar with CORS headers
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -22,7 +35,9 @@ metadata:
   name: wd-backend-media
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    # yamllint disable rule:line-length
     traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-media-cors@kubernetescrd
+    # yamllint enable rule:line-length
 spec:
   rules:
     - host: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
@@ -47,6 +62,9 @@ metadata:
   name: wd-backend
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    # yamllint disable rule:line-length
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-api-compress@kubernetescrd
+    # yamllint enable rule:line-length
 spec:
   rules:
     - host: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
