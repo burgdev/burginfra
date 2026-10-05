@@ -54,8 +54,14 @@ spec:
             # --keep-alive 30 cuts Traefik<->pod reconnect churn (uvicorn
             # inherits gunicorn's 2s default otherwise). --no-control-socket
             # is appended by entrypoint.sh, not needed here.
+            # NO --preload under ASGI: gunicorn preloads the app in the
+            # master and forks; anything that touched the psycopg pool
+            # pre-fork (import-time route validation) leaves the pool's
+            # locks/threads broken in the children - workers then hang in
+            # pool.getconn() while staying idle-CPU (staging incident:
+            # readiness 500s -> timeouts, pool stuck at 1 connection).
             - name: GUNICORN_CMD_ARGS
-              value: "--preload --timeout 60 --keep-alive 30"
+              value: "--timeout 60 --keep-alive 30"
           # Liveness goes shallow (backend #264): dependency-free - the
           # deep /health/ (DB + cache + storage) stays on readinessProbe.
           # A dependency check on liveness restarts healthy pods during a
