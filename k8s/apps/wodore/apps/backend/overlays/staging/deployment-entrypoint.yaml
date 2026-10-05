@@ -7,7 +7,10 @@
 # command because production's pinned 0.1.13 image has no start.sh (the
 # rename would crash-loop prod). When prod's image is bumped past #263,
 # move command/args/WAIT_FOR_DB into the base and delete this patch -
-# per-env differences stay env-only.
+# per-env differences stay env-only. PROMOTION MUST ALSO move the shallow
+# liveness (/health/live/, backend #264) into the base: base currently
+# has the DEEP /health/ on liveness, which restart-loops healthy pods
+# during a database hiccup.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -48,6 +51,13 @@ spec:
             # string through the flux re-parse.
             - name: POSTGRES_POOL
               value: '${WODORE_POSTGRES_POOL:-"0"}'
+            # Per-worker pool cap. Sync views serialize on asgiref's single
+            # thread-sensitive executor (~1-2 concurrent queries/worker),
+            # so 10 is oversized; 5 bounds the worst-case budget to
+            # workers x 5 vs CNPG max_connections=100 (martin ~12, qcluster
+            # and jobs on top).
+            - name: POSTGRES_POOL_SIZE
+              value: '${WODORE_POSTGRES_POOL_SIZE:-"5"}'
             # Replaces WODORE_GUNICORN_EXTRA_ARGS: under uvicorn workers
             # --timeout is a pure stuck-loop watchdog (slow requests are
             # no longer killed, so it can be tighter than the old 120s);
@@ -73,3 +83,9 @@ spec:
               httpHeaders:
                 - name: Host
                   value: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
+          # The deep /health/ queues behind the same single sync executor
+          # as regular sync views; concurrent slow requests can push it
+          # past the base 5s and false-flap readiness. 15s keeps the gate
+          # meaningful without the flap (advisor review of the rollout).
+          readinessProbe:
+            timeoutSeconds: 15
