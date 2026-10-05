@@ -123,12 +123,14 @@ spec:
             - name: martin-sync
               mountPath: /code/martin_sync
           resources:
-            # Heavy management commands (update_availability can take hours)
+            # Heavy management commands (update_availability can take
+            # hours) - deliberately NO cpu limit (AGENT.md: cpu limits
+            # CFS-throttle long batch work; the old 1-core limit stretched
+            # multi-hour runs). Memory stays capped to protect the node.
             requests:
               cpu: 100m
               memory: 300Mi
             limits:
-              cpu: "1"
               memory: 2Gi
       volumes:
         - name: media
