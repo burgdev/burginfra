@@ -36,8 +36,8 @@ spec:
       # Async API runtime (backend #259 + #263): staging opts in via the
       # entrypoint patch (deployment-entrypoint.yaml); production keeps
       # the literal WSGI command until its image is bumped past #263.
-      WODORE_ASGI_ENABLED: "1"
-      WODORE_POSTGRES_POOL: "1" # psycopg3 pool, required with ASGI
+      WODORE_ASGI_ENABLED: '"1"' # quotes survive flux substitution re-parse
+      WODORE_POSTGRES_POOL: '"1"' # psycopg3 pool, required with ASGI
       # Staging: 2 fatter async workers (cluster default is 3); double
       # quotes force the string type through flux substitution re-parse
       WD_BACKEND_GUNICORN_WORKERS: '"2"'
