@@ -36,14 +36,18 @@ spec:
             # migrate-check init container own database gating
             - name: WAIT_FOR_DB
               value: "0"
-            # Async runtime (backend #259): uvicorn workers on server.asgi
+            # Async runtime (backend #259): uvicorn workers on server.asgi.
+            # Quoted default + quoted flux value ("1") — flux re-parses
+            # substituted scalars, a bare 1 becomes an int and fails the
+            # env schema (same trap as WD_QCLUSTER_WORKERS "\"3\"").
             - name: ASGI_ENABLED
-              value: "${WODORE_ASGI_ENABLED:-0}"
+              value: '${WODORE_ASGI_ENABLED:-"0"}'
             # psycopg3 pool instead of CONN_MAX_AGE - required with ASGI;
             # budget: workers x POSTGRES_POOL_SIZE (default 10) vs CNPG
-            # max_connections=100
+            # max_connections=100. Quotes: keep the substituted value a
+            # string through the flux re-parse.
             - name: POSTGRES_POOL
-              value: "${WODORE_POSTGRES_POOL:-0}"
+              value: '${WODORE_POSTGRES_POOL:-"0"}'
             # Replaces WODORE_GUNICORN_EXTRA_ARGS: under uvicorn workers
             # --timeout is a pure stuck-loop watchdog (slow requests are
             # no longer killed, so it can be tighter than the old 120s);
