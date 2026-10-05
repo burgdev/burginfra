@@ -21,7 +21,7 @@ spec:
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       # yamllint disable rule:line-length
-      WD_BACKEND_TAG: "20261005T1551-sha-2b21c78-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
+      WD_BACKEND_TAG: "20261005T2045-sha-cdc015b-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
       # yamllint enable rule:line-length
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       # yamllint disable rule:line-length
