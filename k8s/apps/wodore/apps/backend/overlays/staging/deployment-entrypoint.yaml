@@ -58,6 +58,12 @@ spec:
             # and jobs on top).
             - name: POSTGRES_POOL_SIZE
               value: '${WODORE_POSTGRES_POOL_SIZE:-"5"}'
+            # Pool checkout budget (backend #274): keep below the readiness
+            # deadline so an exhausted pool fails fast and legibly instead
+            # of hanging psycopg's default 30s (2026-10-05 wedge: probe
+            # timeouts plus one zombie health check per probe).
+            - name: POSTGRES_POOL_TIMEOUT
+              value: '${WODORE_POSTGRES_POOL_TIMEOUT:-"30"}'
             # Replaces WODORE_GUNICORN_EXTRA_ARGS: under uvicorn workers
             # --timeout is a pure stuck-loop watchdog (slow requests are
             # no longer killed, so it can be tighter than the old 120s);
@@ -83,9 +89,20 @@ spec:
               httpHeaders:
                 - name: Host
                   value: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
-          # The deep /health/ queues behind the same single sync executor
-          # as regular sync views; concurrent slow requests can push it
-          # past the base 5s and false-flap readiness. 15s keeps the gate
-          # meaningful without the flap (advisor review of the rollout).
+          # Readiness goes fast-fail (backend #274): /health/ready/ caps
+          # the DB touch at a 2s budget (a pool checkout + SELECT 1), so an
+          # exhausted pool answers a clean 503 in ~2s instead of hanging
+          # until the probe deadline - during the 2026-10-05 wedge the deep
+          # /health/ blocked 30s in pool.getconn while this probe (15s)
+          # timed out first, reporting only 'context deadline exceeded'.
+          # 6s ~= 3x the endpoint budget; the deep /health/ stays available
+          # for humans/debugging. Requires a backend image containing #274
+          # (the pinned WD_BACKEND_TAG ships it atomically with this patch).
           readinessProbe:
-            timeoutSeconds: 15
+            httpGet:
+              path: /health/ready/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: hub.${ENV_SUBDOMAIN}${WODORE_HOST}
+            timeoutSeconds: 6
