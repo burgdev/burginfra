@@ -21,7 +21,7 @@ spec:
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       # yamllint disable rule:line-length
-      WD_BACKEND_TAG: "20261005T2234-sha-a7bbce0-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
+      WD_BACKEND_TAG: "20261006T0628-sha-510e0d3-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
       # yamllint enable rule:line-length
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       # yamllint disable rule:line-length
@@ -39,6 +39,10 @@ spec:
       WODORE_ASGI_ENABLED: '"1"' # quotes survive flux substitution re-parse
       WODORE_POSTGRES_POOL: '"1"' # psycopg3 pool, required with ASGI
       WODORE_POSTGRES_POOL_SIZE: '"5"' # ~1-2 conns/worker; bounds DB budget
+      # Pool checkout budget (backend #274): 10s < readiness deadline, so
+      # an exhausted pool fails fast and loggable instead of hanging the
+      # psycopg default 30s (2026-10-05 wedge: probe timeout + zombie checks)
+      WODORE_POSTGRES_POOL_TIMEOUT: '"10"'
       # Staging: 2 fatter async workers (cluster default is 3); double
       # quotes force the string type through flux substitution re-parse
       WD_BACKEND_GUNICORN_WORKERS: '"2"'
