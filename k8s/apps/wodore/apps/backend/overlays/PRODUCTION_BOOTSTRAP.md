@@ -17,7 +17,7 @@ verified on staging (burginfra #97–#99, wodore-backend #192–#196).
 
 ## Steps
 
-1. Copy `overlays/staging/job-migrate-bootstrap.yaml` to
+1. Copy `overlays/job-migrate-bootstrap.yaml` to
    `overlays/production/` and wire it into the production overlay's
    `kustomization.yaml` (same `patches:` entry, target Job
    `wd-backend-migrate`).
@@ -45,7 +45,9 @@ verified on staging (burginfra #97–#99, wodore-backend #192–#196).
 
 ## Cleanup (do not forget)
 
-Revert BOTH overlay patches (staging + production) back to plain
-`python manage.py migrate --noinput` in the base job once every
-environment is bootstrapped. `bootstrap_user_model` is idempotent, but
-plain migrate is the correct steady-state entry point again.
+Revert the production overlay patch back to plain
+`python manage.py migrate --noinput` once production is bootstrapped.
+The staging patch was already removed (2026-10-08): staging bootstrapped
+in #97–#99 and runs the base plain-migrate job again.
+`bootstrap_user_model` is idempotent, but plain migrate is the correct
+steady-state entry point.

@@ -4,10 +4,6 @@ resources:
   - ../../base
   - imagepolicy.yaml
 patches:
-  - path: job-migrate-bootstrap.yaml
-    target:
-      kind: Job
-      name: wd-backend-migrate
   - path: deployment-cors-origins.yaml
     target:
       kind: Deployment

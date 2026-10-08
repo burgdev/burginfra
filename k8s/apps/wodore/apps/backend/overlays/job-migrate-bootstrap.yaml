@@ -3,9 +3,11 @@
 # `migrate` - plain migrate fails with InconsistentMigrationHistory on the
 # auth.User -> accounts.User swap. The command creates accounts_user,
 # copies users (pks/passwords/flags preserved), re-points FKs and applies
-# all remaining migrations itself. Idempotent; revert this patch (back to
-# plain migrate in base) once the swap has run in every environment.
-# Production phase-2 runbook: ../PRODUCTION_BOOTSTRAP.md
+# all remaining migrations itself. Idempotent and self-guarding (no-ops on
+# already-switched databases), then runs plain migrate.
+# Staging was bootstrapped (burginfra #97-#99) and reverted to the base
+# plain-migrate job on 2026-10-08. This file is kept as the template for
+# production phase-2 - runbook: ./PRODUCTION_BOOTSTRAP.md
 apiVersion: batch/v1
 kind: Job
 metadata:
