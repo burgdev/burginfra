@@ -6,8 +6,12 @@ spec:
   replicas: 1
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 60
+  # Recreate, not RollingUpdate: a 1-replica pod on a ReadWriteOnce PVC
+  # cannot surge (the new pod can't attach the volume the old one still
+  # holds), which deadlocks rollouts. The disk cache survives, so the
+  # replacement pod serves warm from its first request.
   strategy:
-    type: RollingUpdate
+    type: Recreate
   selector:
     matchLabels:
       app: wd-martin-cache
@@ -78,4 +82,5 @@ spec:
           persistentVolumeClaim:
             claimName: wd-martin-cache-v1
         - name: tmp
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 256Mi

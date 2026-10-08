@@ -4,7 +4,9 @@ metadata:
   name: wd-martin-cache-nginx-config
 data:
   nginx.conf: |
-    worker_processes auto;
+    # Pinned low: a cache pod needs no node-wide core count, and a miss
+    # storm must not starve co-located pods.
+    worker_processes 2;
     error_log /dev/stderr warn;
     pid /tmp/nginx.pid;
 
@@ -12,6 +14,10 @@ data:
         worker_connections 1024;
     }
 
+    # NOTE: nginx vars are all lowercase; Flux postBuild substitutes are
+    # all uppercase (NAMESPACE, ENVIRONMENT, WODORE_HOST, ...), so
+    # envsubst can never touch nginx variables. Keep that invariant when
+    # adding substitute vars.
     http {
         include /etc/nginx/mime.types;
         default_type application/octet-stream;
@@ -39,7 +45,9 @@ data:
         proxy_cache_path /var/cache/nginx/tiles
             levels=1:2
             keys_zone=tiles:64m
-            max_size=14g
+            # 12g of the 15Gi PVC: ~3Gi headroom for fs overhead and the
+            # cache manager's ~1-minute eviction interval.
+            max_size=12g
             inactive=14d
             use_temp_path=off;
 
@@ -48,8 +56,11 @@ data:
             server_name _;
 
             # Runtime resolution via kube-dns instead of startup resolution:
-            # the cache pod boots even while martin is unreachable, and
-            # DNS hiccups never block nginx cold starts.
+            # the cache pod boots even while martin is unreachable. nginx
+            # resolves the resolver hostname once at config load via the
+            # pod's own DNS. On a cluster with a non-default service CIDR
+            # this can be swapped for the kube-dns ClusterIP (k3s default:
+            # 10.43.0.10).
             resolver kube-dns.kube-system.svc.cluster.local valid=30s ipv6=off;
             set $martin_upstream "wd-martin:3000";
 
@@ -78,7 +89,9 @@ data:
 
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                # $remote_addr (the Traefik pod IP) - never append the
+                # client-supplied chain, which is trivially forged.
+                proxy_set_header X-Forwarded-For $remote_addr;
                 proxy_set_header X-Forwarded-Proto $scheme;
                 # Cache stores identity-encoded bodies; compression happens
                 # per client at the Traefik edge (wd-martin-compress).
@@ -86,8 +99,15 @@ data:
 
                 proxy_cache tiles;
                 proxy_cache_methods GET HEAD;
-                # Fallback only; upstream Cache-Control wins.
-                proxy_cache_valid 200 301 1h;
+                # Path-only key: martin's tile API takes no query params,
+                # and stripping args prevents cache-key explosion via junk
+                # query strings. Revisit if versioned URLs (?version=) or
+                # query-param function sources are ever introduced.
+                proxy_cache_key "$scheme$proxy_host$uri";
+                # Fallback only; upstream Cache-Control wins. 204: martin
+                # returns empty tiles as 204. No 301: stale redirects are
+                # never worth an hour.
+                proxy_cache_valid 200 204 1h;
 
                 # Collapse identical concurrent requests into one upstream
                 # fetch (map-load bursts request the same tiles at once).
