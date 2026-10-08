@@ -4,7 +4,9 @@ metadata:
   name: wd-martin
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
-    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-wd-martin-header@kubernetescrd
+    # yamllint disable rule:line-length
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-wd-martin-rate@kubernetescrd,${NAMESPACE}-wd-martin-compress@kubernetescrd
+    # yamllint enable rule:line-length
 spec:
   rules:
     - host: tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
@@ -14,29 +16,43 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: wd-martin
+                name: wd-martin-cache
                 port:
-                  number: 3000
+                  number: 80
   tls:
     - secretName: wd-martin-${ENVIRONMENT}-tls
       hosts:
         - tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
 ---
+# No response-header middleware: martin sets Cache-Control itself via
+# cache_control and handles CORS natively (cors: true). Keep header
+# logic in martin so browser, nginx cache, and a future CDN all key off
+# the same upstream headers. X-Cache-Status comes from the nginx tier.
+---
+# Tile response compression at the Traefik edge. The nginx cache stores
+# identity-encoded bodies (Accept-Encoding is stripped before martin),
+# so each client negotiates its own encoding without fragmenting the
+# cache.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: wd-martin-header
+  name: wd-martin-compress
 spec:
-  headers:
-    customResponseHeaders:
-      X-Cache-Status: "Traefik"
-      Cache-Control: "public, max-age=1800"
-    accessControlAllowMethods:
-      - GET
-      - OPTIONS
-    accessControlAllowOriginList:
-      - https://stg.${WODORE_HOST}
-      - https://${WODORE_HOST}
-      - https://stg.${WODO_HOST}
-      - https://${WODO_HOST}
-    accessControlMaxAge: 100
+  compress: {}
+---
+# Per-client-IP token bucket at the Traefik edge - the only tier that
+# sees the real client IP. Generous for map panning, brutal for
+# scripts. Keyed on remote address by default; behind a future CDN,
+# switch sourceCriterion to the CDN's client-IP header (e.g.
+# CF-Connecting-IP). Do NOT enable that header name while Traefik is
+# still directly reachable - clients would forge it and rotate
+# buckets to bypass the limit.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: wd-martin-rate
+spec:
+  rateLimit:
+    average: 100
+    burst: 300
+    period: 1s
