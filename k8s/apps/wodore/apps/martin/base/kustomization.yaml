@@ -12,3 +12,7 @@ resources:
   - pvcs.yaml
   - deployment.yaml
   - service.yaml
+  - nginx-cache-config.yaml
+  - nginx-cache-pvc.yaml
+  - nginx-cache-deployment.yaml
+  - nginx-cache-service.yaml

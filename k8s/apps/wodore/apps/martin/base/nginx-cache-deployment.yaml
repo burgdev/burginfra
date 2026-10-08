@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-martin-cache
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 60
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: wd-martin-cache
+  template:
+    metadata:
+      labels:
+        app: wd-martin-cache
+    spec:
+      securityContext:
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        fsGroupChangePolicy: "OnRootMismatch"
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: nginx-cache
+          image: nginx:1.29-alpine
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: tmp
+              mountPath: /tmp
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
+          # Probes only prove nginx itself is up - deliberately not
+          # martin's /health, so cache pods stay Ready (and keep serving
+          # stale tiles) while martin restarts.
+          livenessProbe:
+            httpGet:
+              path: /nginx-health
+              port: http
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /nginx-health
+              port: http
+            initialDelaySeconds: 3
+            timeoutSeconds: 3
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              memory: 128Mi
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: wd-martin-cache-nginx-config
+        - name: cache
+          persistentVolumeClaim:
+            claimName: wd-martin-cache-v1
+        - name: tmp
+          emptyDir: {}
