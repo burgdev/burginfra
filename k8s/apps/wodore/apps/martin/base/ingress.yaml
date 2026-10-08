@@ -5,7 +5,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
     # yamllint disable rule:line-length
-    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-wd-martin-compress@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-wd-martin-rate@kubernetescrd,${NAMESPACE}-wd-martin-compress@kubernetescrd
     # yamllint enable rule:line-length
 spec:
   rules:
@@ -39,3 +39,20 @@ metadata:
   name: wd-martin-compress
 spec:
   compress: {}
+---
+# Per-client-IP token bucket at the Traefik edge - the only tier that
+# sees the real client IP. Generous for map panning, brutal for
+# scripts. Keyed on remote address by default; behind a future CDN,
+# switch sourceCriterion to the CDN's client-IP header (e.g.
+# CF-Connecting-IP). Do NOT enable that header name while Traefik is
+# still directly reachable - clients would forge it and rotate
+# buckets to bypass the limit.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: wd-martin-rate
+spec:
+  rateLimit:
+    average: 100
+    burst: 300
+    period: 1s

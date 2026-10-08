@@ -99,11 +99,12 @@ data:
 
                 proxy_cache tiles;
                 proxy_cache_methods GET HEAD;
-                # Path-only key: martin's tile API takes no query params,
-                # and stripping args prevents cache-key explosion via junk
-                # query strings. Revisit if versioned URLs (?version=) or
-                # query-param function sources are ever introduced.
-                proxy_cache_key "$scheme$proxy_host$uri";
+                # Full URI including query args: martin function sources
+                # take parameters via the query string, so distinct param
+                # sets must stay distinct cache entries - a path-only key
+                # would serve wrong tiles. Junk-query churn is bounded by
+                # the 12g LRU cap and throttled at Traefik instead.
+                proxy_cache_key "$scheme$proxy_host$uri$is_args$args";
                 # Fallback only; upstream Cache-Control wins. 204: martin
                 # returns empty tiles as 204. No 301: stale redirects are
                 # never worth an hour.
