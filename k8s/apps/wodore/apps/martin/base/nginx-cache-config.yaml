@@ -62,7 +62,8 @@ data:
             # this can be swapped for the kube-dns ClusterIP (k3s default:
             # 10.43.0.10).
             resolver kube-dns.kube-system.svc.cluster.local valid=30s ipv6=off;
-            set $martin_upstream "wd-martin:3000";
+            set $martin_fqdn "wd-martin.${NAMESPACE}.svc.cluster.local";
+            set $martin_upstream "$martin_fqdn:3000";
 
             # Real cache verdict for clients. Traefik must NOT set
             # X-Cache-Status via customResponseHeaders (it overwrites
