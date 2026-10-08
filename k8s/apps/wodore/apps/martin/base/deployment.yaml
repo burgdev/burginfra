@@ -23,7 +23,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: wd-martin
-          image: ghcr.io/maplibre/martin:1.2.0
+          image: ghcr.io/maplibre/martin:1.16.1
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
@@ -46,7 +46,8 @@ spec:
             - /bin/sh
             - -c
             - |
-              martin --config /martin_sync/config/martin.yaml --webui enable-for-all
+              martin --config /martin_sync/config/martin.yaml \
+                --webui enable-for-all
           volumeMounts:
             - name: martin-sync
               mountPath: /martin_sync
