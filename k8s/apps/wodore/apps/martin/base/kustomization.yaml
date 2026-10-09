@@ -12,7 +12,14 @@ resources:
   - pvcs.yaml
   - deployment.yaml
   - service.yaml
-  - nginx-cache-config.yaml
   - nginx-cache-pvc.yaml
   - nginx-cache-deployment.yaml
   - nginx-cache-service.yaml
+# Hash-suffixed name (default): every nginx.conf change produces a new
+# ConfigMap name, kustomize rewrites the Deployment volume reference,
+# and the pod rolls automatically. Plain ConfigMap resources do NOT
+# restart pods - nginx would keep serving the old config forever.
+configMapGenerator:
+  - name: wd-martin-cache-nginx-config
+    files:
+      - nginx.conf=nginx-cache-config.conf
