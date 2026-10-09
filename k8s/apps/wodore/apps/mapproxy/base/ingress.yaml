@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wd-mapproxy
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    # yamllint disable rule:line-length
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-wd-mapproxy-rate@kubernetescrd
+    # yamllint enable rule:line-length
+spec:
+  rules:
+    # Shares the martin tiles host: Traefik routes by longest prefix, so
+    # /mapproxy (this rule) wins over martin's catch-all / on the same
+    # host, no priority override needed.
+    - host: tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /mapproxy
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-mapproxy
+                port:
+                  number: 80
+  tls:
+    - secretName: wd-mapproxy-${ENVIRONMENT}-tls
+      hosts:
+        - tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
+---
+# Per-client-IP token bucket at the Traefik edge - the only tier that
+# sees the real client IP. Same generous-for-panning shape as
+# wd-martin-rate. No compress middleware: MapProxy serves raster
+# tiles that are already PNG/JPEG compressed.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: wd-mapproxy-rate
+spec:
+  rateLimit:
+    average: 100
+    burst: 300
+    period: 1s
