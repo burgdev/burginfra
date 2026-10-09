@@ -1,0 +1,11 @@
+# VSO: append HUT_SRV_* to the destination includes allowlist of
+# `wd-backend-envvars` (base secrets.yaml filters everything not matching
+# DJANGO_*/ZITADEL_*/OIDC_*/HRS_AUTHORIZATION_KEY*).
+# Needed so hut-services source credentials — currently
+# HUT_SRV_DOC_NZ_API_KEY (DOC NZ API v2 enrichment: hut category,
+# introduction, bunks, status) — sync from OpenBao kv/apps/wodore/staging
+# into the k8s Secret and reach the backend containers via envFrom.
+# JSON6902 `add` with the trailing `-` appends to the base list.
+- op: add
+  path: /spec/destination/transformation/includes/-
+  value: HUT_SRV_.*
