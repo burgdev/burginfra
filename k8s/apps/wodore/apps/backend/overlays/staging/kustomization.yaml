@@ -14,3 +14,11 @@ patches:
     target:
       kind: Deployment
       name: wd-backend
+  # Sync HUT_SRV_* source credentials (hut-services DOC NZ API key) from
+  # OpenBao into wd-backend-envvars — see the patch file header
+  - path: vso-backend-envvars-hutsrv.yaml
+    target:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+      name: wd-backend-envvars
