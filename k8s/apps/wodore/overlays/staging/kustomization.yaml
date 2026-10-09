@@ -5,3 +5,4 @@ resources:
   - ../../apps/backend/overlays/staging
   - ../../apps/frontend/overlays/staging
   - ../../apps/martin/overlays/staging
+  - ../../apps/mapproxy/overlays/staging

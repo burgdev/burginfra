@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wd-mapproxy
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 60
+  # Recreate, not RollingUpdate: a 1-replica pod on a ReadWriteOnce PVC
+  # cannot surge (the new pod can't attach the volume the old one still
+  # holds), which deadlocks rollouts. The tile cache survives, so the
+  # replacement pod serves warm from its first request.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: wd-mapproxy
+  template:
+    metadata:
+      labels:
+        app: wd-mapproxy
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+        - name: wd-mapproxy
+          # -nginx variant: official image running mapproxy behind nginx
+          # on port 80. Config is read once at startup — the
+          # hash-suffixed ConfigMap (configMapGenerator) rolls the pod
+          # on every config change.
+          image: ghcr.io/mapproxy/mapproxy/mapproxy:7.0.0-nginx
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /mapproxy/config
+              readOnly: true
+            # nested mount: kubelet mounts deepest-first, so the cache
+            # PVC overlays the read-only ConfigMap dir
+            - name: cache
+              mountPath: /mapproxy/config/cache_data
+          startupProbe:
+            httpGet:
+              path: /mapproxy/tms/1.0.0/
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /mapproxy/tms/1.0.0/
+              port: http
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+      volumes:
+        - name: config
+          configMap:
+            name: wd-mapproxy-config
+        - name: cache
+          persistentVolumeClaim:
+            claimName: wd-mapproxy-cache
