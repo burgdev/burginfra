@@ -1,41 +1,43 @@
 # yamllint disable rule:line-length
 # Wodore "Europe Topo" tile service config (MapProxy 7.0.0)
 #
-# Serves the raster basemap as TWO layers so the small scales stay
-# license-clean OpenTopoMap everywhere (including full-country views):
+# Serves the merged raster basemap as ONE layer:
 #
-#   europe_topo_low   OpenTopoMap only                     (z0-7)
-#   europe_topo_high  OpenTopoMap + basemap.at + swisstopo (z7+)
+#   europe_topo   OpenTopoMap worldwide; basemap.at (AT) and swisstopo
+#                 (CH/LI) merged on top from zoom 7 up
 #
 # basemap.at is clipped to the Austria polygon and swisstopo
 # pixelkarte to the Switzerland+Liechtenstein polygon - pixel-perfect
 # country cuts at the borders, no white no-data areas, no bbox seams.
+# Both country sources carry max_res: below z7 MapProxy returns blank
+# images for them and the layer falls back to pure OpenTopoMap - so
+# full-country views stay license-clean OpenTopoMap.
 #
 #   demo:  https://tiles.<host>/mapproxy/demo/
-#   low:   .../mapproxy/tiles/europe_topo_low/webmercator/{z}/{x}/{y}.png
-#   high:  .../mapproxy/tiles/europe_topo_high/webmercator/{z}/{x}/{y}.png
+#   tiles: https://tiles.<host>/mapproxy/tiles/europe_topo/webmercator/{z}/{x}/{y}.jpeg
 #
 # The /tiles endpoint serves plain XYZ order (top-left origin) - usable
-# as a MapLibre raster source without scheme:'tms'. Switching between
-# the two layers happens in the client by zoom (layer minzoom/maxzoom).
+# as a MapLibre raster source without scheme:'tms'.
 #
 # MapProxy 7.0.0 gotchas learned the hard way (verified in the
 # wd-europe-topo prototype):
 # - layers must reference a SINGLE cache (multi-cache layer merge is
 #   8.0+); merging multiple sources works at the CACHE level instead
 # - tile sources do NOT support min_level/max_level ("unknown" warning,
-#   silently ignored) - the low/high layer pair replaces it
+#   silently ignored) - use max_res/min_res instead (blank outside the
+#   resolution range)
 # - do NOT override num_levels on a based grid - startup hangs
 # - mbtiles caches failed to initialize; default file cache works fine
-# - no expires_hours option exists - staleness is handled with
-#   refresh_before (tiles older than two weeks are re-fetched while
-#   serving)
+# - no webp support; jpeg cache storage via format + encoding_options
 services:
   demo:
   tms:
     use_grid_names: true
     # nw origin => the /tiles endpoint serves XYZ order (top-left)
     origin: 'nw'
+    # Browser-side tile caching (Cache-Control on tile responses).
+    # MapProxy answers with 304s via ETag/Last-Modified after expiry.
+    expires_hours: 168
 grids:
   webmercator:
     # GLOBAL_WEBMERCATOR = EPSG:3857 with nw (top-left) origin - the
@@ -53,6 +55,9 @@ sources:
     # removes basemap.at's white no-data margin at the grid edges.
     url: https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/%(z)s/%(y)s/%(x)s.png
     grid: webmercator
+    # blank below z7 (max_res is exclusive; res(7) = 1222.99 m/px) -
+    # OpenTopoMap renders the small scales for the whole map.
+    max_res: 1223
     coverage:
       datasource: /mapproxy/config/at-boundary.geojson
       srs: 'EPSG:4326'
@@ -61,6 +66,8 @@ sources:
     type: tile
     url: https://wmts0.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/%(z)s/%(x)s/%(y)s.jpeg
     grid: webmercator
+    # blank below z7 (see at_geolandbasemap).
+    max_res: 1223
     # clip to the country polygon: everything outside becomes transparent
     # pixels, so OpenTopoMap below shows through with a clean border cut.
     # ch-boundary.geojson = Natural Earth 10m country polygons (public
@@ -72,19 +79,7 @@ sources:
       srs: 'EPSG:4326'
       clip: true
 caches:
-  europe_topo_low_cache:
-    grids: [webmercator]
-    # Small scales: pure OpenTopoMap worldwide (also CH/AT).
-    # WebP: ~3-10x smaller than PNG for raster imagery.
-    format: image.jpeg
-    image:
-      encoding_options:
-        jpeg_quality: 85
-    sources: [opentopo]
-    # Re-fetch tiles older than four weeks while serving.
-    refresh_before:
-      weeks: 4
-  europe_topo_high_cache:
+  europe_topo_cache:
     grids: [webmercator]
     # cache-level merge: multiple sources are merged left (bottom) to
     # right (top) before they are cached - OpenTopoMap everywhere,
@@ -96,15 +91,13 @@ caches:
       encoding_options:
         jpeg_quality: 85
     sources: [opentopo, at_geolandbasemap, ch_pixelkarte]
+    # Re-fetch tiles older than four weeks while serving.
     refresh_before:
       weeks: 4
 layers:
-  - name: europe_topo_low
-    title: Europe Topo - small scales (OpenTopoMap)
-    sources: [europe_topo_low_cache]
-  - name: europe_topo_high
-    title: Europe Topo - large scales (OpenTopoMap + basemap.at + swisstopo)
-    sources: [europe_topo_high_cache]
+  - name: europe_topo
+    title: Europe Topo (OpenTopoMap; basemap.at + swisstopo from z7)
+    sources: [europe_topo_cache]
 globals:
   cache:
     # lock files must live in the writable cache_data volume (the
