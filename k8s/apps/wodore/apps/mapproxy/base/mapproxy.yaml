@@ -83,5 +83,9 @@ globals:
     # lock files must live in the writable cache_data volume (the
     # ConfigMap at /mapproxy/config is read-only)
     lock_dir: /mapproxy/config/cache_data/lock
+    # re-fetch tiles older than two weeks. Without this the file cache
+    # grows unbounded - MapProxy has no size-based LRU eviction. Upstream
+    # Cache-Control headers are NOT honored for tile-cache expiry.
+    expires_hours: 336
   image:
     resampling_method: bilinear
