@@ -76,7 +76,10 @@ caches:
     grids: [webmercator]
     # Small scales: pure OpenTopoMap worldwide (also CH/AT).
     # WebP: ~3-10x smaller than PNG for raster imagery.
-    format: image.webp
+    format: image.jpeg
+    image:
+      encoding_options:
+        jpeg_quality: 85
     sources: [opentopo]
     # Re-fetch tiles older than four weeks while serving.
     refresh_before:
@@ -88,7 +91,10 @@ caches:
     # basemap.at on top inside Austria, swisstopo on top inside the
     # Switzerland polygon. France/Italy stay on OpenTopoMap (no free
     # national topo raster exists; IGN SCAN25 is a paid product).
-    format: image.webp
+    format: image.jpeg
+    image:
+      encoding_options:
+        jpeg_quality: 85
     sources: [opentopo, at_geolandbasemap, ch_pixelkarte]
     refresh_before:
       weeks: 4
