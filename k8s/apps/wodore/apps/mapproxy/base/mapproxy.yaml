@@ -41,6 +41,9 @@ sources:
     # removes basemap.at's white no-data margin at the grid edges.
     url: https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/%(z)s/%(y)s/%(x)s.png
     grid: webmercator
+    # basemap.at's cartography is too dense below z7 - OpenTopoMap renders
+    # the small scales for the whole map (see also ch_pixelkarte).
+    min_level: 7
     coverage:
       datasource: /mapproxy/config/at-boundary.geojson
       srs: 'EPSG:4326'
@@ -49,6 +52,9 @@ sources:
     type: tile
     url: https://wmts0.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/%(z)s/%(x)s/%(y)s.jpeg
     grid: webmercator
+    # swisstopo pixelkarte is too small-scale below z7 - OpenTopoMap renders
+    # the small scales (full-country/world views) for the whole map.
+    min_level: 7
     # clip to the country polygon: everything outside becomes transparent
     # pixels, so OpenTopoMap below shows through with a clean border cut.
     # ch-boundary.geojson = Natural Earth 10m country polygons (public
