@@ -16,6 +16,11 @@ spec:
       labels:
         app: wd-martin
     spec:
+      # Shared PID namespace: the sync-watcher sidecar can restart the
+      # martin container in place when a sync touches /martin_sync -
+      # no kubectl, no RBAC, no backend coupling (pod IP is unchanged,
+      # so the cache tier keeps serving).
+      shareProcessNamespace: true
       securityContext:
         runAsUser: 1001
         runAsGroup: 1001
@@ -70,7 +75,45 @@ spec:
               memory: 2Gi
             requests:
               memory: 512Mi
+        - name: sync-watcher
+          image: busybox:1.37
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # martin reads /martin_sync only at startup. Watch the WHOLE
+              # tree (config, styles, sprites, fonts); when a sync touches
+              # any file, kill the martin process - the container restarts
+              # in place and re-reads everything. Pure busybox polling:
+              # no inotify, no kubectl, no RBAC.
+              MARKER=/watch/.sync_marker
+              touch "$MARKER"
+              while true; do
+                sleep 30
+                CHANGED=$(find /martin_sync -type f -newer "$MARKER" \
+                  2>/dev/null | head -1)
+                [ -z "$CHANGED" ] && continue
+                touch "$MARKER"
+                echo "sync change detected ($CHANGED) - restarting martin"
+                sleep 15   # let the sync finish writing
+                pkill -f "martin --config" || true
+                break      # our container is restarted by kubelet
+              done
+          volumeMounts:
+            - name: martin-sync
+              mountPath: /martin_sync
+              readOnly: true
+            - name: watcher-marker
+              mountPath: /watch
+          resources:
+            limits:
+              memory: 32Mi
+            requests:
+              cpu: 5m
+              memory: 8Mi
       volumes:
         - name: martin-sync
           persistentVolumeClaim:
             claimName: wd-martin-sync-v1
+        - name: watcher-marker
+          emptyDir: {}
