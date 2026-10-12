@@ -4,15 +4,16 @@
 # Serves two merged raster basemap layers (names are world_*, the
 # coverage is genuinely worldwide - Esri imagery + OpenTopoMap global):
 #
-#   world_topo   OpenTopoMap worldwide; basemap.at (AT) and swisstopo
-#                 (CH/LI) merged on top from zoom 7 up
+#   world_topo   OpenTopoMap worldwide; BEV Austrian Map (AT) and
+#                 swisstopo (CH/LI) merged on top from zoom 7 up
 #
-# basemap.at is clipped to the Austria polygon and swisstopo
-# pixelkarte to the Switzerland+Liechtenstein polygon - pixel-perfect
-# country cuts at the borders, no white no-data areas, no bbox seams.
-# Both country sources carry max_res: below z7 MapProxy returns blank
+# BEV Austrian Map online (ÖK render, z5-z16) is clipped to the
+# Austria polygon and swisstopo pixelkarte to the
+# Switzerland+Liechtenstein polygon - pixel-perfect country cuts at
+# the borders, no white no-data areas, no bbox seams.
+# Both country sources carry min_res: below z7 MapProxy returns blank
 # images for them and the layer falls back to pure OpenTopoMap - so
-# full-country views stay license-clean OpenTopoMap.
+# full-country views stay OpenTopoMap-only.
 #
 #   demo:  https://tiles.<host>/mapproxy/demo/
 #   tiles: https://tiles.<host>/mapproxy/tiles/world_topo/webmercator/{z}/{x}/{y}.webp
@@ -54,12 +55,21 @@ sources:
     url: https://b.tile.opentopomap.org/%(z)s/%(x)s/%(y)s.png
     grid: webmercator
     transparent: true
-  at_geolandbasemap:
+  at_bev_karte:
     type: tile
-    # basemap.at classic topo (CC BY 4.0, 256px PNG). NOTE: basemap.at
-    # tile URLs use z/Y/x row-before-column order. The polygon clip also
-    # removes basemap.at's white no-data margin at the grid edges.
-    url: https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/%(z)s/%(y)s/%(x)s.png
+    # BEV "Austrian Map online" topo (ÖK50/ÖK250/ÖK500 render, 256px
+    # PNG, plain XYZ order, z5-z16). Declared CC BY 4.0 in the BEV
+    # data catalog (DOI 10.48677/2fe7eed6-ab55-4926-a4a1-80df6dedc55c);
+    # the www.bev.gv.at product page still carries legacy
+    # redistribution wording - written confirmation from BEV
+    # Kundenservice requested 2026-10. Attribution: "Datenquelle: BEV".
+    # Operational caveats: upstream is a Werkzeug dev server sending
+    # Cache-Control: no-cache (our cache tiers absorb that) and tiles
+    # stop at z16 - the FRONTEND raster source must set maxzoom: 16 so
+    # z17+ overzooms this layer instead of falling through to
+    # OpenTopoMap mid-zoom (frontend repo change, lands with this).
+    # on_error keeps OpenTopoMap as graceful fallback on BEV hiccups.
+    url: https://maps.bev.gv.at/tiles/karte/%(z)s/%(x)s/%(y)s.png
     grid: webmercator
     transparent: true
     # active from z7 up (min_res; res(7) = 1222.99 m/px) -
@@ -78,7 +88,7 @@ sources:
     url: https://wmts0.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/%(z)s/%(x)s/%(y)s.jpeg
     grid: webmercator
     transparent: true
-    # active from z7 up (see at_geolandbasemap).
+    # active from z7 up (see at_bev_karte).
     min_res: 1223
     on_error:
       400:
@@ -178,12 +188,15 @@ sources:
       srs: 'EPSG:4326'
       clip: true
 caches:
-  world_topo_cache:
+  # v2 suffix = cache rename: MapProxy keys tiles by cache name, so
+  # the renamed directory starts fresh and pre-swap (geolandbasemap)
+  # tiles on the PVC are abandoned instead of served stale.
+  world_topo_cache_v2:
     grids: [webmercator]
     # cache-level merge: multiple sources are merged left (bottom) to
     # right (top) before they are cached - OpenTopoMap everywhere,
-    # basemap.at on top inside Austria, swisstopo on top inside the
-    # Switzerland polygon, Plan IGN on top inside France (bbox).
+    # BEV Austrian Map on top inside Austria, swisstopo on top inside
+    # the Switzerland polygon, Plan IGN on top inside France (bbox).
     # Merge internally with alpha (request_format png), store + serve
     # WebP: smaller than JPEG at equal quality (Pillow webp quality
     # defaults apply; jpeg_quality has no effect on webp).
@@ -191,7 +204,7 @@ caches:
     request_format: image/png
     image:
       transparent: false
-    sources: [opentopo, at_geolandbasemap, ch_pixelkarte, ign_plan]
+    sources: [opentopo, at_bev_karte, ch_pixelkarte, ign_plan]
     # Re-fetch tiles older than four weeks while serving.
     refresh_before:
       weeks: 4
@@ -209,8 +222,8 @@ caches:
       weeks: 4
 layers:
   - name: world_topo
-    title: World Topo (OpenTopoMap; basemap.at + swisstopo from z7)
-    sources: [world_topo_cache]
+    title: World Topo (OpenTopoMap; BEV Austrian Map + swisstopo from z7)
+    sources: [world_topo_cache_v2]
   - name: world_satellite
     title: World Satellite (Esri; swissimage CH + IGN ortho FR from z7)
     sources: [world_satellite_cache]
