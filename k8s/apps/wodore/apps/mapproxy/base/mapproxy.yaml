@@ -128,6 +128,23 @@ sources:
     url: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/%(z)s/%(y)s/%(x)s
     grid: webmercator
     transparent: false
+  at_ortho:
+    type: tile
+    # basemap.at orthophoto 30cm/15cm (CC BY 4.0). NOTE: layer name is
+    # bmaporthofoto30cm (not bmaporthofoto) and the extension .jpeg,
+    # per the WMTSCapabilities resource templates.
+    url: https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/%(z)s/%(y)s/%(x)s.jpeg
+    grid: webmercator
+    transparent: true
+    min_res: 1223
+    on_error:
+      404:
+        response: transparent
+        cache: true
+    coverage:
+      datasource: /mapproxy/config/at-boundary.geojson
+      srs: 'EPSG:4326'
+      clip: true
   ch_swissimage:
     type: tile
     # swisstopo swissimage 10cm (swisstopo OGD, commercial OK), CH+LI.
@@ -180,13 +197,13 @@ caches:
   europe_satellite_cache:
     grids: [webmercator]
     # Satellite: Esri World Imagery everywhere; swissimage (CH+LI) and
-    # IGN BD ORTHO (FR) merged on top from z7 (AT ortho pending the
-    # correct basemap.at ortho URL - falls back to Esri meanwhile).
+    # swissimage (CH+LI), basemap.at ortho 30cm (AT) and IGN BD ORTHO
+    # (FR) merged on top from z7.
     format: image/webp
     request_format: image/png
     image:
       transparent: false
-    sources: [esri_world, ch_swissimage, fr_ortho]
+    sources: [esri_world, at_ortho, ch_swissimage, fr_ortho]
     refresh_before:
       weeks: 4
 layers:
