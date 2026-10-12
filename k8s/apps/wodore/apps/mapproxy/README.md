@@ -39,6 +39,7 @@ Only cacheable sources are configured: swisstopo pixelkarte (OGD
 terms), BEV Austrian Map online (CC BY 4.0 per the BEV data catalog,
 DOI 10.48677/2fe7eed6-ab55-4926-a4a1-80df6dedc55c — product-page
 wording conflict flagged to BEV Kundenservice for written
-confirmation), basemap.at ortho (CC BY 4.0), OpenTopoMap (CC-BY-SA).
-Boundary polygons are Natural Earth 10m country polygons (public
-domain).
+confirmation), IGN Plan IGN v2 + BD ORTHO (Licence Ouverte/Etalab
+2.0, served keyless), basemap.at ortho (CC BY 4.0), OpenTopoMap
+(CC-BY-SA). Boundary polygons are Natural Earth 10m country polygons
+(public domain).
