@@ -1,22 +1,41 @@
-# Wodore "Europe Topo" tile service config (MapProxy 7.0.0)
+# yamllint disable rule:line-length
+# Wodore "World Topo" tile service config (MapProxy 7.0.0)
 #
-# Serves one merged raster basemap: OpenTopoMap (worldwide fallback,
-# bottom) with basemap.at clipped to the Austria polygon and swisstopo
-# pixelkarte clipped to the Switzerland+Liechtenstein polygon on top —
-# pixel-perfect country cuts at the borders, no white no-data areas,
-# no bbox seams.
+# Serves two merged raster basemap layers (names are world_*, the
+# coverage is genuinely worldwide - Esri imagery + OpenTopoMap global):
+#
+#   world_topo   OpenTopoMap worldwide; basemap.at (AT) and swisstopo
+#                 (CH/LI) merged on top from zoom 7 up
+#
+# basemap.at is clipped to the Austria polygon and swisstopo
+# pixelkarte to the Switzerland+Liechtenstein polygon - pixel-perfect
+# country cuts at the borders, no white no-data areas, no bbox seams.
+# Both country sources carry max_res: below z7 MapProxy returns blank
+# images for them and the layer falls back to pure OpenTopoMap - so
+# full-country views stay license-clean OpenTopoMap.
 #
 #   demo:  https://tiles.<host>/mapproxy/demo/
-#   tiles: https://tiles.<host>/mapproxy/tiles/europe_topo/webmercator/{z}/{x}/{y}.png
+#   tiles: https://tiles.<host>/mapproxy/tiles/world_topo/webmercator/{z}/{x}/{y}.webp
 #
-# The /tiles endpoint serves plain XYZ order (top-left origin) — usable
-# as a MapLibre raster source without scheme:'tms'.
+# The /tiles endpoint serves plain XYZ order (top-left origin) - usable
+# as a MapLibre raster source without scheme:'tms'. The cache stores
+# and serves JPEG (merge internally with alpha via request_format, then
+# encode) - only the .webp extension is routable, the raster URL
+# template must end in .webp.
 #
 # MapProxy 7.0.0 gotchas learned the hard way (verified in the
-# wd-europe-topo prototype):
+# wd-europe-topo prototype and locally against this exact image):
 # - layers must reference a SINGLE cache (multi-cache layer merge is
 #   8.0+); merging multiple sources works at the CACHE level instead
-# - do NOT override num_levels on a based grid — startup hangs
+# - tile sources do NOT support min_level/max_level ("unknown" warning,
+#   silently ignored) - use max_res/min_res instead (blank outside the
+#   resolution range)
+# - services.tms.expires_hours is ALSO unknown in this build (warning,
+#   ignored) - browser cache headers come from the nginx tier instead
+# - WebP is impossible: Pillow in the image has the webp codec, but
+#   MapProxy core has no webp encoder - tiles 404 under any webp cache
+#   format (verified against ghcr and kartoza images)
+# - do NOT override num_levels on a based grid - startup hangs
 # - mbtiles caches failed to initialize; default file cache works fine
 services:
   demo:
@@ -26,7 +45,7 @@ services:
     origin: 'nw'
 grids:
   webmercator:
-    # GLOBAL_WEBMERCATOR = EPSG:3857 with nw (top-left) origin — the
+    # GLOBAL_WEBMERCATOR = EPSG:3857 with nw (top-left) origin - the
     # XYZ convention used by the upstream tile servers
     base: GLOBAL_WEBMERCATOR
 sources:
@@ -34,6 +53,7 @@ sources:
     type: tile
     url: https://b.tile.opentopomap.org/%(z)s/%(x)s/%(y)s.png
     grid: webmercator
+    transparent: true
   at_geolandbasemap:
     type: tile
     # basemap.at classic topo (CC BY 4.0, 256px PNG). NOTE: basemap.at
@@ -41,6 +61,14 @@ sources:
     # removes basemap.at's white no-data margin at the grid edges.
     url: https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/%(z)s/%(y)s/%(x)s.png
     grid: webmercator
+    transparent: true
+    # active from z7 up (min_res; res(7) = 1222.99 m/px) -
+    # OpenTopoMap renders the small scales for the whole map.
+    min_res: 1223
+    on_error:
+      404:
+        response: transparent
+        cache: true
     coverage:
       datasource: /mapproxy/config/at-boundary.geojson
       srs: 'EPSG:4326'
@@ -49,6 +77,16 @@ sources:
     type: tile
     url: https://wmts0.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/%(z)s/%(x)s/%(y)s.jpeg
     grid: webmercator
+    transparent: true
+    # active from z7 up (see at_geolandbasemap).
+    min_res: 1223
+    on_error:
+      400:
+        response: transparent
+        cache: true
+      404:
+        response: transparent
+        cache: true
     # clip to the country polygon: everything outside becomes transparent
     # pixels, so OpenTopoMap below shows through with a clean border cut.
     # ch-boundary.geojson = Natural Earth 10m country polygons (public
@@ -59,19 +97,123 @@ sources:
       datasource: /mapproxy/config/ch-boundary.geojson
       srs: 'EPSG:4326'
       clip: true
+  ign_plan:
+    type: tile
+    # IGN "Plan IGN v2" (Licence Ouverte/Etalab 2.0, commercial OK).
+    # The key comes from the IGN_API_KEY env var (Secret
+    # wd-mapproxy-apikeys) - MapProxy expands env vars in config values
+    # at load time. SCAN25 Touristique swaps in by rotating the Secret
+    # to the registered geopf key and changing LAYER to
+    # GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR here.
+    url: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image/png&apikey=${IGN_API_KEY}
+    grid: webmercator
+    transparent: true
+    # France shows one level earlier than AT/CH: from z6 up
+    # (res(6) = 2445.98 m/px).
+    min_res: 2446
+    on_error:
+      404:
+        response: transparent
+        cache: true
+    # Natural Earth 10m France polygon (metropolitan + Corsica).
+    coverage:
+      datasource: /mapproxy/config/fr-boundary.geojson
+      srs: 'EPSG:4326'
+      clip: true
+  # --- Satellite imagery (world_satellite) ---
+  esri_world:
+    type: tile
+    # Global fallback: Esri World Imagery. Attribution required
+    # ("Esri, Maxar, Earthstar Geographics, and the GIS User Community").
+    # Reconsider for commercial scale-up (Esri terms).
+    url: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/%(z)s/%(y)s/%(x)s
+    grid: webmercator
+    transparent: false
+  at_ortho:
+    type: tile
+    # basemap.at orthophoto 30cm/15cm (CC BY 4.0). NOTE: layer name is
+    # bmaporthofoto30cm (not bmaporthofoto) and the extension .jpeg,
+    # per the WMTSCapabilities resource templates.
+    url: https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/%(z)s/%(y)s/%(x)s.jpeg
+    grid: webmercator
+    transparent: true
+    min_res: 1223
+    on_error:
+      404:
+        response: transparent
+        cache: true
+    coverage:
+      datasource: /mapproxy/config/at-boundary.geojson
+      srs: 'EPSG:4326'
+      clip: true
+  ch_swissimage:
+    type: tile
+    # swisstopo swissimage 10cm (swisstopo OGD, commercial OK), CH+LI.
+    url: https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/%(z)s/%(x)s/%(y)s.jpeg
+    grid: webmercator
+    transparent: true
+    min_res: 1223
+    on_error:
+      404:
+        response: transparent
+        cache: true
+    coverage:
+      datasource: /mapproxy/config/ch-boundary.geojson
+      srs: 'EPSG:4326'
+      clip: true
+  fr_ortho:
+    type: tile
+    # IGN BD ORTHO (Licence Ouverte/Etalab 2.0) via geopf, same key
+    # Secret as the Plan IGN source.
+    url: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image/jpeg&apikey=${IGN_API_KEY}
+    grid: webmercator
+    transparent: true
+    min_res: 1223
+    on_error:
+      404:
+        response: transparent
+        cache: true
+    coverage:
+      datasource: /mapproxy/config/fr-boundary.geojson
+      srs: 'EPSG:4326'
+      clip: true
 caches:
-  europe_topo_cache:
+  world_topo_cache:
     grids: [webmercator]
     # cache-level merge: multiple sources are merged left (bottom) to
-    # right (top) before they are cached — OpenTopoMap everywhere,
+    # right (top) before they are cached - OpenTopoMap everywhere,
     # basemap.at on top inside Austria, swisstopo on top inside the
-    # Switzerland polygon. France/Italy stay on OpenTopoMap (no free
-    # national topo raster exists; IGN SCAN25 is a paid product).
-    sources: [opentopo, at_geolandbasemap, ch_pixelkarte]
+    # Switzerland polygon, Plan IGN on top inside France (bbox).
+    # Merge internally with alpha (request_format png), store + serve
+    # WebP: smaller than JPEG at equal quality (Pillow webp quality
+    # defaults apply; jpeg_quality has no effect on webp).
+    format: image/webp
+    request_format: image/png
+    image:
+      transparent: false
+    sources: [opentopo, at_geolandbasemap, ch_pixelkarte, ign_plan]
+    # Re-fetch tiles older than four weeks while serving.
+    refresh_before:
+      weeks: 4
+  world_satellite_cache:
+    grids: [webmercator]
+    # Satellite: Esri World Imagery everywhere; swissimage (CH+LI) and
+    # swissimage (CH+LI), basemap.at ortho 30cm (AT) and IGN BD ORTHO
+    # (FR) merged on top from z7.
+    format: image/webp
+    request_format: image/png
+    image:
+      transparent: false
+    sources: [esri_world, at_ortho, ch_swissimage, fr_ortho]
+    refresh_before:
+      weeks: 4
 layers:
-  - name: europe_topo
-    title: Europe Topo (OpenTopoMap + swisstopo CH)
-    sources: [europe_topo_cache]
+  - name: world_topo
+    title: World Topo (OpenTopoMap; basemap.at + swisstopo from z7)
+    sources: [world_topo_cache]
+  - name: world_satellite
+    title: World Satellite (Esri; swissimage CH + IGN ortho FR from z7)
+    sources: [world_satellite_cache]
 globals:
   cache:
     # lock files must live in the writable cache_data volume (the
@@ -79,3 +221,9 @@ globals:
     lock_dir: /mapproxy/config/cache_data/lock
   image:
     resampling_method: bilinear
+    jpeg_quality: 85
+  http:
+    client_timeout: 30
+    headers:
+      # Polite scraping: identify ourselves to the upstream tile servers
+      User-Agent: 'Wodore-Tiles/1.0 (https://wodore.com; tb@wodore.com)'

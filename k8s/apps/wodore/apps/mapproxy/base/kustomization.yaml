@@ -18,3 +18,4 @@ configMapGenerator:
       - mapproxy.yaml
       - at-boundary.geojson
       - ch-boundary.geojson
+      - fr-boundary.geojson
