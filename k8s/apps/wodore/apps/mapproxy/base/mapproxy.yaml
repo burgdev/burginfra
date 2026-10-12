@@ -99,10 +99,12 @@ sources:
   ign_plan:
     type: tile
     # IGN "Plan IGN v2" (Licence Ouverte/Etalab 2.0, commercial OK).
-    # SCAN25 Touristique would swap in here once a geopf key with the
-    # cartes resource is registered (layer GEOGRAPHICALGRIDSYSTEMS.
-    # MAPS.SCAN25TOUR + the key instead of the public essentiels key).
-    url: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image/png&apikey=essentiels
+    # The key comes from the IGN_API_KEY env var (Secret
+    # wd-mapproxy-apikeys) - MapProxy expands env vars in config values
+    # at load time. SCAN25 Touristique swaps in by rotating the Secret
+    # to the registered geopf key and changing LAYER to
+    # GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR here.
+    url: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image/png&apikey=${IGN_API_KEY}
     grid: webmercator
     transparent: true
     # France shows one level earlier than AT/CH: from z6 up
