@@ -17,27 +17,31 @@
 #   tiles: https://tiles.<host>/mapproxy/tiles/europe_topo/webmercator/{z}/{x}/{y}.jpeg
 #
 # The /tiles endpoint serves plain XYZ order (top-left origin) - usable
-# as a MapLibre raster source without scheme:'tms'.
+# as a MapLibre raster source without scheme:'tms'. The cache stores
+# and serves JPEG (merge internally with alpha via request_format, then
+# encode) - only the .jpeg extension is routable, the raster URL
+# template must end in .jpeg.
 #
 # MapProxy 7.0.0 gotchas learned the hard way (verified in the
-# wd-europe-topo prototype):
+# wd-europe-topo prototype and locally against this exact image):
 # - layers must reference a SINGLE cache (multi-cache layer merge is
 #   8.0+); merging multiple sources works at the CACHE level instead
 # - tile sources do NOT support min_level/max_level ("unknown" warning,
 #   silently ignored) - use max_res/min_res instead (blank outside the
 #   resolution range)
+# - services.tms.expires_hours is ALSO unknown in this build (warning,
+#   ignored) - browser cache headers come from the nginx tier instead
+# - WebP is impossible: Pillow in the image has the webp codec, but
+#   MapProxy core has no webp encoder - tiles 404 under any webp cache
+#   format (verified against ghcr and kartoza images)
 # - do NOT override num_levels on a based grid - startup hangs
 # - mbtiles caches failed to initialize; default file cache works fine
-# - no webp support; jpeg cache storage via format + encoding_options
 services:
   demo:
   tms:
     use_grid_names: true
     # nw origin => the /tiles endpoint serves XYZ order (top-left)
     origin: 'nw'
-    # Browser-side tile caching (Cache-Control on tile responses).
-    # MapProxy answers with 304s via ETag/Last-Modified after expiry.
-    expires_hours: 168
 grids:
   webmercator:
     # GLOBAL_WEBMERCATOR = EPSG:3857 with nw (top-left) origin - the
@@ -48,6 +52,7 @@ sources:
     type: tile
     url: https://b.tile.opentopomap.org/%(z)s/%(x)s/%(y)s.png
     grid: webmercator
+    transparent: true
   at_geolandbasemap:
     type: tile
     # basemap.at classic topo (CC BY 4.0, 256px PNG). NOTE: basemap.at
@@ -55,9 +60,14 @@ sources:
     # removes basemap.at's white no-data margin at the grid edges.
     url: https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/%(z)s/%(y)s/%(x)s.png
     grid: webmercator
+    transparent: true
     # blank below z7 (max_res is exclusive; res(7) = 1222.99 m/px) -
     # OpenTopoMap renders the small scales for the whole map.
     max_res: 1223
+    on_error:
+      404:
+        response: transparent
+        cache: true
     coverage:
       datasource: /mapproxy/config/at-boundary.geojson
       srs: 'EPSG:4326'
@@ -66,8 +76,16 @@ sources:
     type: tile
     url: https://wmts0.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/%(z)s/%(x)s/%(y)s.jpeg
     grid: webmercator
+    transparent: true
     # blank below z7 (see at_geolandbasemap).
     max_res: 1223
+    on_error:
+      400:
+        response: transparent
+        cache: true
+      404:
+        response: transparent
+        cache: true
     # clip to the country polygon: everything outside becomes transparent
     # pixels, so OpenTopoMap below shows through with a clean border cut.
     # ch-boundary.geojson = Natural Earth 10m country polygons (public
@@ -86,10 +104,12 @@ caches:
     # basemap.at on top inside Austria, swisstopo on top inside the
     # Switzerland polygon. France/Italy stay on OpenTopoMap (no free
     # national topo raster exists; IGN SCAN25 is a paid product).
-    format: image.jpeg
+    # Merge internally with alpha (request_format png), store + serve
+    # JPEG: 3-5x smaller tiles than PNG on the wire.
+    format: image/jpeg
+    request_format: image/png
     image:
-      encoding_options:
-        jpeg_quality: 85
+      transparent: false
     sources: [opentopo, at_geolandbasemap, ch_pixelkarte]
     # Re-fetch tiles older than four weeks while serving.
     refresh_before:
@@ -105,3 +125,9 @@ globals:
     lock_dir: /mapproxy/config/cache_data/lock
   image:
     resampling_method: bilinear
+    jpeg_quality: 85
+  http:
+    client_timeout: 30
+    headers:
+      # Polite scraping: identify ourselves to the upstream tile servers
+      User-Agent: 'Wodore-Tiles/1.0 (https://wodore.com; tb@wodore.com)'
