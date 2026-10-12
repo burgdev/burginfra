@@ -61,9 +61,9 @@ sources:
     url: https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/%(z)s/%(y)s/%(x)s.png
     grid: webmercator
     transparent: true
-    # blank below z7 (max_res is exclusive; res(7) = 1222.99 m/px) -
+    # active from z7 up (min_res; res(7) = 1222.99 m/px) -
     # OpenTopoMap renders the small scales for the whole map.
-    max_res: 1223
+    min_res: 1223
     on_error:
       404:
         response: transparent
@@ -77,8 +77,8 @@ sources:
     url: https://wmts0.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/%(z)s/%(x)s/%(y)s.jpeg
     grid: webmercator
     transparent: true
-    # blank below z7 (see at_geolandbasemap).
-    max_res: 1223
+    # active from z7 up (see at_geolandbasemap).
+    min_res: 1223
     on_error:
       400:
         response: transparent
@@ -96,21 +96,41 @@ sources:
       datasource: /mapproxy/config/ch-boundary.geojson
       srs: 'EPSG:4326'
       clip: true
+  ign_plan:
+    type: tile
+    # IGN "Plan IGN v2" (Licence Ouverte/Etalab 2.0, commercial OK).
+    # SCAN25 Touristique would swap in here once a geopf key with the
+    # cartes resource is registered (layer GEOGRAPHICALGRIDSYSTEMS.
+    # MAPS.SCAN25TOUR + the key instead of the public essentiels key).
+    url: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image/png&apikey=essentiels
+    grid: webmercator
+    transparent: true
+    # active from z7 up (see at_geolandbasemap).
+    min_res: 1223
+    on_error:
+      404:
+        response: transparent
+        cache: true
+    # metro-France bbox; no polygon file yet (Corsica outside - alpine
+    # focus). Swap in a fr-boundary.geojson for clean borders later.
+    coverage:
+      bbox: [-5.2, 41.3, 9.6, 51.1]
+      srs: 'EPSG:4326'
+      clip: true
 caches:
   europe_topo_cache:
     grids: [webmercator]
     # cache-level merge: multiple sources are merged left (bottom) to
     # right (top) before they are cached - OpenTopoMap everywhere,
     # basemap.at on top inside Austria, swisstopo on top inside the
-    # Switzerland polygon. France/Italy stay on OpenTopoMap (no free
-    # national topo raster exists; IGN SCAN25 is a paid product).
+    # Switzerland polygon, Plan IGN on top inside France (bbox).
     # Merge internally with alpha (request_format png), store + serve
     # JPEG: 3-5x smaller tiles than PNG on the wire.
     format: image/jpeg
     request_format: image/png
     image:
       transparent: false
-    sources: [opentopo, at_geolandbasemap, ch_pixelkarte]
+    sources: [opentopo, at_geolandbasemap, ch_pixelkarte, ign_plan]
     # Re-fetch tiles older than four weeks while serving.
     refresh_before:
       weeks: 4
