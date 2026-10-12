@@ -33,16 +33,6 @@ spec:
           # on every config change.
           image: ghcr.io/mapproxy/mapproxy/mapproxy:7.0.0-nginx
           imagePullPolicy: Always
-          env:
-            # Geopf (IGN) API key - MapProxy expands it into the source
-            # URLs at config load. Public "essentiels" key is the
-            # bootstrap value; rotate the Secret (and restart) when a
-            # registered SCAN25 key exists.
-            - name: IGN_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: wd-mapproxy-apikeys
-                  key: IGN_API_KEY
           securityContext:
             allowPrivilegeEscalation: false
           ports:
