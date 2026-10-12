@@ -1,9 +1,10 @@
 # yamllint disable rule:line-length
-# Wodore "Europe Topo" tile service config (MapProxy 7.0.0)
+# Wodore "World Topo" tile service config (MapProxy 7.0.0)
 #
-# Serves the merged raster basemap as ONE layer:
+# Serves two merged raster basemap layers (names are world_*, the
+# coverage is genuinely worldwide - Esri imagery + OpenTopoMap global):
 #
-#   europe_topo   OpenTopoMap worldwide; basemap.at (AT) and swisstopo
+#   world_topo   OpenTopoMap worldwide; basemap.at (AT) and swisstopo
 #                 (CH/LI) merged on top from zoom 7 up
 #
 # basemap.at is clipped to the Austria polygon and swisstopo
@@ -14,7 +15,7 @@
 # full-country views stay license-clean OpenTopoMap.
 #
 #   demo:  https://tiles.<host>/mapproxy/demo/
-#   tiles: https://tiles.<host>/mapproxy/tiles/europe_topo/webmercator/{z}/{x}/{y}.webp
+#   tiles: https://tiles.<host>/mapproxy/tiles/world_topo/webmercator/{z}/{x}/{y}.webp
 #
 # The /tiles endpoint serves plain XYZ order (top-left origin) - usable
 # as a MapLibre raster source without scheme:'tms'. The cache stores
@@ -119,7 +120,7 @@ sources:
       datasource: /mapproxy/config/fr-boundary.geojson
       srs: 'EPSG:4326'
       clip: true
-  # --- Satellite imagery (europe_satellite) ---
+  # --- Satellite imagery (world_satellite) ---
   esri_world:
     type: tile
     # Global fallback: Esri World Imagery. Attribution required
@@ -177,7 +178,7 @@ sources:
       srs: 'EPSG:4326'
       clip: true
 caches:
-  europe_topo_cache:
+  world_topo_cache:
     grids: [webmercator]
     # cache-level merge: multiple sources are merged left (bottom) to
     # right (top) before they are cached - OpenTopoMap everywhere,
@@ -194,7 +195,7 @@ caches:
     # Re-fetch tiles older than four weeks while serving.
     refresh_before:
       weeks: 4
-  europe_satellite_cache:
+  world_satellite_cache:
     grids: [webmercator]
     # Satellite: Esri World Imagery everywhere; swissimage (CH+LI) and
     # swissimage (CH+LI), basemap.at ortho 30cm (AT) and IGN BD ORTHO
@@ -207,12 +208,12 @@ caches:
     refresh_before:
       weeks: 4
 layers:
-  - name: europe_topo
-    title: Europe Topo (OpenTopoMap; basemap.at + swisstopo from z7)
-    sources: [europe_topo_cache]
-  - name: europe_satellite
-    title: Europe Satellite (Esri; swissimage CH + IGN ortho FR from z7)
-    sources: [europe_satellite_cache]
+  - name: world_topo
+    title: World Topo (OpenTopoMap; basemap.at + swisstopo from z7)
+    sources: [world_topo_cache]
+  - name: world_satellite
+    title: World Satellite (Esri; swissimage CH + IGN ortho FR from z7)
+    sources: [world_satellite_cache]
 globals:
   cache:
     # lock files must live in the writable cache_data volume (the
