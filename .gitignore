@@ -54,3 +54,4 @@ yarn-error.log*
 # Local development overrides
 local-*.yaml
 override-*.yaml
+.worktrees/
