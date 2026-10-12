@@ -14,13 +14,13 @@
 # full-country views stay license-clean OpenTopoMap.
 #
 #   demo:  https://tiles.<host>/mapproxy/demo/
-#   tiles: https://tiles.<host>/mapproxy/tiles/europe_topo/webmercator/{z}/{x}/{y}.jpeg
+#   tiles: https://tiles.<host>/mapproxy/tiles/europe_topo/webmercator/{z}/{x}/{y}.webp
 #
 # The /tiles endpoint serves plain XYZ order (top-left origin) - usable
 # as a MapLibre raster source without scheme:'tms'. The cache stores
 # and serves JPEG (merge internally with alpha via request_format, then
-# encode) - only the .jpeg extension is routable, the raster URL
-# template must end in .jpeg.
+# encode) - only the .webp extension is routable, the raster URL
+# template must end in .webp.
 #
 # MapProxy 7.0.0 gotchas learned the hard way (verified in the
 # wd-europe-topo prototype and locally against this exact image):
@@ -105,16 +105,16 @@ sources:
     url: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image/png&apikey=essentiels
     grid: webmercator
     transparent: true
-    # active from z7 up (see at_geolandbasemap).
-    min_res: 1223
+    # France shows one level earlier than AT/CH: from z6 up
+    # (res(6) = 2445.98 m/px).
+    min_res: 2446
     on_error:
       404:
         response: transparent
         cache: true
-    # metro-France bbox; no polygon file yet (Corsica outside - alpine
-    # focus). Swap in a fr-boundary.geojson for clean borders later.
+    # Natural Earth 10m France polygon (metropolitan + Corsica).
     coverage:
-      bbox: [-5.2, 41.3, 9.6, 51.1]
+      datasource: /mapproxy/config/fr-boundary.geojson
       srs: 'EPSG:4326'
       clip: true
 caches:
@@ -125,8 +125,9 @@ caches:
     # basemap.at on top inside Austria, swisstopo on top inside the
     # Switzerland polygon, Plan IGN on top inside France (bbox).
     # Merge internally with alpha (request_format png), store + serve
-    # JPEG: 3-5x smaller tiles than PNG on the wire.
-    format: image/jpeg
+    # WebP: smaller than JPEG at equal quality (Pillow webp quality
+    # defaults apply; jpeg_quality has no effect on webp).
+    format: image/webp
     request_format: image/png
     image:
       transparent: false
