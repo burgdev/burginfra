@@ -26,4 +26,4 @@ spec:
                 ${ENV_SUBDOMAIN}${WODORE_HOST},
                 hub.${ENV_SUBDOMAIN}${WODO_HOST},
                 ${ENV_SUBDOMAIN}${WODO_HOST},
-                wodore.github.io,localhost,home.tail58599f.ts.net
+                wodore.github.io,localhost,home.tail58599f.ts.net,home
