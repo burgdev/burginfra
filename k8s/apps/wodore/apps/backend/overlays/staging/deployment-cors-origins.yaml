@@ -9,7 +9,7 @@
 # scalar joins lines with spaces; the backend strips around commas.
 # iOS (capacitor://localhost) is NOT expressible this way - it needs
 # the env-driven CORS_ALLOWED_ORIGINS support in the backend when the
-# iOS app is tested.
+# iOS app is tested. home.tail58599f.ts.net is the Tailscale dev host.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,4 +26,4 @@ spec:
                 ${ENV_SUBDOMAIN}${WODORE_HOST},
                 hub.${ENV_SUBDOMAIN}${WODO_HOST},
                 ${ENV_SUBDOMAIN}${WODO_HOST},
-                wodore.github.io,localhost
+                wodore.github.io,localhost,home.tail58599f.ts.net
