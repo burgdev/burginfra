@@ -31,10 +31,9 @@ falling through to OpenTopoMap.
   `kv/apps/wodore/staging` → VSO `wd-backend-envvars`, `MAP_*` includes
   filter in the backend staging overlay) reaches wd-mapproxy via
   `secretKeyRef` and is expanded into the tile URLs by MapProxy 7.0.0
-  env-var substitution at config load. **Unbraced `$VAR` syntax only** —
-  flux `postBuild.substitute` rewrites `${...}` in the rendered
-  manifests and silently empties unknown variables (the braced form
-  shipped as `?api=` and degraded NZ to fallback for a day). Environments
+  env-var substitution at config load. **The file spells it `$$MAP_LINZ_API_KEY`**
+  (flux escape for a literal `$`): `${...}` gets silently emptied by flux
+  `postBuild.substitute` and a bare `$VAR` blocks the apply entirely. Environments
   without the key degrade to the OpenTopoMap/Esri fallback (`on_error`).
 - On-demand caching: tiles are fetched from upstream and cached in the
   `wd-mapproxy-cache` PVC on first request. No seeding job yet — that
