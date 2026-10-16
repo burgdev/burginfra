@@ -42,7 +42,11 @@ spec:
           env:
             # LINZ Basemaps API key for the nz_topo50 / nz_aerial
             # sources in mapproxy.yaml - MapProxy 7.0.0 expands
-            # ${MAP_LINZ_API_KEY} into the tile URLs at config load.
+            # $MAP_LINZ_API_KEY (UNBRACED: flux postBuild substitution
+            # silently empties unknown ${VAR} placeholders in the
+            # rendered ConfigMap, which 400-ed every LINZ fetch into
+            # the on_error fallback for a day - see mapproxy.yaml
+            # header) into the tile URLs at config load.
             # The key lives in OpenBao kv/apps/wodore/staging and
             # reaches this pod through the backend's VSO-synced secret
             # wd-backend-envvars (same namespace; MAP_* keys are let

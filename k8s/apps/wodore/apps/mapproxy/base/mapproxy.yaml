@@ -39,6 +39,12 @@
 #   format (verified against ghcr and kartoza images)
 # - do NOT override num_levels on a based grid - startup hangs
 # - mbtiles caches failed to initialize; default file cache works fine
+# - NEVER use ${VAR} env syntax in this file: flux postBuild substitution
+#   rewrites ${...} in the rendered manifests and silently EMPTIES
+#   unknown variables (MAP_LINZ_API_KEY shipped as "?api=" and every
+#   LINZ fetch 400-ed into the on_error transparent fallback for a
+#   day). Unbraced $VAR survives flux (its pattern is braced-only) and
+#   MapProxy 7.0.0 expands it at config load all the same.
 services:
   demo:
   tms:
@@ -142,21 +148,22 @@ sources:
     # Zealand"). NZ-only coverage (mainland + Chathams + offshore
     # islands; see nz-boundary.geojson), z6-z21, png/jpeg/webp.
     # The API key rides in the query string: MapProxy 7.0.0 expands
-    # ${MAP_LINZ_API_KEY} from the process env at config load (secret
-    # wd-backend-envvars <- OpenBao kv/apps/wodore/staging; MAP_* let
-    # through the VSO includes filter by the wodore staging overlay).
-    # If the env is unset (production until the key lands there) the
-    # literal placeholder is kept, LINZ answers 400/403 - handled
-    # below, world_topo falls back to OpenTopoMap. LINZ Kundenservice
-    # confirmed server-side caching is fine (attribution only) and
-    # suggests re-fetching tiles ~every 6 months (weekly tile
-    # updates) - well within the 4-week refresh_before below.
-    url: https://basemaps.linz.govt.nz/v1/tiles/topo-raster/3857/%(z)s/%(x)s/%(y)s.png?api=${MAP_LINZ_API_KEY}
+    # $MAP_LINZ_API_KEY (UNBRACED - see the flux gotcha in the header)
+    # from the process env at config load (secret wd-backend-envvars
+    # <- OpenBao kv/apps/wodore/staging; MAP_* let through the VSO
+    # includes filter by the wodore staging overlay). If the env is
+    # unset (production until the key lands there) the placeholder is
+    # kept, LINZ answers 400/403 - handled below, world_topo falls
+    # back to OpenTopoMap. LINZ Kundenservice confirmed server-side
+    # caching is fine (attribution only) and suggests re-fetching
+    # tiles ~every 6 months (weekly tile updates) - well within the
+    # 4-week refresh_before below.
+    url: https://basemaps.linz.govt.nz/v1/tiles/topo-raster/3857/%(z)s/%(x)s/%(y)s.png?api=$MAP_LINZ_API_KEY
     grid: webmercator
     transparent: true
-    # active from z6 up (res(6) = 2445.98 m/px), like ign_plan - the
-    # national mosaic starts at z6.
-    min_res: 2446
+    # active from z5 up (res(5) = 4891.97 m/px): LINZ serves the
+    # national mosaic from z5 and it reads well at country scale.
+    min_res: 4892
     on_error:
       400:
         response: transparent
@@ -232,19 +239,20 @@ sources:
   nz_aerial:
     type: tile
     # LINZ Basemaps aerial imagery (latest national mosaic, rural
-    # ~10m / urban up to ~5cm, CC BY 4.0). NZ-only coverage, z0-z21.
-    # Same key handling as nz_topo50 (see there); on_error covers
-    # both out-of-coverage 404s and unset/invalid API key (400/403)
-    # with transparent fallback to Esri World Imagery.
+    # ~10m / urban up to ~5cm, CC BY 4.0). NZ-only coverage, served
+    # from z0. Same key handling as nz_topo50 (see there); on_error
+    # covers both out-of-coverage 404s and unset/invalid API key
+    # (400/403) with transparent fallback to Esri World Imagery.
     # Upstream .webp (unlike nz_topo50's lossless png): imagery
     # tolerates the double lossy generation (LINZ webp encode ->
     # decode -> our webp cache encode) and webp cuts fetch bytes on
     # cache misses ~40%; the merge canvas (request_format png)
     # converts regardless, and Pillow in this image decodes webp.
-    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.webp?api=${MAP_LINZ_API_KEY}
+    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.webp?api=$MAP_LINZ_API_KEY
     grid: webmercator
     transparent: true
-    min_res: 1223
+    # active from z5 up (res(5) = 4891.97 m/px), like nz_topo50.
+    min_res: 4892
     on_error:
       400:
         response: transparent
@@ -263,13 +271,15 @@ caches:
   # v2 suffix = cache rename: MapProxy keys tiles by cache name, so
   # the renamed directory starts fresh and pre-swap (geolandbasemap)
   # tiles on the PVC are abandoned instead of served stale.
-  world_topo_cache_v3:
+  world_topo_cache_v4:
     grids: [webmercator]
     # cache-level merge: multiple sources are merged left (bottom) to
     # right (top) before they are cached - OpenTopoMap everywhere,
     # BEV Austrian Map on top inside Austria, swisstopo on top inside
     # the Switzerland polygon, Plan IGN on top inside France, LINZ
-    # topo-raster on top inside New Zealand (v3 rename: added NZ).
+    # topo-raster on top inside New Zealand from z5 (v4 rename:
+    # unbraced $MAP_LINZ_API_KEY fix + z5 activation; v3 tiles were
+    # all cached transparent-on-400 fallback).
     # Merge internally with alpha (request_format png), store + serve
     # WebP: smaller than JPEG at equal quality (Pillow webp quality
     # defaults apply; jpeg_quality has no effect on webp).
@@ -281,11 +291,11 @@ caches:
     # Re-fetch tiles older than four weeks while serving.
     refresh_before:
       weeks: 4
-  world_satellite_cache_v2:
+  world_satellite_cache_v3:
     grids: [webmercator]
     # Satellite: Esri World Imagery everywhere; swissimage (CH+LI),
-    # basemap.at ortho 30cm (AT), IGN BD ORTHO (FR) and LINZ aerial
-    # (NZ) merged on top from z7 (v2 rename: added NZ).
+    # basemap.at ortho 30cm (AT), IGN BD ORTHO (FR) from z7 and LINZ
+    # aerial (NZ) from z5 on top (v3 rename: key fix + z5 activation).
     format: image/webp
     request_format: image/png
     image:
@@ -295,11 +305,11 @@ caches:
       weeks: 4
 layers:
   - name: world_topo
-    title: World Topo (OpenTopoMap; BEV + swisstopo from z7; IGN FR + LINZ NZ from z6)
-    sources: [world_topo_cache_v3]
+    title: World Topo (OpenTopoMap; BEV + swisstopo from z7; IGN FR + LINZ NZ from z5)
+    sources: [world_topo_cache_v4]
   - name: world_satellite
-    title: World Satellite (Esri; swissimage CH + IGN ortho FR + LINZ aerial NZ from z7)
-    sources: [world_satellite_cache_v2]
+    title: World Satellite (Esri; CH/FR ortho from z7; LINZ aerial NZ from z5)
+    sources: [world_satellite_cache_v3]
 globals:
   cache:
     # lock files must live in the writable cache_data volume (the
