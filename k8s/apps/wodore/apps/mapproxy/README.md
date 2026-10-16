@@ -1,10 +1,13 @@
-# MapProxy — "Europe Topo" raster basemap (Phase 1: static pilot)
+# MapProxy — "World Topo/Satellite" raster basemaps (Phase 1: static pilot)
 
-Serves the border-merged "Europe Topo" raster basemap: swisstopo
-pixelkarte clipped to the Switzerland+Liechtenstein polygon (top),
-BEV "Austrian Map online" (ÖK render) clipped to the Austria polygon
-(middle), OpenTopoMap as the worldwide fallback (bottom) — merged at
-the MapProxy cache level with pixel-perfect country cuts.
+Serves the border-merged raster basemaps: swisstopo pixelkarte clipped
+to the Switzerland+Liechtenstein polygon, BEV "Austrian Map online"
+(ÖK render) clipped to the Austria polygon, Plan IGN v2 clipped to the
+France polygon, LINZ Basemaps topo-raster (Topo50/250 Gridless mosaic)
+and aerial clipped to the New Zealand polygon, with OpenTopoMap
+(world_topo) resp. Esri World Imagery (world_satellite) as the
+worldwide fallback — merged at the MapProxy cache level with
+pixel-perfect country cuts.
 
 Austria note: the topo overlay is BEV's ÖK tiles (z5–z16). The BEV
 data catalog declares the product CC BY 4.0, while the www.bev.gv.at
@@ -24,6 +27,12 @@ falling through to OpenTopoMap.
 
 - Static config: tile sources are hardcoded in `mapproxy.yaml` (no
   backend-driven sync yet).
+- API-key sources: the LINZ Basemaps key (`MAP_LINZ_API_KEY`, OpenBao
+  `kv/apps/wodore/staging` → VSO `wd-backend-envvars`, `MAP_*` includes
+  filter in the backend staging overlay) reaches wd-mapproxy via
+  `secretKeyRef` and is expanded into the tile URLs by MapProxy 7.0.0
+  env-var substitution at config load. Environments without the key
+  degrade to the OpenTopoMap/Esri fallback (`on_error`).
 - On-demand caching: tiles are fetched from upstream and cached in the
   `wd-mapproxy-cache` PVC on first request. No seeding job yet — that
   is a follow-up.
@@ -80,6 +89,10 @@ terms), BEV Austrian Map online (CC BY 4.0 per the BEV data catalog,
 DOI 10.48677/2fe7eed6-ab55-4926-a4a1-80df6dedc55c — product-page
 wording conflict flagged to BEV Kundenservice for written
 confirmation), IGN Plan IGN v2 + BD ORTHO (Licence Ouverte/Etalab
-2.0, served keyless), basemap.at ortho (CC BY 4.0), OpenTopoMap
-(CC-BY-SA). Boundary polygons are Natural Earth 10m country polygons
-(public domain).
+2.0, served keyless), basemap.at ortho (CC BY 4.0), LINZ Basemaps
+topo-raster + aerial (CC BY 4.0 — LINZ confirmed server-side caching
+is fine, attribution only; they suggest re-fetching cached tiles
+about every 6 months, well within the 4-week `refresh_before`),
+OpenTopoMap (CC-BY-SA), Esri World Imagery (attribution required,
+reconsider for commercial scale-up). Boundary polygons are Natural
+Earth 10m country polygons (public domain).

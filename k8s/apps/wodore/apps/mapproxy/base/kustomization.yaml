@@ -19,3 +19,4 @@ configMapGenerator:
       - at-boundary.geojson
       - ch-boundary.geojson
       - fr-boundary.geojson
+      - nz-boundary.geojson
