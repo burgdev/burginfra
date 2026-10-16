@@ -12,14 +12,17 @@
 # app-wodore-staging (<=3h interval or manual) substitutes the new
 # value, the configMapGenerator hash changes and the pod rolls -
 # no manual rollout restart needed.
-# Mirrors the openbao-configs-heatbeats CR pattern (vaultAuthRef
-# apps-kv-staging exists in flux-system, see vaultauth.yaml).
+# Mirrors the openbao-configs-heatbeats CR pattern. vaultAuthRef
+# apps-kv-flux (not apps-kv-staging): the OpenBao kubernetes auth
+# roles are namespace-bound, and only the *-flux roles authorize
+# flux-system service accounts (apps-kv-staging login 403s with
+# "namespace not authorized" from here).
 apiVersion: secrets.hashicorp.com/v1beta1
 kind: VaultStaticSecret
 metadata:
   name: wodore-flux-vars
 spec:
-  vaultAuthRef: apps-kv-staging
+  vaultAuthRef: apps-kv-flux
   mount: kv
   path: apps/wodore/staging
   type: kv-v2
