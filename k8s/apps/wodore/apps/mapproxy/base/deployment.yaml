@@ -41,14 +41,13 @@ spec:
               protocol: TCP
           env:
             # LINZ Basemaps API key for the nz_topo50 / nz_aerial
-            # sources in mapproxy.yaml - MapProxy 7.0.0 expands
-            # $MAP_LINZ_API_KEY into the tile URLs at config load.
-            # mapproxy.yaml spells it $$MAP_LINZ_API_KEY: flux
-            # postBuild (envsubst) renders $$ as a literal $ - bare
-            # $VAR blocks the apply ("unable to parse variable name")
-            # and ${VAR} gets silently emptied to "?api=" (which
-            # 400-ed every LINZ fetch into the on_error fallback for
-            # a day).
+            # sources in mapproxy.yaml. The URLs carry a braced
+            # ${LINZ_KEY_ENV_REF} that flux postBuild substitutes with
+            # a literal $MAP_LINZ_API_KEY (flux's restricted envsubst
+            # rejects bare $VAR / $$ and silently empties unknown
+            # ${VAR} - both failure modes shipped broken NZ tiles);
+            # MapProxy 7.0.0 then expands the bare $VAR from this
+            # container env at config load.
             # The key lives in OpenBao kv/apps/wodore/staging and
             # reaches this pod through the backend's VSO-synced secret
             # wd-backend-envvars (same namespace; MAP_* keys are let

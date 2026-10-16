@@ -18,6 +18,13 @@ spec:
       NAMESPACE: "staging"
       ENVIRONMENT: "staging"
       ENV_SUBDOMAIN: "stg."
+      # mapproxy LINZ tile URLs: flux's restricted envsubst only
+      # parses ${...} (bare $VAR / $$ break the apply, unknown ${VAR}
+      # gets silently emptied). Substitute the braced placeholder in
+      # mapproxy.yaml with a literal $MAP_LINZ_API_KEY - envsubst
+      # writes values verbatim (single pass), and MapProxy 7.0.0
+      # expands the bare $VAR from the pod env at config load.
+      LINZ_KEY_ENV_REF: '$MAP_LINZ_API_KEY'
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       # yamllint disable rule:line-length

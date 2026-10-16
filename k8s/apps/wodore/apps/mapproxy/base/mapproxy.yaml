@@ -39,14 +39,17 @@
 #   format (verified against ghcr and kartoza images)
 # - do NOT override num_levels on a based grid - startup hangs
 # - mbtiles caches failed to initialize; default file cache works fine
-# - NEVER use ${VAR} or bare $VAR env syntax in this file: flux
-#   postBuild (envsubst) rewrites ${...} in the rendered manifests
-#   and silently EMPTIES unknown variables, while a bare $VAR makes
-#   the whole apply FAIL with "unable to parse variable name".
-#   Escape as $$VAR: envsubst renders a literal $VAR into the
-#   ConfigMap and MapProxy 7.0.0 expands it from the process env at
-#   config load (both failure modes shipped broken NZ tiles: first
-#   silently as "?api=", then as a blocked reconcile).
+# - env placeholders in this file MUST be ${...}: flux postBuild
+#   uses restricted envsubst - bare $VAR and $$ escapes make the
+#   whole apply FAIL ("unable to parse variable name"), while
+#   braced ${VAR} parses but gets silently EMPTIED for variables
+#   flux does not know. The wodore flux overlays therefore define
+#   LINZ_KEY_ENV_REF='$MAP_LINZ_API_KEY' in postBuild.substitute:
+#   envsubst writes the value verbatim (single pass - the $ is not
+#   re-parsed), so the ConfigMap gets a literal $MAP_LINZ_API_KEY
+#   and MapProxy 7.0.0 expands it from the process env at config
+#   load. (Both failure modes shipped broken NZ tiles before this:
+#   first silently as "?api=", then as a blocked reconcile.)
 services:
   demo:
   tms:
@@ -149,20 +152,20 @@ sources:
     # mosaic (CC BY 4.0, attribution "CC BY 4.0 Land Information New
     # Zealand"). NZ-only coverage (mainland + Chathams + offshore
     # islands; see nz-boundary.geojson), z6-z21, png/jpeg/webp.
-    # The API key rides in the query string: MapProxy 7.0.0 expands
-    # $MAP_LINZ_API_KEY from the process env at config load. The file
-    # must spell it $$MAP_LINZ_API_KEY - flux postBuild (envsubst)
-    # renders $$ as a literal $ (bare/${} forms break the apply or get
-    # silently emptied - see the flux gotcha in the header). Env:
-    # secret wd-backend-envvars <- OpenBao kv/apps/wodore/staging
-    # (MAP_* let through the VSO includes filter by the wodore
-    # staging overlay). If unset (production until the key lands
-    # there) the placeholder is kept, LINZ answers 400/403 - handled
-    # below, world_topo falls back to OpenTopoMap. LINZ Kundenservice
-    # confirmed server-side caching is fine (attribution only) and
-    # suggests re-fetching tiles ~every 6 months (weekly tile
-    # updates) - well within the 4-week refresh_before below.
-    url: https://basemaps.linz.govt.nz/v1/tiles/topo-raster/3857/%(z)s/%(x)s/%(y)s.png?api=$$MAP_LINZ_API_KEY
+    # The API key rides in the query string: flux postBuild
+    # substitutes ${LINZ_KEY_ENV_REF} (defined in the wodore flux
+    # overlay) with a literal $MAP_LINZ_API_KEY - MapProxy 7.0.0
+    # then expands that from the process env at config load (env:
+    # secret wd-backend-envvars <- OpenBao kv/apps/wodore/staging,
+    # MAP_* let through the VSO includes filter). See the env
+    # gotcha in the header. If the env is unset (production until
+    # the key lands there) the placeholder is kept, LINZ answers
+    # 400/403 - handled below, world_topo falls back to
+    # OpenTopoMap. LINZ Kundenservice confirmed server-side caching
+    # is fine (attribution only) and suggests re-fetching tiles
+    # ~every 6 months (weekly tile updates) - well within the
+    # 4-week refresh_before below.
+    url: https://basemaps.linz.govt.nz/v1/tiles/topo-raster/3857/%(z)s/%(x)s/%(y)s.png?api=${LINZ_KEY_ENV_REF}
     grid: webmercator
     transparent: true
     # active from z5 up (res(5) = 4891.97 m/px): LINZ serves the
@@ -252,8 +255,8 @@ sources:
     # decode -> our webp cache encode) and webp cuts fetch bytes on
     # cache misses ~40%; the merge canvas (request_format png)
     # converts regardless, and Pillow in this image decodes webp.
-    # $$ escaping like nz_topo50 (flux envsubst -> literal $VAR).
-    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.webp?api=$$MAP_LINZ_API_KEY
+    # ${LINZ_KEY_ENV_REF} flux indirection like nz_topo50 (see there).
+    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.webp?api=${LINZ_KEY_ENV_REF}
     grid: webmercator
     transparent: true
     # active from z5 up (res(5) = 4891.97 m/px), like nz_topo50.
