@@ -39,17 +39,19 @@
 #   format (verified against ghcr and kartoza images)
 # - do NOT override num_levels on a based grid - startup hangs
 # - mbtiles caches failed to initialize; default file cache works fine
-# - env placeholders in this file MUST be ${...}: flux postBuild
-#   uses restricted envsubst - bare $VAR and $$ escapes make the
-#   whole apply FAIL ("unable to parse variable name"), while
-#   braced ${VAR} parses but gets silently EMPTIED for variables
-#   flux does not know. The wodore flux overlays therefore define
-#   LINZ_KEY_ENV_REF='$MAP_LINZ_API_KEY' in postBuild.substitute:
-#   envsubst writes the value verbatim (single pass - the $ is not
-#   re-parsed), so the ConfigMap gets a literal $MAP_LINZ_API_KEY
-#   and MapProxy 7.0.0 expands it from the process env at config
-#   load. (Both failure modes shipped broken NZ tiles before this:
-#   first silently as "?api=", then as a blocked reconcile.)
+# - flux postBuild substitutes ${...} placeholders in these
+#   manifests with restricted envsubst: bare $VAR and $$ forms FAIL
+#   the whole apply ("unable to parse variable name"), and braced
+#   ${VAR} that flux does not know is silently EMPTIED (the LINZ
+#   URLs shipped as "?api=" once and 400-ed into the on_error
+#   fallback for a day). API keys therefore ride ${VAR} placeholders
+#   that flux KNOWS: the wodore flux overlays list Secret
+#   wodore-flux-vars (VSO-synced from OpenBao kv/apps/wodore/staging
+#   into flux-system, includes MAP_.*) in postBuild.substituteFrom,
+#   so ${MAP_LINZ_API_KEY} gets the real value baked into the
+#   ConfigMap - no env expansion in MapProxy needed at all. Rotation:
+#   OpenBao -> VSO Secret -> next flux reconcile substitutes the new
+#   value, the configMapGenerator hash changes, the pod rolls.
 services:
   demo:
   tms:
@@ -152,20 +154,17 @@ sources:
     # mosaic (CC BY 4.0, attribution "CC BY 4.0 Land Information New
     # Zealand"). NZ-only coverage (mainland + Chathams + offshore
     # islands; see nz-boundary.geojson), z6-z21, png/jpeg/webp.
-    # The API key rides in the query string: flux postBuild
-    # substitutes ${LINZ_KEY_ENV_REF} (defined in the wodore flux
-    # overlay) with a literal $MAP_LINZ_API_KEY - MapProxy 7.0.0
-    # then expands that from the process env at config load (env:
-    # secret wd-backend-envvars <- OpenBao kv/apps/wodore/staging,
-    # MAP_* let through the VSO includes filter). See the env
-    # gotcha in the header. If the env is unset (production until
-    # the key lands there) the placeholder is kept, LINZ answers
-    # 400/403 - handled below, world_topo falls back to
-    # OpenTopoMap. LINZ Kundenservice confirmed server-side caching
-    # is fine (attribution only) and suggests re-fetching tiles
-    # ~every 6 months (weekly tile updates) - well within the
-    # 4-week refresh_before below.
-    url: https://basemaps.linz.govt.nz/v1/tiles/topo-raster/3857/%(z)s/%(x)s/%(y)s.png?api=${LINZ_KEY_ENV_REF}
+    # The API key rides the query string as a ${...} placeholder that
+    # flux postBuild substitutes with the REAL value from Secret
+    # wodore-flux-vars (VSO <- OpenBao kv/apps/wodore/staging; see
+    # the flux gotcha in the header). Environments without the
+    # substitute source (production until the key lands there) get
+    # the variable silently emptied -> LINZ answers 400/403 - handled
+    # below, world_topo falls back to OpenTopoMap. LINZ Kundenservice
+    # confirmed server-side caching is fine (attribution only) and
+    # suggests re-fetching tiles ~every 6 months (weekly tile
+    # updates) - well within the 4-week refresh_before below.
+    url: https://basemaps.linz.govt.nz/v1/tiles/topo-raster/3857/%(z)s/%(x)s/%(y)s.png?api=${MAP_LINZ_API_KEY}
     grid: webmercator
     transparent: true
     # active from z5 up (res(5) = 4891.97 m/px): LINZ serves the
@@ -255,8 +254,9 @@ sources:
     # decode -> our webp cache encode) and webp cuts fetch bytes on
     # cache misses ~40%; the merge canvas (request_format png)
     # converts regardless, and Pillow in this image decodes webp.
-    # ${LINZ_KEY_ENV_REF} flux indirection like nz_topo50 (see there).
-    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.webp?api=${LINZ_KEY_ENV_REF}
+    # ${MAP_LINZ_API_KEY} flux substitution like nz_topo50 (see
+    # there) - the real key is baked into the ConfigMap.
+    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.webp?api=${MAP_LINZ_API_KEY}
     grid: webmercator
     transparent: true
     # active from z5 up (res(5) = 4891.97 m/px), like nz_topo50.
@@ -285,9 +285,9 @@ caches:
     # right (top) before they are cached - OpenTopoMap everywhere,
     # BEV Austrian Map on top inside Austria, swisstopo on top inside
     # the Switzerland polygon, Plan IGN on top inside France, LINZ
-    # topo-raster on top inside New Zealand from z5 (v4 rename:
-    # $$MAP_LINZ_API_KEY flux-escape fix + z5 activation; v3 tiles
-    # were all cached transparent-on-400 fallback).
+    # topo-raster on top inside New Zealand from z5 (v4 rename: the
+    # v3 dir holds tiles cached during the flux-substitution outage -
+    # LINZ 400-ed into transparent fallback on every NZ tile).
     # Merge internally with alpha (request_format png), store + serve
     # WebP: smaller than JPEG at equal quality (Pillow webp quality
     # defaults apply; jpeg_quality has no effect on webp).

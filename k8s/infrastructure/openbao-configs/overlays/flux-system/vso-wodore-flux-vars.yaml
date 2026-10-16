@@ -1,0 +1,33 @@
+# VSO: expose the wodore map/tile source keys to flux postBuild.
+# flux postBuild.substitute can only inject variables from ConfigMaps/
+# Secrets in the Kustomization's own namespace (flux-system), and its
+# restricted envsubst cannot carry $-placeholders through any syntax
+# (bare $VAR and $$ fail the apply; ${VAR} is parsed but unknown vars
+# are silently emptied). So the wd-mapproxy LINZ tile URLs spell
+# ${MAP_LINZ_API_KEY} and get the REAL value substituted from this
+# Secret, synced from the same OpenBao KV entry the backend reads
+# (kv/apps/wodore/staging -> also lands in wd-backend-envvars in the
+# staging namespace for the backend's envFrom).
+# Rotation: OpenBao -> this Secret (VSO) -> next flux reconcile of
+# app-wodore-staging (<=3h interval or manual) substitutes the new
+# value, the configMapGenerator hash changes and the pod rolls -
+# no manual rollout restart needed.
+# Mirrors the openbao-configs-heatbeats CR pattern (vaultAuthRef
+# apps-kv-staging exists in flux-system, see vaultauth.yaml).
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: wodore-flux-vars
+spec:
+  vaultAuthRef: apps-kv-staging
+  mount: kv
+  path: apps/wodore/staging
+  type: kv-v2
+  hmacSecretData: true
+  destination:
+    create: true
+    name: wodore-flux-vars
+    transformation:
+      excludeRaw: true
+      includes:
+        - MAP_.*
