@@ -1,0 +1,14 @@
+# VSO: let MAP_* keys through the destination includes allowlist of
+# `wd-backend-envvars` (base secrets.yaml filters everything not matching
+# DJANGO_*/ZITADEL_*/OIDC_*/HRS_AUTHORIZATION_KEY*).
+# Needed so map/tile source settings stored with the wodore app sync from
+# OpenBao kv/apps/wodore/staging into the k8s Secret - today
+# MAP_LINZ_API_KEY (LINZ Basemaps: nz_topo50 topo-raster + nz_aerial
+# sources in the wd-mapproxy config), plus future MAP_* keys when the
+# mapproxy config moves into the backend. The backend containers receive
+# them via envFrom; wd-mapproxy (same namespace) reads the same Secret
+# via secretKeyRef.
+# JSON6902 `add` with the trailing `-` appends to the base list.
+- op: add
+  path: /spec/destination/transformation/includes/-
+  value: MAP_.*

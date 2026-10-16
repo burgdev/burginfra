@@ -39,6 +39,29 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          env:
+            # LINZ Basemaps API key for the nz_topo50 / nz_aerial
+            # sources in mapproxy.yaml - MapProxy 7.0.0 expands
+            # ${MAP_LINZ_API_KEY} into the tile URLs at config load.
+            # The key lives in OpenBao kv/apps/wodore/staging and
+            # reaches this pod through the backend's VSO-synced secret
+            # wd-backend-envvars (same namespace; MAP_* keys are let
+            # through the includes filter by the wodore staging
+            # overlay patch). optional: true keeps environments
+            # without the key (production until it is added to
+            # kv/apps/wodore/production) bootable - MapProxy keeps
+            # the literal placeholder and the NZ sources' on_error
+            # degrades world_topo/world_satellite to OpenTopoMap/Esri.
+            # Rotation note: env vars are read at pod start only
+            # (wd-backend-envvars sets no rolloutRestartTargets), so a
+            # rotated key needs a manual `kubectl rollout restart` of
+            # wd-mapproxy (and wd-backend).
+            - name: MAP_LINZ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wd-backend-envvars
+                  key: MAP_LINZ_API_KEY
+                  optional: true
           volumeMounts:
             - name: config
               mountPath: /mapproxy/config
