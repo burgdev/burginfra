@@ -28,14 +28,17 @@ falling through to OpenTopoMap.
 - Static config: tile sources are hardcoded in `mapproxy.yaml` (no
   backend-driven sync yet).
 - API-key sources: the LINZ Basemaps key (`MAP_LINZ_API_KEY`, OpenBao
-  `kv/apps/wodore/staging` → VSO `wd-backend-envvars`, `MAP_*` includes
-  filter in the backend staging overlay) reaches wd-mapproxy via
-  `secretKeyRef` and is expanded into the tile URLs by MapProxy 7.0.0
-  env-var substitution at config load. The URLs spell it `${LINZ_KEY_ENV_REF}`:
-  flux `postBuild` uses restricted envsubst (bare `$VAR`/`$$` break the apply,
-  unknown `${VAR}` is silently emptied), so the wodore flux overlays substitute
-  that placeholder with a literal `$MAP_LINZ_API_KEY` for MapProxy to expand.
-  Environments without the key degrade to the OpenTopoMap/Esri fallback (`on_error`).
+  `kv/apps/wodore/staging`) is baked into the tile URLs of the
+  wd-mapproxy-config ConfigMap by flux `postBuild.substituteFrom`
+  (Secret `wodore-flux-vars` in flux-system, VSO-synced via
+  `openbao-configs/overlays/flux-system/vso-wodore-flux-vars.yaml`).
+  No env expansion involved — flux's restricted envsubst cannot carry
+  `$`-placeholders in any syntax (`${VAR}` unknown → silently emptied,
+  bare `$VAR`/`$$` → the apply fails). Rotation auto-rolls the pod
+  (substituted value changes the ConfigMap hash). The backend receives
+  the same key via `wd-backend-envvars` (envFrom, `MAP_*` includes
+  filter in the backend staging overlay). Environments without the key
+  degrade to the OpenTopoMap/Esri fallback (`on_error`).
 - On-demand caching: tiles are fetched from upstream and cached in the
   `wd-mapproxy-cache` PVC on first request. No seeding job yet — that
   is a follow-up.
