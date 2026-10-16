@@ -42,13 +42,13 @@ spec:
           # NOTE on the LINZ Basemaps API key (nz_topo50 / nz_aerial
           # sources): it is NOT injected as an env var - flux postBuild
           # substitutes the real value into the tile URLs of the
-          # wd-mapproxy-config ConfigMap itself (placeholder
-          # ${MAP_LINZ_API_KEY} <- Secret wodore-flux-vars in
-          # flux-system, VSO-synced from OpenBao kv/apps/wodore/staging;
-          # the restricted envsubst cannot carry $-placeholders in any
-          # syntax, and an env-based attempt shipped "?api=" for a
-          # day). Rotation auto-rolls this pod: the substituted value
-          # changes the configMapGenerator hash.
+          # wd-mapproxy-config ConfigMap itself (braced placeholder
+          # <- Secret wodore-flux-vars in flux-system, VSO-synced from
+          # OpenBao kv/apps/wodore/staging; the restricted envsubst
+          # cannot carry dollar-prefixed placeholders in any syntax,
+          # and an env-based attempt shipped "?api=" for a day).
+          # Rotation auto-rolls this pod: the substituted value changes
+          # the configMapGenerator hash.
           volumeMounts:
             - name: config
               mountPath: /mapproxy/config
