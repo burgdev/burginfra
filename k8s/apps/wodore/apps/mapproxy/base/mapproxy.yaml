@@ -156,7 +156,7 @@ sources:
     # mosaic (CC BY 4.0, attribution "CC BY 4.0 Land Information New
     # Zealand"). NZ-only coverage (mainland + Chathams + offshore
     # islands; see nz-boundary.geojson), z6-z21, png/jpeg/webp.
-    # The API key rides the query string as a ${...} placeholder that
+    # The API key rides the query string as a braced placeholder that
     # flux postBuild substitutes with the REAL value from Secret
     # wodore-flux-vars (VSO <- OpenBao kv/apps/wodore/staging; see
     # the flux gotcha in the header). Environments without the
