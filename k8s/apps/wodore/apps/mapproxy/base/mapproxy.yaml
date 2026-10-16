@@ -236,7 +236,12 @@ sources:
     # Same key handling as nz_topo50 (see there); on_error covers
     # both out-of-coverage 404s and unset/invalid API key (400/403)
     # with transparent fallback to Esri World Imagery.
-    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.png?api=${MAP_LINZ_API_KEY}
+    # Upstream .webp (unlike nz_topo50's lossless png): imagery
+    # tolerates the double lossy generation (LINZ webp encode ->
+    # decode -> our webp cache encode) and webp cuts fetch bytes on
+    # cache misses ~40%; the merge canvas (request_format png)
+    # converts regardless, and Pillow in this image decodes webp.
+    url: https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/%(z)s/%(x)s/%(y)s.webp?api=${MAP_LINZ_API_KEY}
     grid: webmercator
     transparent: true
     min_res: 1223
