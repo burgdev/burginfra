@@ -1,0 +1,40 @@
+# Staging-only CORS on /media for browser dev servers pointing at the
+# staging backend: the Wodore frontend fetches mono symbol SVGs inline
+# via window.fetch (needs CORS; plain <img> does not), so dev origins
+# must be allowed on hub.stg.wodore.com/media/* exactly like the API
+# paths already are (DJANGO_TRUSTED_DOMAINS - see
+# deployment-cors-origins.yaml).
+#
+# WHY regex, not exact origins: dev ports vary (lane dev servers 3500+,
+# shared 9000s), which the exact-match accessControlAllowOriginList in
+# base cannot express. The regexes mirror the backend's port-agnostic
+# ^https?://<domain> CORS semantics for exactly the dev hosts appended
+# to DJANGO_TRUSTED_DOMAINS on staging (localhost = Android Capacitor
+# WebView + local dev; home = LAN dev hostname), anchored to
+# scheme://host[:port] so e.g. localhost.evil.com cannot match. The
+# tailscale FQDN (home.tail58599f.ts.net) is deliberately NOT allowed
+# on /media (owner decision) - the short names cover dev access.
+# Traefik allows an origin that matches the base exact list OR any
+# regex here; production keeps the base list only, so this does not
+# widen prod.
+#
+# Character classes ([.] [0-9]) instead of \. \d: Traefik regexes cross
+# YAML/k8s layers where backslash escaping depends on quoting style
+# (docs: "any escaped character needs to be escaped twice"); avoiding
+# backslashes entirely is quoting-proof.
+#
+# KEEP IN SYNC with deployment-cors-origins.yaml: the media-cors
+# Middleware is a Traefik CRD rendered by kustomize/Flux postBuild and
+# cannot read the backend's DJANGO_TRUSTED_DOMAINS env var, so this list
+# is a deliberate mirror of that env value's dev-host suffix, not a
+# shared source (see the commit message for the env-reuse analysis and
+# the recommended alternative if this drifts).
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: media-cors
+spec:
+  headers:
+    accessControlAllowOriginListRegex:
+      - '^https?://localhost(:[0-9]+)?$'
+      - '^https?://home(:[0-9]+)?$'

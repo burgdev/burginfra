@@ -4,6 +4,15 @@ resources:
   - ../../base
   - imagepolicy.yaml
 patches:
+  # Media CORS: allow dev-server origins (localhost/home/Tailscale, any
+  # port) on /media for lane dev servers pointing at staging - mirrors
+  # the dev hosts in deployment-cors-origins.yaml; see the patch header
+  - path: middleware-media-cors.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: Middleware
+      name: media-cors
   - path: deployment-cors-origins.yaml
     target:
       kind: Deployment
