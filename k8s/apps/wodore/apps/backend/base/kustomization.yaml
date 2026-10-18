@@ -18,3 +18,10 @@ resources:
   - service.yaml
   - ingress.yaml
   - cronjob-availability.yaml
+patches:
+  - path: vso-backend-envvars-sentry.yaml
+    target:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+      name: wd-backend-envvars
