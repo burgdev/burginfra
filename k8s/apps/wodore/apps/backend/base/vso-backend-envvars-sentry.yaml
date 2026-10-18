@@ -1,0 +1,11 @@
+# Map the per-app Sentry DSN from OpenBao (SENTRY_DSN_BACKEND at
+# kv/apps/wodore/<env>) to the plain SENTRY_DSN env name django reads
+# (os.environ["SENTRY_DSN"]; empty/missing value = Sentry stays off).
+# Landed as a JSON6902 patch next to the base VSO (same pattern as the
+# staging overlay's vso-backend-envvars-map.yaml). The rendered key
+# rides `envFrom: wd-backend-envvars` into the api deployment, the
+# qcluster, the migrate job and the availability cronjob.
+- op: add
+  path: /spec/destination/transformation/templates/SENTRY_DSN
+  value:
+    text: "{{ .Secrets.SENTRY_DSN_BACKEND }}"
