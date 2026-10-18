@@ -14,6 +14,14 @@ spec:
       - "https://${ENV_SUBDOMAIN}${WODO_HOST}"
       - "https://wodore.github.io"
     accessControlMaxAge: 86400
+    # ACAO reflects the request Origin (exact list above + staging's
+    # accessControlAllowOriginListRegex), and /media responses are
+    # cacheable (Cache-Control: public, immutable). Without Vary: Origin
+    # a browser/shared cache can reuse a response fetched under one
+    # allowed origin for a request from another allowed origin - the
+    # cached ACAO then fails the CORS check. Traefik only emits Vary
+    # when addVaryHeader is set (headers middleware docs), so opt in.
+    addVaryHeader: true
 ---
 # API response compression (gzip via Traefik, negotiated by
 # Accept-Encoding; >=1 KiB bodies only, already-encoded responses are
