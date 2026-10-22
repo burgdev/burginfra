@@ -30,7 +30,7 @@ spec:
   path: "./k8s/infrastructure/kube-prometheus-stack/helm/overlays/local"
   prune: true
   dependsOn:
-  - name: helm-kube-prometheus-stack-local
+    - name: helm-kube-prometheus-stack-local
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository
     name: burgdev-burginfra
@@ -43,4 +43,3 @@ spec:
       - kind: ConfigMap
         name: kube-prometheus-stack-config-vars
         optional: false
-      

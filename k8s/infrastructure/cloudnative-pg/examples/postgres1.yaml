@@ -8,7 +8,6 @@ spec:
   storage:
     storageClass: fast-local-data-v1
     size: 500Mi
-
   # Bootstrap with database and users
   bootstrap:
     initdb:
@@ -21,7 +20,6 @@ spec:
       #postInitSQL:
       #  # Grant privileges needed for Zitadel to manage its schema
       #  - ALTER USER zitadel WITH CREATEROLE CREATEDB;
-
   ## Managed roles - CNPG will sync password from secret automatically
   #managed:
   #  roles:
@@ -43,49 +41,44 @@ spec:
     limits:
       memory: "512Mi"
       cpu: "500m"
-
   # PostgreSQL Configuration - optimized for small deployments
   postgresql:
     parameters:
       # Connection settings
       max_connections: "50"
-
       # Memory settings (conservative for 512Mi limit)
       shared_buffers: "128MB"
       effective_cache_size: "256MB"
       maintenance_work_mem: "32MB"
       work_mem: "2MB"
-
       # WAL settings
       wal_buffers: "4MB"
       min_wal_size: "256MB"
       max_wal_size: "1GB"
       checkpoint_completion_target: "0.9"
-
       # Query planner
       default_statistics_target: "100"
       random_page_cost: "1.1" # SSD optimized
       effective_io_concurrency: "200"
-
       # Logging (minimal for performance)
       log_checkpoints: "on"
       log_connections: "off"
       log_disconnections: "off"
       log_lock_waits: "on"
 
-  # Backup configuration (optional, can be added later)
-  # backup:
-  #   barmanObjectStore:
-  #     destinationPath: s3://your-bucket/zitadel-postgres
-  #     s3Credentials:
-  #       accessKeyId:
-  #         name: backup-credentials
-  #         key: ACCESS_KEY_ID
-  #       secretAccessKey:
-  #         name: backup-credentials
-  #         key: SECRET_ACCESS_KEY
-  #     wal:
-  #       compression: gzip
-  #     data:
-  #       compression: gzip
-  #   retentionPolicy: "30d"
+# Backup configuration (optional, can be added later)
+# backup:
+#   barmanObjectStore:
+#     destinationPath: s3://your-bucket/zitadel-postgres
+#     s3Credentials:
+#       accessKeyId:
+#         name: backup-credentials
+#         key: ACCESS_KEY_ID
+#       secretAccessKey:
+#         name: backup-credentials
+#         key: SECRET_ACCESS_KEY
+#     wal:
+#       compression: gzip
+#     data:
+#       compression: gzip
+#   retentionPolicy: "30d"

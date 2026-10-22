@@ -23,8 +23,4 @@ spec:
           env:
             - name: DJANGO_TRUSTED_DOMAINS
               value: >-
-                hub.${ENV_SUBDOMAIN}${WODORE_HOST},
-                ${ENV_SUBDOMAIN}${WODORE_HOST},
-                hub.${ENV_SUBDOMAIN}${WODO_HOST},
-                ${ENV_SUBDOMAIN}${WODO_HOST},
-                wodore.github.io,localhost,home
+                hub.${ENV_SUBDOMAIN}${WODORE_HOST}, ${ENV_SUBDOMAIN}${WODORE_HOST}, hub.${ENV_SUBDOMAIN}${WODO_HOST}, ${ENV_SUBDOMAIN}${WODO_HOST}, wodore.github.io,localhost,home

@@ -29,18 +29,17 @@ controllers:
               secretKeyRef:
                 name: immich-postgres-superuser
                 key: password
-          #DB_DATABASE_NAME:
-          #  valueFrom:
-          #    secretKeyRef:
-          #      name: immich-postgres-superuser
-          #      key: dbname
+                #DB_DATABASE_NAME:
+                #  valueFrom:
+                #    secretKeyRef:
+                #      name: immich-postgres-superuser
+                #      key: dbname
 valkey:
   enabled: true
   persistence:
     data:
       type: persistentVolumeClaim
       storageClassName: fast-local-data-v3
-
 machine-learning:
   replicas: ${IMMICH_ML_REPLICAS}
   resources:
@@ -55,7 +54,6 @@ machine-learning:
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
       storageClassName: fast-local-data-v3
-
 server:
   persistence:
     external:
@@ -79,7 +77,6 @@ server:
             - path: "/"
               service:
                 identifier: main
-
 immich:
   persistence:
     library:

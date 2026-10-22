@@ -42,9 +42,7 @@ spec:
             # gunicorn 23, which rejects --no-control-socket (crash-looped
             # prod for 2.5 days until this was made per-env).
             - >-
-              gunicorn -b 0.0.0.0:8008 -w $GUNICORN_WORKERS
-              $GUNICORN_EXTRA_ARGS
-              --preload server.wsgi:application
+              gunicorn -b 0.0.0.0:8008 -w $GUNICORN_WORKERS $GUNICORN_EXTRA_ARGS --preload server.wsgi:application
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -77,7 +75,6 @@ spec:
                 secretKeyRef:
                   name: wd-imagor-config-secret
                   key: IMAGOR_SECRET
-
             # Martin settings
             - name: MARTIN_TILE_URL
               value: "https://tiles.${ENV_SUBDOMAIN}${WODORE_HOST}"

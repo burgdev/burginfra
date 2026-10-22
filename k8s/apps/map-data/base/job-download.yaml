@@ -52,7 +52,6 @@ spec:
               memory: 1Gi
             limits:
               memory: 2Gi
-
       volumes:
         - name: osm-data
           persistentVolumeClaim:

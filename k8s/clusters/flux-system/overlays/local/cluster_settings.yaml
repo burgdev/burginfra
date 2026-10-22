@@ -12,7 +12,6 @@ data:
   CLUSTER: "local"
   KUBE_VERSION: "1.33.5" # Server version: v1.33.5+k3s1
   KUBE_TOOLS_VERSION: "1.33.5" # alpine/k8s image tag version
-
   # === DOMAIN & EMAIL ===
   CRUXLI_HOST: "crux.local.gd"
   CRUXLI_EMAIL: "tobias@burgdev.ch"
@@ -23,14 +22,11 @@ data:
   WODO_HOST: "wodo.re.local.gd"
   WODO_EMAIL: "tb@wodo.re"
   BURGINFRA_HOST: "infra.local.gd"
-
   # === CERTIFICATES ===
   CERT_ISSUER_STAGING: "local-ca-issuer"
   CERT_ISSUER_PROD: "local-ca-issuer"
-
   # === FLUX ===
   IMAGE_AUTOMATION_SUSPEND: "true" # do not run image automation on local cluster
-
   # === IMMICH (Photo Management) ===
   IMMICH_FLUX_SUSPEND: "false"
   IMMICH_SERVER_REPLICAS: "0" # Stopped by default on local to save memory
@@ -39,12 +35,10 @@ data:
   IMMICH_LIBRARY_STORAGE_SIZE: "5Gi"
   IMMICH_EXTERNAL_STORAGE_SIZE: "5Gi"
   IMMICH_DB_STORAGE_SIZE: "2Gi"
-
   # === UMAMI (Analytics) ===
   UMAMI_FLUX_SUSPEND: "false"
   UMAMI_REPLICAS: "0" # Stopped by default on local to save memory
   UMAMI_POSTGRES_HIBERNATE: "on" # TODO: Not working - YAML boolean parsing issue with "on"/"off" values
-
   # === WODORE (Application) ===
   WODORE_FLUX_SUSPEND: "false"
   WODORE_REPLICAS: "1" # Keep running for development
@@ -57,7 +51,6 @@ data:
   WD_BACKEND_MEDIA_STORAGE_SIZE: "5Gi"
   WD_BACKEND_PY_CACHE_STORAGE_SIZE: "1Gi"
   WD_BACKEND_DB_STORAGE_SIZE: "2Gi"
-
   # === VALHALLA (Routing Engine) ===
   VALHALLA_FLUX_SUSPEND: "false" # Enabled on local for development
   VALHALLA_REPLICAS: "1"
@@ -68,7 +61,6 @@ data:
   VALHALLA_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
   VALHALLA_GTFS_URLS: "https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
   VALHALLA_ELEVATION_BOUNDS: "45,46,47,48:5,6,7,8,9,10,11" # lat_range:lon_range for Switzerland
-
   # === GRAPHHOPPER (Routing Engine) ===
   GRAPHOPPER_FLUX_SUSPEND: "false" # Enabled on local for development
   GRAPHOPPER_REPLICAS: "1"
@@ -78,7 +70,6 @@ data:
   GRAPHOPPER_BUILD_MEMORY: "12Gi" # Container memory (8Gi for JVM + 4Gi overhead for GTFS/native)
   GRAPHOPPER_JAVA_MEMORY: "8g" # JVM heap size (keep at 8g as requested)
   GRAPHOPPER_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
-
   # === MAP DATA (Shared OSM, GTFS, Elevation) ===
   MAP_DATA_FLUX_SUSPEND: "false" # Enabled on local for development
   MAP_DATA_OSM_STORAGE_SIZE: "10Gi"
@@ -88,4 +79,3 @@ data:
   MAP_DATA_OSM_URLS: "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
   MAP_DATA_GTFS_URLS: "https://data.opentransportdata.swiss/en/dataset/timetable-2026-gtfs2020/resource_permalink/gtfs_fp2026_20260103.zip"
   MAP_DATA_ELEVATION_BOUNDS: "45,46,47,48:5,6,7,8,9,10,11" # lat_range:lon_range for Switzerland
-

@@ -24,6 +24,8 @@ spec:
       hosts:
         - tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
 ---
+
+
 # No response-header middleware: martin sets Cache-Control itself via
 # cache_control and handles CORS natively (cors: true). Keep header
 # logic in martin so browser, nginx cache, and a future CDN all key off

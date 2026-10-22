@@ -13,7 +13,6 @@ spec:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
       configMapName: kopia-policies
-
     # Overwrite Retention Policy
     retain:
       hourly: 24
@@ -21,7 +20,6 @@ spec:
       weekly: 1
       monthly: 1
       yearly: 0
-
     #actions:
     #  beforeSnapshot: |
     #    echo "[Auto] Start at $(date)" >> /data/backup.log

@@ -13,7 +13,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-
 configMapGenerator:
   - name: valhalla-download-scripts
     options:

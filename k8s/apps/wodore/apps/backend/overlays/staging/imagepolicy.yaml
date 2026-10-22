@@ -14,4 +14,3 @@ spec:
   policy:
     alphabetical:
       order: asc # Sort alphabetically (latest selected)
-

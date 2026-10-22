@@ -1,5 +1,4 @@
 # https://raw.githubusercontent.com/flux-iac/tofu-controller/main/docs/release.yaml
----
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:

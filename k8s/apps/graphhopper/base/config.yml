@@ -8,21 +8,17 @@ graphhopper:
   # GTFS zip files for public transit routing
   # Re-enabled with extended startup timeout (15 minutes)
   gtfs.file: /gtfs_data/feed_1/gtfs.zip
-
   # Import all vehicle types during initial graph building
   # This ensures edges are available for all profiles we might enable later
   import_vehicle: all
-
   # Exclude certain highway types during OSM import to reduce graph size
   # Empty string means include all highways (needed for foot/hiking profiles)
   # Required parameter: must be explicitly set even if empty
   import.osm.ignored_highways: ""
-
   # Directory where GraphHopper stores its optimized graph data
   # This data is created by the initialize job and read by the server deployment
   # Mounted on graphhopper-data PVC
   graph.location: /data/.gh
-
   # Routing profiles to build
   # Use built-in custom model files shipped with the image.
   profiles:
@@ -32,24 +28,20 @@ graphhopper:
       custom_model_files: [bike.json, bike_elevation.json]
     - name: foot
       custom_model_files: [foot.json, foot_elevation.json]
-
   # Contraction Hierarchies (CH) for fast queries
   profiles_ch:
     - profile: car
-
   # Graph data access method
   # RAM_STORE: Load entire graph into memory for fastest queries (high memory usage)
   # MMAP: Memory-mapped files for lower memory usage with slight performance cost
   # Using RAM_STORE with 6GB heap for GTFS support (MMAP too slow for GTFS loading)
   graph.dataaccess: RAM_STORE
-
   # Encoded values required by the custom models above
   graph.encoded_values: |
     car_access, car_average_speed, country, road_class, roundabout, max_speed,
     foot_access, foot_average_speed, foot_priority, foot_road_access, hike_rating, average_slope,
     bike_access, bike_average_speed, bike_priority, bike_road_access, bike_network, mtb_rating,
     road_environment
-
   # Elevation data configuration
   # SRTM: Shuttle Radar Topography Mission provides global elevation data
   # Automatically downloaded and cached during graph building
@@ -57,7 +49,6 @@ graphhopper:
   # Cache directory for downloaded SRTM tiles (persistent across builds)
   # Mounted on graphhopper-srtm-cache PVC
   graph.elevation.cache_dir: /srtm_cache
-
   # Logging configuration
   logging:
     appenders:
@@ -67,7 +58,6 @@ graphhopper:
       # Reduce OSM import warning noise to INFO level
       "com.graphhopper.osm_warnings":
         level: INFO
-
 # Server configuration (Dropwizard HTTP server)
 server:
   application_connectors:
@@ -80,4 +70,3 @@ server:
       bind_host: 0.0.0.0 # Admin reachable inside cluster if needed
   request_log:
     appenders: [] # Disable request logging to reduce noise
-

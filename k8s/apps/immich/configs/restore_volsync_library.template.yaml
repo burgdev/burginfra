@@ -18,7 +18,6 @@ spec:
     destinationPVC: immich-library-pvc-v2
     copyMethod: Direct
     enableFileDeletion: false
-
     # Cache configuration to avoid emptyDir on root filesystem
     cacheCapacity: 50Gi
     cacheAccessModes:
@@ -30,12 +29,11 @@ spec:
       sourceNamespace: ${SRC_NAMESPACE}
       #sourcePathOverride: "/mnt/kubernetes/volumes/immich/server/data"
       #sourcePathOverride: "/data"
-
     moverSecurityContext:
       runAsUser: 0 # root
       runAsGroup: 0 # root
       fsGroup: 0
----
+
 ### Not yet used
 ### # IMMICH LIBRARY - volsync
 ### apiVersion: volsync.backube/v1alpha1
@@ -92,4 +90,5 @@ spec:
 ###       fsGroup: 26
 ### ---
 ###
+---
 

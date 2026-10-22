@@ -7,7 +7,7 @@ parameters:
   storageType: lvm
   volgroup: ${VG_NAME:-openebs-vg}
   fsType: xfs
-  shared: yes
+  shared: "true"
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer

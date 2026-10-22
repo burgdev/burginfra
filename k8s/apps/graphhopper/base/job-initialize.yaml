@@ -17,7 +17,6 @@ spec:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
         runAsNonRoot: true
-
       containers:
         - name: build-graph
           image: ghcr.io/simonneutert/graphhopper:11.0
@@ -72,7 +71,6 @@ spec:
               memory: ${GRAPHOPPER_BUILD_MEMORY} # 12Gi from cluster settings
             limits:
               memory: ${GRAPHOPPER_BUILD_MEMORY} # Match request for memory
-
       volumes:
         - name: osm-data
           persistentVolumeClaim:
