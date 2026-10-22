@@ -1,5 +1,4 @@
 # TODO: move pvc and tool job to volsync (infra)
----
 # Shared PVC for volsync tools (kubectl) - shared across all backups
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -113,10 +112,8 @@ spec:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
       configMapName: kopia-policies
-
     # Use custom ServiceAccount with limited RBAC
     moverServiceAccount: volsync-podinfo-mover
-
     # TODO: Use moverVolumes once available (waiting for https://github.com/perfectra1n/volsync/pull/25)
     #       Then it is also possible to use config maps for the scripts
     # moverVolumes:
@@ -132,7 +129,6 @@ spec:
       weekly: 4
       monthly: 6
       yearly: 1
-
     # Application consistency hooks
     actions:
       beforeSnapshot: |
@@ -168,7 +164,6 @@ spec:
         # Log to backup data
         echo "[$(date)] Backup started - podinfo scaled from $CURRENT_REPLICAS to 0" >> /data/backup.log
         echo "==> Pre-backup complete"
-
       afterSnapshot: |
         #!/bin/sh
         set -e
@@ -197,7 +192,6 @@ spec:
           mv /data/backup.log.tmp /data/backup.log
         fi
         echo "==> Post-backup complete"
-
     # Use Direct copy method since LVM volume is not thin-provisioned
     # Snapshot requires thin LVM: https://github.com/openebs/openebs/issues/4071
     copyMethod: Snapshot
@@ -209,5 +203,5 @@ spec:
     #  beforeSnapshot:
     #    - /scripts/pre-snapshot.sh
 
-    #  afterSnapshot:
-    #    - /scripts/post-snapshot.sh
+#  afterSnapshot:
+#    - /scripts/post-snapshot.sh

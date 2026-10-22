@@ -16,7 +16,6 @@ spec:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
-
       initContainers:
         # PHASE 1: Download all data (OSM, GTFS, elevation)
         - name: download-data
@@ -47,7 +46,6 @@ spec:
               memory: 256Mi
             limits:
               memory: 2Gi # For merging large OSM regions
-
       # PHASE 2: Build Valhalla tiles
       containers:
         - name: build-tiles
@@ -84,7 +82,6 @@ spec:
               memory: ${VALHALLA_BUILD_MEMORY:-8Gi}
             limits:
               memory: ${VALHALLA_BUILD_MEMORY:-8Gi}
-
       volumes:
         - name: data
           persistentVolumeClaim:

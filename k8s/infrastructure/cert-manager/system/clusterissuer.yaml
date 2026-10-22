@@ -1,4 +1,3 @@
----
 # Root CA Certificate - this will be installed in system trust store
 apiVersion: cert-manager.io/v1
 kind: Certificate

@@ -14,4 +14,3 @@ spec:
   policy:
     semver:
       range: ">=0.0.0" # Accept all 0.x.x versions
-

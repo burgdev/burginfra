@@ -12,7 +12,6 @@ spec:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
       configMapName: kopia-policies
-
     # Overwrite Retention Policy
     retain:
       hourly: 24
@@ -20,18 +19,14 @@ spec:
       weekly: 4
       monthly: 1
       yearly: 1
-
     actions:
       #  beforeSnapshot: |
       #    echo "[Auto] Start at $(date)" >> /data/backup.log
-
       afterSnapshot: |
         #!/bin/bash
         bash /kopia-config/send-heartbeat.sh -u "${BEAT_OPENBAO_DATA_VOLSYNC}"
-
     # Use snapshot for point-in-time consistency
     copyMethod: Snapshot
-
     moverSecurityContext:
       runAsUser: 100
       runAsGroup: 1000

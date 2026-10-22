@@ -3,7 +3,6 @@ defaultVaultConnection:
   enabled: false # defined in ../../base/vaultconnection.yaml
   address: http://openbao.burginfra-staging.svc.cluster.local:8200
   skipTLSVerify: true # OpenBao standalone usually runs without TLS
-
 defaultAuthMethod:
   enabled: false # defined in ../../base/vaultauth.yaml
   method: kubernetes

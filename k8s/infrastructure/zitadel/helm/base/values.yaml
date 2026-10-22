@@ -2,7 +2,6 @@
 # Default valus: https://github.com/zitadel/zitadel/blob/main/cmd/defaults.yaml
 zitadel:
   masterkeySecretName: zitadel-masterkey
-
   configmapConfig:
     # login with
     # ZITADEL_DEFAULTINSTANCE_ORG_HUMAN_USERNAME@ZITADEL_DEFAULTINSTANCE_ORG_NAME.ExternalDomain
@@ -10,10 +9,8 @@ zitadel:
     ExternalDomain: auth.${BURGDEV_HOST}
     ExternalPort: 443
     ExternalSecure: true
-
     TLS:
       Enabled: false # TLS termination handled by Traefik
-
     Database:
       Postgres:
         Host: zitadel-postgres-rw # CloudNativePG read-write service
@@ -26,8 +23,7 @@ zitadel:
         User:
           SSL:
             Mode: disable
-
-      #DefaultInstance:
+            #DefaultInstance:
     FirstInstance:
       InstanceName: BURGINFRA
       Org:
@@ -56,15 +52,12 @@ zitadel:
           Machine:
             Username: zitadel-service-login
             Name: "Service Login Account"
-
     DefaultInstance:
       SMTPConfiguration:
         From: noreply@${BURGDEV_HOST}
         FromName: "BurgDev Auth"
-
       Features:
         UserScheam: true
-
 envVarsSecret: "zitadel-envvars"
 # Env vars for init job (some chart versions need these at top level)
 env:
@@ -115,7 +108,6 @@ env:
       secretKeyRef:
         name: zitadel-postgres-app
         key: username
-
 # Enable ingress
 ingress:
   enabled: true
@@ -141,7 +133,6 @@ ingress:
         - auth.${BURGDEV_HOST}
         - auth.${WODORE_HOST}
         - auth.${CRUXLI_HOST}
-
 # Login UI ingress - Disabled as Zitadel v4+ has login built-in
 # The login UI is served by the main Zitadel application at /ui/v2/login/
 login:
@@ -150,7 +141,6 @@ login:
     className: traefik
     annotations:
       cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
-
 # Override kubectl image version for setup job sidecars
 # The chart uses cluster k8s version but alpine/k8s may not have that exact tag
 # Use KUBE_TOOLS_VERSION from cluster settings
@@ -164,7 +154,6 @@ setupJob:
   loginUserPATWriter:
     image:
       tag: "${KUBE_TOOLS_VERSION}"
-
 # Override kubectl image version for cleanup job
 cleanupJob:
   kubectl:

@@ -5,7 +5,6 @@
 # - PVC snapshots (physical backup) for full recovery
 # - PostgreSQL CHECKPOINT before snapshot for consistency
 # - Validation and heartbeat monitoring
----
 # ServiceAccount for volsync mover with minimal RBAC permissions
 apiVersion: v1
 kind: ServiceAccount
@@ -52,15 +51,12 @@ spec:
   trigger:
     schedule: "10 */6 * * *" # every 6 hours
     # manual: backup-01
-
   kopia:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
       configMapName: kopia-policies
-
     # Use custom ServiceAccount with limited RBAC
     moverServiceAccount: volsync-zitadel-mover
-
     # TODO: Use moverVolumes once available (waiting for https://github.com/perfectra1n/volsync/pull/25)
     #       Then it is also possible to use config maps for the scripts
     #       See podinfo backup_manual.yaml file!!
@@ -77,7 +73,6 @@ spec:
       weekly: 4
       monthly: 6
       yearly: 1
-
     # Application consistency hooks
     actions:
       beforeSnapshot: |
@@ -103,14 +98,11 @@ spec:
 
         # Run generic PostgreSQL backup script from kopia-policies ConfigMap
         bash /kopia-config/pre-snapshot-postgres.sh -c /tmp/backup-config.env
-
       afterSnapshot: |
         #!/bin/bash
         # Run generic PostgreSQL post-snapshot validation script from kopia-policies ConfigMap
         bash /kopia-config/post-snapshot-postgres.sh -c /tmp/backup-config.env
-
     copyMethod: Snapshot
-
     moverSecurityContext:
       runAsUser: 26 # postgres
       runAsGroup: 26 # tape

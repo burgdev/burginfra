@@ -8,8 +8,8 @@ spec:
   retryInterval: 10s # Retry quickly when dependencies update or reconciliation fails
   path: "./k8s/infrastructure/volsync/base"
   dependsOn:
-  - name: helm-volsync-system
-  - name: infra-openebs-system 
+    - name: helm-volsync-system
+    - name: infra-openebs-system
   prune: true
   sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
     kind: GitRepository

@@ -14,7 +14,6 @@ spec:
     repository: volsync-kopia-webdav-secrets
     policyConfig:
       configMapName: kopia-policies
-
     # Overwrite Retention Policy
     retain:
       hourly: 72
@@ -22,14 +21,11 @@ spec:
       weekly: 4
       monthly: 6
       yearly: 1
-
     actions:
       #  beforeSnapshot: |
       #    echo "[Auto] Start at $(date)" >> /data/backup.log
-
       afterSnapshot: |
         curl ${BEAT_IMMICH_LIBRARY_VOLSYNC}
-
     # Use snapshot for point-in-time consistency
     copyMethod: Snapshot
     moverSecurityContext:
