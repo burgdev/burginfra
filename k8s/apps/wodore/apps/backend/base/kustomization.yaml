@@ -25,3 +25,9 @@ patches:
       version: v1beta1
       kind: VaultStaticSecret
       name: wd-backend-envvars
+  - path: vso-backend-envvars-maptiler.yaml
+    target:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+      name: wd-backend-envvars

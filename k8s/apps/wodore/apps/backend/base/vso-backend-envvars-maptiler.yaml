@@ -1,0 +1,12 @@
+# Let WODORE_MAPTILER_API_KEY through the destination includes allowlist
+# of `wd-backend-envvars` (base secrets.yaml filters everything not
+# matching DJANGO_*/ZITADEL_*/OIDC_*/HRS_AUTHORIZATION_KEY*). The key is
+# stored in OpenBao kv/apps/wodore/<env> (it already rides the frontend
+# VSO's WODORE_.* allowlist); the backend needs it to render
+# maptiler-hybrid basemap styles server-side. Key name is used as-is —
+# no template rename needed. Applied in base so staging and production
+# backends both receive it (production uses it once its image is
+# bumped past the maptiler style support).
+- op: add
+  path: /spec/destination/transformation/includes/-
+  value: WODORE_MAPTILER.*
