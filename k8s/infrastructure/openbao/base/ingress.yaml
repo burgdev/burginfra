@@ -6,8 +6,8 @@ metadata:
     cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
 spec:
   rules:
-    # ENV_SUBDOMAIN is optional; defaults to "infra."
-    - host: kms.${ENV_SUBDOMAIN:-infra.}${BURGINFRA_HOST}
+    # ENV_SUBDOMAIN is optional per-cluster prefix; empty by default
+    - host: kms.${ENV_SUBDOMAIN:-}${BURGINFRA_HOST}
       http:
         paths:
           - path: /
@@ -20,4 +20,4 @@ spec:
   tls:
     - secretName: openbao-ui-${ENVIRONMENT}-tls
       hosts:
-        - kms.${ENV_SUBDOMAIN:-infra.}${BURGINFRA_HOST}
+        - kms.${ENV_SUBDOMAIN:-}${BURGINFRA_HOST}
