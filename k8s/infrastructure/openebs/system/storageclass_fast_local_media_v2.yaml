@@ -7,7 +7,7 @@ parameters:
   storageType: lvm
   volgroup: ${VG_NAME:-openebs-vg}
   fsType: xfs
-  shared: "true"
+  shared: "yes"
   thinProvision: "yes" # Enable thin provisioning for snapshot support
 reclaimPolicy: Delete
 allowVolumeExpansion: true
