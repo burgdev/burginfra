@@ -57,6 +57,14 @@ spec:
             # proxy must keep Host <public hub host> for Django ALLOWED_HOSTS.
             - name: WODORE_API_UPSTREAM
               value: wd-backend-api.${NAMESPACE}.svc.cluster.local:8008
+            # Public/unauthenticated API GETs (frontend #339): Bearer-less
+            # GETs use this base; auth'd calls keep WODORE_API_HOST. Composed
+            # with CDN_SUBDOMAIN: hub.cdn.stg.wodore.com (staging, Bunny) /
+            # hub.wodore.com (prod = same host, no-op until CDN flips there).
+            - name: WODORE_PUBLIC_API_URL
+              # yamllint disable rule:line-length
+              value: https://hub.${CDN_SUBDOMAIN}${ENV_SUBDOMAIN}${WODORE_HOST}
+              # yamllint enable rule:line-length
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
