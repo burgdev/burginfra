@@ -18,6 +18,9 @@ spec:
       NAMESPACE: "staging"
       ENVIRONMENT: "staging"
       ENV_SUBDOMAIN: "stg."
+      # CDN infix label for public service URLs (tiles.cdn.stg.wodore.com);
+      # empty = direct origin URLs (see frontend WODORE_TILE_SERVER_URL)
+      CDN_SUBDOMAIN: "cdn."
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       # yamllint disable rule:line-length
