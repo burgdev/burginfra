@@ -49,6 +49,14 @@ spec:
               # yamllint disable rule:line-length
               value: https://tiles.${CDN_SUBDOMAIN}${ENV_SUBDOMAIN}${WODORE_HOST}
               # yamllint enable rule:line-length
+            # In-cluster API upstream for the frontend nginx proxy (see
+            # wodore-frontend-quasar docker/nginx-default.conf): avoids
+            # resolving the public hub hostname at nginx config load, which
+            # crash-looped staging during the 2026-10-25 DNS records outage.
+            # Ignored by images that do not support the variable yet; the
+            # proxy must keep Host <public hub host> for Django ALLOWED_HOSTS.
+            - name: WODORE_API_UPSTREAM
+              value: wd-backend-api.${NAMESPACE}.svc.cluster.local:8008
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
