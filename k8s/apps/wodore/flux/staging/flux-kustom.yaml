@@ -21,11 +21,6 @@ spec:
       # CDN infix label for public service URLs (tiles.cdn.stg.wodore.com);
       # empty = direct origin URLs (see frontend WODORE_TILE_SERVER_URL)
       CDN_SUBDOMAIN: "cdn."
-      # Bunny pull zone ID for the frontend zone (dashboard -> CDN -> the
-      # numeric ID on the wodore-stg-frontend zone page). Required together
-      # with BUNNY_API_KEY (OpenBao: wd-frontend-envvars) for the preStop
-      # shell-tag purge on the frontend deployment. Empty = purge disabled.
-      BUNNY_FRONTEND_ZONE_ID: ""
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       # yamllint disable rule:line-length

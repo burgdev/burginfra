@@ -7,3 +7,12 @@
   path: /spec/destination/transformation/templates/WODORE_SENTRY_DSN
   value:
     text: "{{ .Secrets.SENTRY_DSN_FRONTEND }}"
+# Include BUNNY_* keys from OpenBao alongside WODORE_* (the base VSO's
+# includes filter only matches WODORE_.*; BUNNY_API_KEY and
+# BUNNY_FRONTEND_ZONE_ID are at kv/apps/wodore/<env> and feed the
+# preStop shell-tag purge hook on the frontend deployment).
+- op: replace
+  path: /spec/destination/transformation/includes
+  value:
+    - "WODORE_.*"
+    - "BUNNY_.*"
