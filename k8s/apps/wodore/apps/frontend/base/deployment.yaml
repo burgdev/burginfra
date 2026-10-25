@@ -36,7 +36,31 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sh", "-c", "sleep 5"]
+                # CDN shell purge on pod termination (i.e. on rolling deploys:
+                # the replacement pod is Ready BEFORE this one stops, so the
+                # purge refetches fresh content - a postStart purge on the new
+                # pod would re-cache the OLD shell from the still-serving old
+                # pod for another s-maxage window). Crash restarts do not fire
+                # preStop and never need a purge (same image). No-ops unless
+                # BUNNY_API_KEY (OpenBao: wd-frontend-envvars) and
+                # BUNNY_FRONTEND_ZONE_ID (flux substitute, per env) are set.
+                # Best-effort: never blocks termination (wget -T 5, || true).
+                # yamllint disable rule:line-length
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    sleep 5
+                    if [ -n "$BUNNY_API_KEY" ] && [ -n "$BUNNY_FRONTEND_ZONE_ID" ]; then
+                      for tag in frontend-html frontend-env; do
+                        wget -q -T 5 -O /dev/null \
+                          --header="AccessKey: $BUNNY_API_KEY" \
+                          --header="Content-Type: application/json" \
+                          --post-data="{\"CacheTag\":\"$tag\"}" \
+                          "https://api.bunny.net/pullzone/$BUNNY_FRONTEND_ZONE_ID/purgeCache" || true
+                      done
+                    fi
+                # yamllint enable rule:line-length
           env:
             ## - name: NGINX_CONFIG # not needed in kubernetes
             ##   value: "proxy"
