@@ -64,6 +64,12 @@ server:
     enabled: true
     size: 2Gi
     storageClass: fast-local-data-v3
+# The chart default injector affinity is a REQUIRED podAntiAffinity on
+# hostname, which deadlocks injector rollouts on this single-node cluster
+# (the surge pod can never schedule while the old one runs — seen during the
+# 0.30.4 upgrade). No affinity = normal rolling update.
+injector:
+  affinity: {}
 csi:
   enabled: true
 ui:
