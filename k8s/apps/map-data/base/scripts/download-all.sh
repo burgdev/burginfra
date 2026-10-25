@@ -3,12 +3,12 @@ set -e
 
 # NOTE: This script uses $${VAR} syntax (double dollar signs) for variable expansion
 # to prevent Flux from substituting variables when deploying via Kustomize.
-# When Flux processes this ConfigMap, $${VAR} becomes ${VAR} in the actual script.
+# When Flux processes this ConfigMap, $${VAR} becomes $${VAR} in the actual script.
 #
-# IMPORTANT: Only ${VAR} needs escaping! $VAR and $(command) work fine as-is.
+# IMPORTANT: Only $${VAR} needs escaping! $VAR and $(command) work fine as-is.
 #
 # For LOCAL TESTING, use the wrapper script: ./test-download-local.sh
-# The wrapper automatically converts $${VAR} to ${VAR} for local execution.
+# The wrapper automatically converts $${VAR} to $${VAR} for local execution.
 
 echo "=== Map Data Download ==="
 echo "Starting unified download process for OSM, GTFS, and elevation data"
