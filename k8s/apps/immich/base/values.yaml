@@ -4,7 +4,7 @@ controllers:
     containers:
       main:
         image:
-          tag: v2.7.4
+          tag: v3.3.5
         resources:
           requests:
             memory: "1Gi"
