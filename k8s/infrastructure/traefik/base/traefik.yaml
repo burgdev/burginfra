@@ -5,6 +5,12 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |-
+    # Preserve real client source IPs: required for the ipAllowList origin
+    # lockdown (wd-bunny-allowlist on the wd-frontend-orig ingress). With the
+    # default Cluster policy every request appears as a node IP. Single-node
+    # cluster: Local has no routing downside.
+    service:
+      externalTrafficPolicy: Local
     ports:
       web:
         redirections:

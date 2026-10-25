@@ -26,13 +26,30 @@ spec:
                 name: wd-frontend
                 port:
                   number: 80
-    # Hidden origin hostnames for the CDN (Bunny): when the public frontend
-    # host is CNAME'd to the CDN, Bunny connects here with SNI orig.* but
-    # sends Host <public host> (Origin Host Header override) - the public
-    # rules above keep doing the routing. These rules serve direct testing;
-    # the orig tls secret below is what Bunny's TLS validation needs. Its own
-    # secret so a failing orig order (e.g. DNS record not yet created) can
-    # never block the main certificate's Let's Encrypt order.
+  tls:
+    - hosts:
+        - ${ENV_SUBDOMAIN}${WODORE_HOST}
+        - ${ENV_SUBDOMAIN}${WODO_HOST}
+      secretName: wd-frontend-tls
+---
+# Hidden origin hostnames for the CDN (Bunny): when the public frontend
+# host is CNAME'd to the CDN, Bunny connects here with SNI orig.* but
+# sends Host <public host> (Origin Host Header override) - the public rules
+# above keep doing the routing. Locked to Bunny edge IPs via the
+# wd-bunny-allowlist middleware so these duplicate-content hosts are
+# unreachable for everyone else. cert-manager http01 renewals still work:
+# the ACME solver creates its own ingress without the middleware.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wd-frontend-orig
+  annotations:
+    cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
+    # yamllint disable rule:line-length
+    traefik.ingress.kubernetes.io/router.middlewares: ${NAMESPACE}-wd-bunny-allowlist@kubernetescrd
+    # yamllint enable rule:line-length
+spec:
+  rules:
     - host: orig.${ENV_SUBDOMAIN}${WODORE_HOST}
       http:
         paths:
@@ -54,10 +71,6 @@ spec:
                 port:
                   number: 80
   tls:
-    - hosts:
-        - ${ENV_SUBDOMAIN}${WODORE_HOST}
-        - ${ENV_SUBDOMAIN}${WODO_HOST}
-      secretName: wd-frontend-tls
     - hosts:
         - orig.${ENV_SUBDOMAIN}${WODORE_HOST}
         - orig.${ENV_SUBDOMAIN}${WODO_HOST}
