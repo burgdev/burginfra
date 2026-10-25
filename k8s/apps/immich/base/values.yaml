@@ -4,7 +4,7 @@ controllers:
     containers:
       main:
         image:
-          tag: v2.7.4
+          tag: v3.3.5
         resources:
           requests:
             memory: "1Gi"
@@ -39,7 +39,7 @@ valkey:
   persistence:
     data:
       type: persistentVolumeClaim
-      storageClassName: fast-local-data-v3
+      storageClass: fast-local-data-v3
 machine-learning:
   replicas: ${IMMICH_ML_REPLICAS}
   resources:
@@ -53,7 +53,7 @@ machine-learning:
     cache:
       type: persistentVolumeClaim
       accessMode: ReadWriteOnce
-      storageClassName: fast-local-data-v3
+      storageClass: fast-local-data-v3
 server:
   persistence:
     external:

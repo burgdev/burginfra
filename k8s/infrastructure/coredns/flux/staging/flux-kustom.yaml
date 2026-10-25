@@ -1,0 +1,21 @@
+# this is used by flux, do not include in any app kustomization.yaml file!
+# bootstrap once: kubectl apply -k k8s/infrastructure/coredns/flux/staging
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-coredns-system
+  namespace: flux-system # do not change!
+spec:
+  interval: 1h0s
+  retryInterval: 10s # Retry quickly when reconciliation fails
+  path: "./k8s/infrastructure/coredns/base"
+  prune: false # never prune cluster DNS config
+  sourceRef: # k8s/clusters/local/flux-system/gotk-sync.yaml
+    kind: GitRepository
+    name: burgdev-burginfra
+  postBuild:
+    substitute:
+      NAMESPACE: "kube-system" # not used, kube-system per default
+    substituteFrom:
+      - kind: ConfigMap # takes configmap from namespace flux-system
+        name: cluster-settings

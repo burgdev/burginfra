@@ -24,6 +24,9 @@ spec:
       NAMESPACE: "production"
       ENVIRONMENT: "prod"
       ENV_SUBDOMAIN: ""
+      # CDN infix label for public service URLs; empty = direct origin URLs
+      # (flip to "cdn." when the production Bunny zones + DNS exist)
+      CDN_SUBDOMAIN: ""
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       WD_BACKEND_TAG: "0.1.13-alpine" # {"$imagepolicy": "flux-system:wd-backend-production:tag"}

@@ -141,21 +141,13 @@ login:
     className: traefik
     annotations:
       cert-manager.io/cluster-issuer: ${CERT_ISSUER_PROD}
-# Override kubectl image version for setup job sidecars
-# The chart uses cluster k8s version but alpine/k8s may not have that exact tag
-# Use KUBE_TOOLS_VERSION from cluster settings
-setupJob:
-  machinekeyWriter:
-    image:
-      tag: "${KUBE_TOOLS_VERSION}"
-  machineUserPATWriter:
-    image:
-      tag: "${KUBE_TOOLS_VERSION}"
-  loginUserPATWriter:
-    image:
-      tag: "${KUBE_TOOLS_VERSION}"
-# Override kubectl image version for cleanup job
-cleanupJob:
+# Override kubectl image tag for setup job sidecars and cleanup job.
+# Chart 9.x reads tools.kubectl.image and defaults the tag to the cluster's
+# k8s version — but alpine/k8s does not publish every patch tag (1.33.6 is
+# missing), which left the sidecars in ImagePullBackOff and every helm
+# upgrade timed out on the pre-upgrade hook. Use KUBE_TOOLS_VERSION from
+# cluster settings (a tag that exists on docker.io/alpine/k8s).
+tools:
   kubectl:
     image:
       tag: "${KUBE_TOOLS_VERSION}"

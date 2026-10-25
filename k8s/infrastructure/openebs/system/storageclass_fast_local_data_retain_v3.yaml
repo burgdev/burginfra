@@ -10,7 +10,7 @@ parameters: # any change here needs a new file and version!
   volgroup: ${VG_NAME:-openebs-vg}
   thinPoolName: ${THINPOOL_NAME:-openebs-vg_thinpool} # Explicitly specify thin pool name
   fsType: ext4
-  shared: "true"
+  shared: "yes"
   thinProvision: "yes" # Enable thin provisioning for snapshot support
 reclaimPolicy: Retain
 allowVolumeExpansion: true

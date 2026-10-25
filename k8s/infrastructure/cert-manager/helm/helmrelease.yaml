@@ -20,7 +20,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cert-manager
-      version: "1.19.*"
+      version: "1.21.*"
   install:
     createNamespace: false
   valuesFrom:
