@@ -1,6 +1,6 @@
 # ImageRepository scans the container registry for new image tags
 # Placed in flux-system namespace to be shared across environments
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: wd-backend
@@ -12,7 +12,7 @@ spec:
     namespaceSelectors:
       - matchLabels: {} # Allow access from all namespaces
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta2
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
   name: wd-frontend
