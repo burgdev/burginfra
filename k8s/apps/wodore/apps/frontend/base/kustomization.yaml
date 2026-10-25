@@ -5,6 +5,7 @@ resources:
   - secrets.yaml
   - service.yaml
   - ingress.yaml
+  - middleware-bunny-allowlist.yaml
   - deployment.yaml
 patches:
   - path: vso-frontend-envvars-sentry.yaml
