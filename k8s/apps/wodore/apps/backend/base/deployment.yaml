@@ -68,8 +68,12 @@ spec:
             - name: GUNICORN_EXTRA_ARGS
               value: '${WODORE_GUNICORN_EXTRA_ARGS:---timeout 30}'
             # Imagor settings
+            # CDN_SUBDOMAIN infix: img.cdn.stg.wodore.com (staging, through
+            # Bunny) / img.wodore.com (prod, direct until flipped)
             - name: IMAGOR_URL
-              value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
+              # yamllint disable rule:line-length
+              value: "https://img.${CDN_SUBDOMAIN}${ENV_SUBDOMAIN}${WODORE_HOST}"
+              # yamllint enable rule:line-length
             - name: IMAGOR_KEY
               valueFrom:
                 secretKeyRef:
@@ -77,7 +81,9 @@ spec:
                   key: IMAGOR_SECRET
             # Martin settings
             - name: MARTIN_TILE_URL
-              value: "https://tiles.${ENV_SUBDOMAIN}${WODORE_HOST}"
+              # yamllint disable rule:line-length
+              value: "https://tiles.${CDN_SUBDOMAIN}${ENV_SUBDOMAIN}${WODORE_HOST}"
+              # yamllint enable rule:line-length
             # E-Mail (smtp settings in secrets.yaml)
             - name: DEFAULT_FROM_EMAIL
               value: "Wodore Info <info@${WODORE_HOST}>"
