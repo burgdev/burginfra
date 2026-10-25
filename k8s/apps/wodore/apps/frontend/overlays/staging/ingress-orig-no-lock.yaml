@@ -1,0 +1,14 @@
+# TEMPORARY: staging runs without the Bunny IP lock on orig.* until the
+# Bunny pull zone wodore-stg-frontend gets Origin Host Header = stg.wodore.com
+# set in the Bunny dashboard. Without that override, Bunny origin-pulls send
+# Host: orig.stg.wodore.com and hit the locked router -> 403 for all of
+# staging (incident 2026-10-25). The lock (middleware + strict list) stays
+# active in production. REVERT this patch once the override is set; until
+# then orig.stg.* relies on the frontend image's deny-all robots.txt +
+# X-Robots-Tag: noindex (wodore-frontend-quasar #338).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wd-frontend-orig
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: null

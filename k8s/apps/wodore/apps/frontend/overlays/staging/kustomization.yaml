@@ -3,3 +3,13 @@ kind: Kustomization
 resources:
   - imagepolicy.yaml
   - ../../base
+patches:
+  # TEMPORARY until the Bunny zone has Origin Host Header = stg.wodore.com:
+  # drop the Bunny IP lock from staging's orig ingress (see patch file).
+  # Production keeps the lock. Revert once the override is set.
+  - path: ingress-orig-no-lock.yaml
+    target:
+      group: networking.k8s.io
+      version: v1
+      kind: Ingress
+      name: wd-frontend-orig
