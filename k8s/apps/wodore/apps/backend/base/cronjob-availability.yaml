@@ -37,18 +37,21 @@ spec:
                   echo "Starting availability update at $(date)"
 
                   # Run the update command and capture exit status
+                  # ($$ keeps STATUS literal for the shell under Flux envsubst)
                   if ./manage.py update_availability --no-progress --request-interval 4; then
-                    STATUS=0
+                    $$STATUS=0
                     echo "Availability update completed successfully at $(date)"
                   else
-                    STATUS=$?
-                    echo "Availability update failed with exit code ${STATUS} at $(date)"
+                    $$STATUS=$?
+                    echo "Availability failed: exit $${STATUS} at $(date)"
                   fi
 
                   # Send heartbeat with status if URL is configured
                   if [ -n "${BEAT_WODORE_AVAILABILITY:-}" ]; then
-                    echo "Sending heartbeat to ${BEAT_WODORE_AVAILABILITY}/$STATUS"
-                    wget -q -O- "${BEAT_WODORE_AVAILABILITY}/${STATUS}" || echo "Heartbeat failed (non-critical)"
+                    echo "Heartbeat: ${BEAT_WODORE_AVAILABILITY}/$$STATUS"
+                    wget -q -O- \
+                      "${BEAT_WODORE_AVAILABILITY}/$${STATUS}" \
+                      || echo "Heartbeat failed (non-critical)"
                   else
                     echo "No heartbeat URL configured, skipping"
                   fi
