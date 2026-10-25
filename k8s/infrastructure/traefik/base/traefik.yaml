@@ -8,9 +8,12 @@ spec:
     # Preserve real client source IPs: required for the ipAllowList origin
     # lockdown (wd-bunny-allowlist on the wd-frontend-orig ingress). With the
     # default Cluster policy every request appears as a node IP. Single-node
-    # cluster: Local has no routing downside.
+    # cluster: Local has no routing downside. service.spec is the chart's
+    # Service-spec passthrough (both keys kept for chart-version tolerance).
     service:
       externalTrafficPolicy: Local
+      spec:
+        externalTrafficPolicy: Local
     ports:
       web:
         redirections:
