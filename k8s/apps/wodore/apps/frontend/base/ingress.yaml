@@ -26,8 +26,39 @@ spec:
                 name: wd-frontend
                 port:
                   number: 80
+    # Hidden origin hostnames for the CDN (Bunny): when the public frontend
+    # host is CNAME'd to the CDN, Bunny connects here with SNI orig.* but
+    # sends Host <public host> (Origin Host Header override) - the public
+    # rules above keep doing the routing. These rules serve direct testing;
+    # the orig tls secret below is what Bunny's TLS validation needs. Its own
+    # secret so a failing orig order (e.g. DNS record not yet created) can
+    # never block the main certificate's Let's Encrypt order.
+    - host: orig.${ENV_SUBDOMAIN}${WODORE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-frontend
+                port:
+                  number: 80
+    - host: orig.${ENV_SUBDOMAIN}${WODO_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wd-frontend
+                port:
+                  number: 80
   tls:
     - hosts:
         - ${ENV_SUBDOMAIN}${WODORE_HOST}
         - ${ENV_SUBDOMAIN}${WODO_HOST}
       secretName: wd-frontend-tls
+    - hosts:
+        - orig.${ENV_SUBDOMAIN}${WODORE_HOST}
+        - orig.${ENV_SUBDOMAIN}${WODO_HOST}
+      secretName: wd-frontend-orig-tls

@@ -43,7 +43,12 @@ spec:
             - name: TMPDIR
               value: "/var/tmp"
             - name: WODORE_TILE_SERVER_URL
-              value: https://tiles.${ENV_SUBDOMAIN}${WODORE_HOST}
+              # CDN_SUBDOMAIN inserts the CDN label between service and env
+              # subdomain: tiles.cdn.stg.wodore.com (staging, through Bunny) /
+              # tiles.wodore.com (prod, direct until CDN_SUBDOMAIN flips there)
+              # yamllint disable rule:line-length
+              value: https://tiles.${CDN_SUBDOMAIN}${ENV_SUBDOMAIN}${WODORE_HOST}
+              # yamllint enable rule:line-length
           envFrom:
             - secretRef:
                 name: "wd-frontend-envvars"
