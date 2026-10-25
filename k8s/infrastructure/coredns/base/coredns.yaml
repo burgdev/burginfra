@@ -1,0 +1,50 @@
+# GitOps copy of the k3s coredns ConfigMap with ONE change: the upstream
+# forward target. k3s deploys coredns via its embedded manifest (NOT a
+# HelmChart on this cluster), so this ConfigMap is applied over it by the
+# infra-coredns-system Flux Kustomization (kubectl apply -k
+# k8s/infrastructure/coredns/flux/staging bootstraps that Kustomization).
+#
+# Why: during the 2026-10-25 stg.wodore.com DNS records outage the node's
+# resolvers (netcup 46.38.252.230 / 46.38.225.230) negatively cached NXDOMAIN
+# for the full 3600s SOA minimum, which crash-looped wd-frontend (its nginx
+# resolves the API upstream at config load) and stalled cert-manager's http01
+# self-check for ~1h after the records were restored. Public anycast
+# resolvers cap negative caching at their own short TTLs and remove the
+# single-provider dependency. The coredns `reload` plugin applies changes
+# without a pod restart.
+#
+# NodeHosts is k3s-managed (node IP entries, rewritten on node changes);
+# the current single-node values are pinned here so applying this ConfigMap
+# does not delete the key. If the node IP ever changes, update it here too.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+          pods insecure
+          fallthrough in-addr.arpa ip6.arpa
+        }
+        hosts /etc/coredns/NodeHosts {
+          ttl 60
+          reload 15s
+          fallthrough
+        }
+        prometheus :9153
+        cache 30
+        loop
+        reload
+        loadbalance
+        import /etc/coredns/custom/*.override
+        forward . 1.1.1.1 8.8.8.8
+    }
+    import /etc/coredns/custom/*.server
+  NodeHosts: |
+    159.195.50.43 infra-vps1
+    2a0a:4cc0:c1:ba05:3450:49ff:fe40:ebbe infra-vps1
