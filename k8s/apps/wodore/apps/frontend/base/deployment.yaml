@@ -48,12 +48,21 @@ spec:
                 # RAM cache - Perma-Cache entries survive and get re-served
                 # (https://docs.bunny.net/docs/cdn-purge/). The
                 # POST /purge?url=<exact> form removes the URL from both the
-                # edge cache AND Perma-Cache. Purged set = the unhashed files
-                # whose bytes change on a deploy: the SPA shell ("/" and
-                # /index.html are separate cache keys), the runtime env, the
-                # service worker and the PWA manifest. Hashed /assets/ chunks
-                # are immutable and never need purging; robots/favicons keep
-                # their short TTLs. No-ops unless BUNNY_API_KEY (OpenBao:
+                # edge cache AND Perma-Cache. Purged set = "/" plus EVERY
+                # root-level file in the retiring pod's webroot (the favicon/
+                # PWA-icon family, robots.txt, the shell, env.js, sw.js,
+                # manifest.json). Enumerating the RETIRING pod is provably
+                # sufficient: a stale cache entry can only exist for a URL
+                # this image knew - files added by the new image have no
+                # cache history. Precompressed .br/.gz siblings are skipped:
+                # nginx serves them via transparent encoding negotiation on
+                # the SAME url, so the base-URL purge covers them. Subdirs
+                # (assets/ is hashed-immutable; icons/ images/ logos/ ... are
+                # design-static) keep their TTLs and are not purged. This is
+                # what lets the nginx favicon block ship s-maxage=30d
+                # (wodore-frontend-quasar nginx-default.conf): deploys
+                # invalidate by exact URL, browsers revalidate on revisit.
+                # No-ops unless BUNNY_API_KEY (OpenBao:
                 # wd-frontend-envvars) and BUNNY_FRONTEND_ZONE_ID (flux
                 # substitute, per env - bunny-enabled gate; the /purge endpoint
                 # itself resolves the zone by hostname) are set. The zone
@@ -61,7 +70,7 @@ spec:
                 # flux substitutes (same pattern as every URL in this file).
                 # ENVSUBST RULE: braced ${VARS} in this template are FLUX
                 # substitutes (strict mode fails on unknown ones); shell
-                # variables must stay BARE ($path, $BUNNY_API_KEY...) so
+                # variables must stay BARE ($f, $BUNNY_API_KEY...) so
                 # envsubst passes them through to the container shell.
                 # Best-effort: never blocks termination (wget -T 5, || true).
                 # yamllint disable rule:line-length
@@ -71,11 +80,19 @@ spec:
                   - |
                     sleep 5
                     if [ -n "$BUNNY_API_KEY" ] && [ -n "$BUNNY_FRONTEND_ZONE_ID" ]; then
-                      for path in / /index.html /env.js /sw.js /manifest.json; do
-                        wget -q -T 5 -O /dev/null \
+                      wget -q -T 5 -O /dev/null \
+                        --header="AccessKey: $BUNNY_API_KEY" \
+                        --post-data="" \
+                        "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}/&async=false" || true
+                      cd /usr/share/nginx/html || true
+                      for f in *; do
+                        case "$f" in
+                          *.br|*.gz|robots-origin.txt) continue ;;
+                        esac
+                        [ -f "$f" ] && wget -q -T 5 -O /dev/null \
                           --header="AccessKey: $BUNNY_API_KEY" \
                           --post-data="" \
-                          "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}$path&async=false" || true
+                          "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}/$f&async=false" || true
                       done
                     fi
                 # yamllint enable rule:line-length
