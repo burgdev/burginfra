@@ -16,6 +16,7 @@ configMapGenerator:
   - name: wd-mapproxy-config
     files:
       - mapproxy.yaml
+      - bev-chain.crt
       - at-boundary.geojson
       - ch-boundary.geojson
       - fr-boundary.geojson

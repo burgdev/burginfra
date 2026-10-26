@@ -91,6 +91,19 @@ sources:
     # active from z7 up (min_res; res(7) = 1222.99 m/px) -
     # OpenTopoMap renders the small scales for the whole map.
     min_res: 1223
+    # TLS: since 2026-10-19 maps.bev.gv.at serves only its leaf cert
+    # (missing the GEANT TLS RSA 1 intermediate), so Python/OpenSSL
+    # verification fails - and because on_error only maps HTTP codes,
+    # the SSLError surfaces as a flat 500 "Could not verify connection
+    # to URL" for every AT cache-miss tile. Pin the expected chain
+    # instead of disabling checks: ssl_ca_certs REPLACES the system
+    # CA store for this source, so the bundle (bev-chain.crt, same
+    # ConfigMap) carries intermediate + root. Drop this block once
+    # BEV serves the full chain again (openssl s_client to
+    # maps.bev.gv.at returns 'Verify return code: 0' with system
+    # trust stores).
+    http:
+      ssl_ca_certs: /mapproxy/config/bev-chain.crt
     on_error:
       404:
         response: transparent
