@@ -41,10 +41,23 @@ spec:
                 # purge refetches fresh content - a postStart purge on the new
                 # pod would re-cache the OLD shell from the still-serving old
                 # pod for another s-maxage window). Crash restarts do not fire
-                # preStop and never need a purge (same image). No-ops unless
-                # BUNNY_API_KEY (OpenBao: wd-frontend-envvars) and
-                # BUNNY_FRONTEND_ZONE_ID (flux substitute, per env) are set.
-                # Best-effort: never blocks termination (wget -T 5, || true).
+                # preStop and never need a purge (same image).
+                #
+                # EXACT-URL purges only: with Perma-Cache enabled on the pull
+                # zone, Bunny's tag- and wildcard purges clear just the edge
+                # RAM cache - Perma-Cache entries survive and get re-served
+                # (https://docs.bunny.net/docs/cdn-purge/). The
+                # POST /purge?url=<exact> form removes the URL from both the
+                # edge cache AND Perma-Cache. Purged set = the unhashed files
+                # whose bytes change on a deploy: the SPA shell ("/" and
+                # /index.html are separate cache keys), the runtime env, the
+                # service worker and the PWA manifest. Hashed /assets/ chunks
+                # are immutable and never need purging; robots/favicons keep
+                # their short TTLs. No-ops unless BUNNY_API_KEY (OpenBao:
+                # wd-frontend-envvars) and BUNNY_FRONTEND_ZONE_ID (flux
+                # substitute, per env - bunny-enabled gate; the /purge endpoint
+                # itself resolves the zone by hostname) are set. Best-effort:
+                # never blocks termination (wget -T 5, || true).
                 # yamllint disable rule:line-length
                 command:
                   - /bin/sh
@@ -52,12 +65,11 @@ spec:
                   - |
                     sleep 5
                     if [ -n "$BUNNY_API_KEY" ] && [ -n "$BUNNY_FRONTEND_ZONE_ID" ]; then
-                      for tag in frontend-html frontend-env; do
+                      for path in / /index.html /env.js /sw.js /manifest.json; do
                         wget -q -T 5 -O /dev/null \
                           --header="AccessKey: $BUNNY_API_KEY" \
-                          --header="Content-Type: application/json" \
-                          --post-data="{\"CacheTag\":\"$tag\"}" \
-                          "https://api.bunny.net/pullzone/$BUNNY_FRONTEND_ZONE_ID/purgeCache" || true
+                          --post-data="" \
+                          "https://api.bunny.net/purge?url=https://${WODORE_DOMAIN}${path}&async=false" || true
                       done
                     fi
                 # yamllint enable rule:line-length
