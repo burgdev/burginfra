@@ -21,7 +21,7 @@ spec:
     spec:
       securityContext:
         fsGroup: 101
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 180
       containers:
         - name: frontend
           image: ghcr.io/wodore/wodore-frontend-quasar:${WD_FRONTEND_TAG:-edge-pwa}
@@ -72,7 +72,9 @@ spec:
                 # substitutes (strict mode fails on unknown ones); shell
                 # variables must stay BARE ($f, $BUNNY_API_KEY...) so
                 # envsubst passes them through to the container shell.
-                # Best-effort: never blocks termination (wget -T 5, || true).
+                # Best-effort: never blocks termination (wget -T 5, || true);
+                # terminationGracePeriodSeconds is raised (180 s) so ~100+
+                # sequential purge calls finish inside the grace window.
                 # yamllint disable rule:line-length
                 command:
                   - /bin/sh
@@ -85,11 +87,19 @@ spec:
                         --post-data="" \
                         "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}/&async=false" || true
                       cd /usr/share/nginx/html || true
-                      for f in *; do
+                      find * -type f | while read -r f; do
                         case "$f" in
-                          *.br|*.gz|robots-origin.txt) continue ;;
+                          *.br|*.gz|*.map|robots-origin.txt) continue ;;
                         esac
-                        [ -f "$f" ] && wget -q -T 5 -O /dev/null \
+                        # Skip content-hashed builds: NAME-<8 chars>.EXT
+                        # (Vite chunk/workbox hashes are always 8; the
+                        # dash-numbers false friends - favicon-16x16,
+                        # mstile-150x150 - are 5/7 chars). Immutable, never
+                        # purged. Everything else changes with deploys.
+                        case "$f" in
+                          *-????????.*) continue ;;
+                        esac
+                        wget -q -T 5 -O /dev/null \
                           --header="AccessKey: $BUNNY_API_KEY" \
                           --post-data="" \
                           "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}/$f&async=false" || true
