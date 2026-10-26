@@ -58,8 +58,11 @@ spec:
                 # substitute, per env - bunny-enabled gate; the /purge endpoint
                 # itself resolves the zone by hostname) are set. The zone
                 # hostname is composed from the ENV_SUBDOMAIN + WODORE_HOST
-                # flux substitutes (same pattern as every URL in this file -
-                # a container env var would fail strict postBuild envsubst).
+                # flux substitutes (same pattern as every URL in this file).
+                # ENVSUBST RULE: braced ${VARS} in this template are FLUX
+                # substitutes (strict mode fails on unknown ones); shell
+                # variables must stay BARE ($path, $BUNNY_API_KEY...) so
+                # envsubst passes them through to the container shell.
                 # Best-effort: never blocks termination (wget -T 5, || true).
                 # yamllint disable rule:line-length
                 command:
@@ -72,7 +75,7 @@ spec:
                         wget -q -T 5 -O /dev/null \
                           --header="AccessKey: $BUNNY_API_KEY" \
                           --post-data="" \
-                          "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}${path}&async=false" || true
+                          "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}$path&async=false" || true
                       done
                     fi
                 # yamllint enable rule:line-length
