@@ -24,11 +24,11 @@ spec:
       # auto updated by fluxcd
       # https://github.com/wodore/wodore-backend/pkgs/container/wodore-backend
       # yamllint disable rule:line-length
-      WD_BACKEND_TAG: "20261026T2119-sha-6ac8dd9-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
+      WD_BACKEND_TAG: "20261026T2320-sha-27e45f2-alpine" # {"$imagepolicy": "flux-system:wd-backend-staging:tag"}
       # yamllint enable rule:line-length
       # https://github.com/wodore/wodore-frontend-quasar/pkgs/container/wodore-frontend-quasar
       # yamllint disable rule:line-length
-      WD_FRONTEND_TAG: "20261026T2225-sha-e9061a8-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
+      WD_FRONTEND_TAG: "20261027T0007-sha-20338d8-pwa" # {"$imagepolicy": "flux-system:wd-frontend-staging:tag"}
       # yamllint enable rule:line-length
       WD_FRONTEND_APP_NAME: "Beta Wodore"
       IMAGOR_TAG: "1.9.6" # https://github.com/cshum/imagor/releases
