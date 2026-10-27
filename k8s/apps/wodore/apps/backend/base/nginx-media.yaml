@@ -4,6 +4,23 @@ metadata:
   name: wd-media-nginx-config
 data:
   default.conf: |
+    # Bunny CDN-Tag map - media purge taxonomy (burginfra edge; full
+    # taxonomy: wodore-backend _work/261026_cdn_tags.md). Symbols
+    # (media/symbols/*.svg) change with category/POI edits, so they
+    # carry media:symbols in addition to the broad media tag: a Bunny
+    # purge with {"CacheTag": "* media:symbols *"} flushes them without
+    # touching hut photos. Keyed on $request_uri - Traefik routes
+    # /media/... here unstripped, so it is the URI as the client sent
+    # it. Order matters (first match wins): symbols before the generic
+    # /media rule. Delimiters after a name: /, ., ? or end-of-URI, so
+    # /mediafoo (no delimiter) stays untagged; the "" default makes
+    # add_header a no-op there (nginx skips empty values), i.e.
+    # untagged/purge-immune.
+    map $request_uri $cdn_media_tag {
+        default                      "";
+        ~^/media/symbols(/|\.|\?|$)  "media media:symbols";
+        ~^/media(/|\.|\?|$)          "media";
+    }
     server {
         listen 80;
         server_name _;
@@ -14,6 +31,8 @@ data:
         location /media {
             expires 30d;
             add_header Cache-Control "public, immutable" always;
+            # Bunny purge tag (see the $cdn_media_tag map above).
+            add_header CDN-Tag $cdn_media_tag always;
             try_files $uri $uri/ =404;
         }
     }
