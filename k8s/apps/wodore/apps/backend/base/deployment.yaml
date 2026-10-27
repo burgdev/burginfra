@@ -67,6 +67,15 @@ spec:
             # --no-control-socket (>= 25 only).
             - name: GUNICORN_EXTRA_ARGS
               value: '${WODORE_GUNICORN_EXTRA_ARGS:---timeout 30}'
+            # Hut-services request cache root (kv backend, hut-services 0.6+):
+            # the image bakes /tmp/py_file_cache/kv root-owned, so uid 1001
+            # cannot write into it — hut source imports and availability
+            # fetches then die (or wedge) on the first cache write. Point the
+            # cache root at the py-cache PVC mount (root:web 2775) so both the
+            # kv dir and the joblib subdir are writable and persist across
+            # restarts.
+            - name: HUT_SERVICE_CACHE_DIR
+              value: "/tmp/py_file_cache/joblib/hut-service-cache"
             # Imagor settings
             # CDN_SUBDOMAIN infix: img.cdn.stg.wodore.com (staging, through
             # Bunny) / img.wodore.com (prod, direct until flipped)

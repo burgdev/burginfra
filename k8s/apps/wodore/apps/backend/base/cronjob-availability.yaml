@@ -59,6 +59,15 @@ spec:
                   echo "Job completed at $(date)"
                   exit $STATUS
               env:
+                # Hut-services request cache root (kv backend, hut-services
+                # 0.6+): the image bakes /tmp/py_file_cache/kv root-owned, so
+                # uid 1001 cannot write into it — the availability fetches
+                # would die on the first cache write. The cronjob mounts no
+                # py-cache PVC, so the cache stays pod-ephemeral (same as the
+                # old joblib default path) — the env var exists only to dodge
+                # the root-owned baked directory.
+                - name: HUT_SERVICE_CACHE_DIR
+                  value: "/tmp/py_file_cache/joblib/hut-service-cache"
                 # Database connection (CNPG service)
                 - name: DJANGO_DATABASE_HOST
                   valueFrom:
