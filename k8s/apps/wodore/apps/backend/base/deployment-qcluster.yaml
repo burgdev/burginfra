@@ -62,6 +62,13 @@ spec:
               # an int and fail env schema validation (same as the
               # WD_BACKEND_GUNICORN_WORKERS '"3"' cluster-settings trick).
               value: '${WD_QCLUSTER_WORKERS:-"3"}'
+            # Hut-services request cache root (kv backend, hut-services 0.6+):
+            # the image bakes /tmp/py_file_cache/kv root-owned, so uid 1001
+            # cannot write into it — async availability tasks (booking
+            # fetches) would die on the first cache write. Same value as the
+            # backend container: py-cache PVC mount, writable and persistent.
+            - name: HUT_SERVICE_CACHE_DIR
+              value: "/tmp/py_file_cache/joblib/hut-service-cache"
             # Imagor settings
             - name: IMAGOR_URL
               value: "https://img.${ENV_SUBDOMAIN}${WODORE_HOST}"
