@@ -34,88 +34,58 @@ spec:
               containerPort: 8080
               protocol: TCP
           lifecycle:
-            preStop:
+            postStart:
               exec:
-                # CDN shell purge on pod termination (i.e. on rolling deploys:
-                # the replacement pod is Ready BEFORE this one stops, so the
-                # purge refetches fresh content - a postStart purge on the new
-                # pod would re-cache the OLD shell from the still-serving old
-                # pod for another s-maxage window). Crash restarts do not fire
-                # preStop and never need a purge (same image).
-                #
-                # EXACT-URL purges only: with Perma-Cache enabled on the pull
-                # zone, Bunny's tag- and wildcard purges clear just the edge
-                # RAM cache - Perma-Cache entries survive and get re-served
-                # (https://bunny.net/docs/cdn/perma-cache). EXACT PURGE
-                # TRAP: the API classifies by URL shape - a path ENDING IN
-                # "/" is a PREFIX purge (no Perma-Cache deletion!). The
-                # root document must be purged WITHOUT the trailing slash
-                # (purge?url=https://host) - verified live: that form
-                # deletes the Perma-Cache copy and forces an origin pull.
-                # Purged set = the root document, /index.html (separate
-                # cache key) and every unhashed webroot file. Enumerating
-                # the RETIRING pod is provably sufficient: a stale cache
-                # entry can only exist for a URL this image knew - files
-                # added by the new image have no cache history. The shell
-                # URLs are purged FIRST and AGAIN LAST: during the drain
-                # window this pod still serves, and a cache MISS hitting it
-                # re-stores the OLD shell into Perma-Cache - the final
-                # purge shrinks that race to sub-second. Precompressed
-                # .br/.gz siblings are skipped: nginx serves them via
-                # transparent encoding negotiation on the SAME url, so the
-                # base-URL purge covers them. Hashed NAME-<8 chars>.EXT
-                # builds are immutable and never purged; this is what lets
-                # the nginx favicon block ship s-maxage=30d
-                # (wodore-frontend-quasar nginx-default.conf).
-                # No-ops unless BUNNY_API_KEY (OpenBao:
-                # wd-frontend-envvars) and BUNNY_FRONTEND_ZONE_ID (flux
-                # substitute, per env - bunny-enabled gate; the /purge endpoint
-                # itself resolves the zone by hostname) are set. The zone
-                # hostname is composed from the ENV_SUBDOMAIN + WODORE_HOST
-                # flux substitutes (same pattern as every URL in this file).
-                # ENVSUBST RULE: braced ${VARS} in this template are FLUX
-                # substitutes (strict mode fails on unknown ones); shell
-                # variables must stay BARE ($f, $BUNNY_API_KEY...) so
-                # envsubst passes them through to the container shell.
-                # Best-effort: never blocks termination (wget -T 5, || true);
-                # terminationGracePeriodSeconds is raised (180 s) so ~100+
-                # sequential purge calls finish inside the grace window.
+                # Post-rollout CDN purge + warmup, delayed past the retiring
+                # pod's termination window (grace 180 s + margin): by then the
+                # new pod is provably the ONLY origin, so the purge cannot
+                # re-poison the edge with the old build's bytes (measured
+                # 2026-10-26/27: purges fired while the draining pod still
+                # answered origin pulls re-cached stale content). A stale
+                # window of a few seconds to ~3 minutes after a deploy is
+                # accepted by design - the shell itself is private/uncached
+                # and self-corrects the moment the old pod is gone; this
+                # covers the edge-cached files (env.js, sw.js, manifest,
+                # favicons, unhashed statics).
+                # Backgrounded so postStart returns immediately; idempotent
+                # (pod restarts just re-run it).
+                # ENVSUBST RULE: braced ${VARS} are FLUX substitutes; shell
+                # variables stay BARE so envsubst passes them through.
                 # yamllint disable rule:line-length
                 command:
                   - /bin/sh
                   - -c
                   - |
-                    sleep 5
+                    (sleep 200
                     if [ -n "$BUNNY_API_KEY" ] && [ -n "$BUNNY_FRONTEND_ZONE_ID" ]; then
-                      for round in first last; do
-                        for p in "https://${ENV_SUBDOMAIN}${WODORE_HOST}" "https://${ENV_SUBDOMAIN}${WODORE_HOST}/index.html"; do
-                          wget -q -T 5 -O /dev/null \
-                            --header="AccessKey: $BUNNY_API_KEY" \
-                            --post-data="" \
-                            "https://api.bunny.net/purge?url=$p&async=false" || true
-                        done
-                        [ "$round" = first ] || break
-                        cd /usr/share/nginx/html || true
-                        find * -type f | while read -r f; do
-                          case "$f" in
-                            *.br|*.gz|*.map|robots-origin.txt) continue ;;
-                          esac
-                          # Skip content-hashed builds: NAME-<8 chars>.EXT
-                          # (Vite chunk/workbox hashes are always 8; the
-                          # dash-numbers false friends - favicon-16x16,
-                          # mstile-150x150 - are 5/7 chars). Immutable, never
-                          # purged. Everything else changes with deploys.
-                          case "$f" in
-                            *-????????.*) continue ;;
-                          esac
-                          wget -q -T 5 -O /dev/null \
-                            --header="AccessKey: $BUNNY_API_KEY" \
-                            --post-data="" \
-                            "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}/$f&async=false" || true
-                        done
+                      cd /usr/share/nginx/html || exit 0
+                      for p in "https://${ENV_SUBDOMAIN}${WODORE_HOST}" "https://${WODORE_HOST}/index.html"; do
+                        wget -q -T 5 -O /dev/null \
+                          --header="AccessKey: $BUNNY_API_KEY" \
+                          --post-data="" \
+                          "https://api.bunny.net/purge?url=$p&async=false" || true
                       done
-                    fi
-                # yamllint enable rule:line-length
+                      find * -type f | while read -r f; do
+                        case "$f" in
+                          *.br|*.gz|*.map|robots-origin.txt) continue ;;
+                          *-????????.*) continue ;;
+                        esac
+                        wget -q -T 5 -O /dev/null \
+                          --header="AccessKey: $BUNNY_API_KEY" \
+                          --post-data="" \
+                          "https://api.bunny.net/purge?url=https://${ENV_SUBDOMAIN}${WODORE_HOST}/$f&async=false" || true
+                      done
+                      # Warm the edge from the now-sole current pod.
+                      for p in / /index.html /env.js /sw.js /manifest.json /favicon.ico /icons.svg; do
+                        wget -q -T 5 -O /dev/null "https://${ENV_SUBDOMAIN}${WODORE_HOST}$p" || true
+                      done
+                    fi) &
+            preStop:
+              exec:
+                # Plain connection drain: the CDN purge moved to the NEW
+                # pod's postStart (see above). Keep a short sleep so
+                # in-flight requests finish before SIGTERM.
+                command: ["/bin/sh", "-c", "sleep 10"]
           env:
             ## - name: NGINX_CONFIG # not needed in kubernetes
             ##   value: "proxy"
