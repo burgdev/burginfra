@@ -25,12 +25,11 @@ spec:
         - CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
         - CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
         - CREATE EXTENSION IF NOT EXISTS pg_trgm;
-    # Grant the app user SET on the trigram similarity threshold — PG 18
-    # restricts SET on extension parameters to grantees; migration
-    # geometries.0069 sets it at session start for trigram index tuning.
-    # Applied to the application database (postInitSQL runs on each DB).
-    postInitSQL:
-      - GRANT SET ON PARAMETER pg_trgm.similarity_threshold TO wodore;
+      # Grant the app user SET on the trigram similarity threshold — PG 18
+      # restricts SET on extension parameters to grantees; migration
+      # geometries.0069 sets it at session start for trigram index tuning.
+      postInitSQL:
+        - GRANT SET ON PARAMETER pg_trgm.similarity_threshold TO wodore;
   # Resource limits - optimized for Django application
   resources:
     requests:
